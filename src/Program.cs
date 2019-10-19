@@ -71,7 +71,7 @@ namespace ChronoBot
         {
             _client.Log += Logger;
             
-            await _client.LoginAsync(TokenType.Bot, "NDMyOTcyMzU3NTg2NjQ5MDg4.DbS3dQ.agY0JEbL93p61a6FPDICVG5UJOo");
+            await _client.LoginAsync(TokenType.Bot, "");
             await _client.StartAsync();
 
             ChronoBot cb = new ChronoBot(_client);
