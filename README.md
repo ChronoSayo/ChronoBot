@@ -1,0 +1,2 @@
+# ChronoBot
+Discord bot.
