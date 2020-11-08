@@ -331,7 +331,7 @@ namespace ChronoBot
         {
             base.MessageReceivedSelf(socketMessage);
 
-            PostRestOfImages(socketMessage);
+            //PostRestOfImages(socketMessage);
         }
     }
 }

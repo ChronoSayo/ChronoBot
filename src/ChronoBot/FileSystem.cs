@@ -1,10 +1,7 @@
-﻿using Discord;
-using Discord.Commands;
+﻿
 using Discord.WebSocket;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.IO;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
@@ -14,17 +11,18 @@ namespace ChronoBot
     class FileSystem
     {
         private DiscordSocketClient _client;
+        private string _path;
         private string _fileName;
 
         public FileSystem(string fileName, DiscordSocketClient client)
         {
-            _client = client;
             _fileName = fileName + ".txt";
+            _path = System.Reflection.Assembly.GetEntryAssembly().Location;
         }
 
         public bool CheckFileExists()
         {
-            if (File.Exists(_fileName))
+            if (File.Exists(Path.Combine(_path, _fileName)))
                 return true;
             return false;
         }

@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27428.2015
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChronoBot", "src\ChronoBot.csproj", "{CE13E7D2-BBC8-481D-982F-80853AE592FD}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChronoBot", "src\ChronoBot\ChronoBot.csproj", "{CE13E7D2-BBC8-481D-982F-80853AE592FD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 using System.Timers;
 using Discord.WebSocket;
 using TwitchLib.Api;
@@ -76,8 +77,9 @@ namespace ChronoBot
                 _fileSystem.Save(FormatLineToFile(name, guildID, channelID, id));
         }
 
-        protected virtual string FormatLineToFile(string name, ulong guildID, ulong channelID, string id)
+        protected virtual string FormatLineToFile(string socialMedia, string name, ulong guildID, ulong channelID, string id)
         {
+            if(!File.Exists())
             return name + " " + guildID + " " + channelID + " " + id;
         }
 
