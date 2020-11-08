@@ -26,8 +26,6 @@ namespace ChronoBot
             _hyperlink = "https://twitter.com/@name/status/@id";
 
             _howToMessage = _howToMessage.Replace(_USER_KEYWORD, "Twitter user");
-
-            LoadOrCreateFromFile("twitternames");
         }
 
         private void PostRestOfImages(SocketMessage socketMessage)

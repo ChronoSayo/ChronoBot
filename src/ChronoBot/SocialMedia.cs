@@ -17,12 +17,13 @@ namespace ChronoBot
         protected List<UserData> _users;
         protected const string _USER_KEYWORD = "%";
 
-        protected struct UserData
+        public struct UserData
         {
             public string name;
             public ulong guildID;
             public ulong channelID;
             public string id;
+            public string socialMedia;
         }
 
         public SocialMedia(DiscordSocketClient client)
@@ -31,56 +32,24 @@ namespace ChronoBot
             _users = new List<UserData>();
         }
         
-        protected virtual void LoadOrCreateFromFile(string filename)
+        protected virtual void LoadOrCreateFromFile()
         {
-            _fileSystem = new FileSystem("Memory Card/" + filename, _client);
-            List<UserData> updatedList = new List<UserData>();
-
-            if (_fileSystem.CheckFileExists())
-            {
-                List<string> newList = _fileSystem.Load();
-                if (newList.Count > 0)
-                {
-                    foreach (string s in newList)
-                    {
-                        string[] split = s.Split(' '); //0: Name. 1: Guild ID. 2: Channel ID. 3. ID.
-
-                        string name = split[0];
-
-                        ulong guildID = Info.DEBUG_CHANNEL_ID;
-                        ulong.TryParse(split[1], out guildID);
-
-                        ulong channelID = Info.DEBUG_CHANNEL_ID;
-                        ulong.TryParse(split[2], out channelID);
-
-                        string id = split[3];
-
-                        CreateSocialMediaUser(name, guildID, channelID, id, false);
-                    }
-                }
-            }
+            _fileSystem = new FileSystem();
+            List<UserData> updatedList = _fileSystem.Load();
         }
         
-        protected virtual void CreateSocialMediaUser(string name, ulong guildID, ulong channelID, 
-            string id, bool saveToFile)
+        protected virtual void CreateSocialMediaUser(string name, ulong guildId, ulong channelId, string id)
         {
             UserData temp = new UserData
             {
                 name = name,
-                guildID = guildID,
-                channelID = channelID,
+                guildID = guildId,
+                channelID = channelId,
                 id = id
             };
             _users.Add(temp);
 
-            if (saveToFile)
-                _fileSystem.Save(FormatLineToFile(name, guildID, channelID, id));
-        }
-
-        protected virtual string FormatLineToFile(string socialMedia, string name, ulong guildID, ulong channelID, string id)
-        {
-            if(!File.Exists())
-            return name + " " + guildID + " " + channelID + " " + id;
+            _fileSystem.Save(temp);
         }
 
         protected virtual void SetCommands(string socialMedia)
@@ -182,13 +151,9 @@ namespace ChronoBot
                 if (i > -1)
                 {
                     UserData ud = _users[i];
-                    string line = _fileSystem.FindLine(FormatLineToFile(ud.name, ud.guildID, ud.channelID, ud.id));
-
-                    Info.SendMessageToChannel(socketMessage, "Successfully deleted " + ud.name);
-
-                    _fileSystem.DeleteLine(line);
-
+                    _fileSystem.DeleteInFile(ud);
                     _users.RemoveAt(i);
+                    Info.SendMessageToChannel(socketMessage, "Successfully deleted " + ud.name);
                 }
                 else
                     Info.SendMessageToChannel(socketMessage, "Failed to delete: " + split[1]);

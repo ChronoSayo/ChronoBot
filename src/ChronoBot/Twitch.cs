@@ -35,12 +35,11 @@ namespace ChronoBot
                     " Add name if Discord name isn't the same as Twitch name. Max 100 per request.";
 
             _streamers = new Dictionary<UserData, bool>();
-            LoadOrCreateFromFile("streamers");
         }
 
         private string GetStreamID(string name)
         {
-            string foundStreamer = string.Empty;
+            string foundStreamer;
             try
             {
                 var user = _api.Users.v5.GetUserByNameAsync(name).GetAwaiter().GetResult();
@@ -118,7 +117,7 @@ namespace ChronoBot
                             split[2].Contains(socketMessage.MentionedChannels.ElementAt(0).Id.ToString()))
                             channelID = socketMessage.MentionedChannels.ElementAt(0).Id;
 
-                        CreateSocialMediaUser(username, guildID, channelID, streamerID, true);
+                        CreateSocialMediaUser(username, guildID, channelID, streamerID);
 
                         Info.SendMessageToChannel(socketMessage, "Successfully added " + username);
                     }
@@ -143,21 +142,18 @@ namespace ChronoBot
                     return;
 
                 int i = FindIndexByName(Info.GetGuildIDFromSocketMessage(socketMessage), split[1]);
-                if (i > -1)
-                {
-                    UserData ud = _streamers.Keys.ElementAt(i);
-                    string formattedLine = FormatLineToFile(ud.name, ud.guildID, ud.channelID, ud.id);
-                    string line = _fileSystem.FindLine(formattedLine);
-                    string delMessage = "Successfully deleted " + ud.name;
-                    if (Info.NoGuildID(ud.guildID))
-                        Info.SendMessageToUser(socketMessage.Author, delMessage);
-                    else
-                        Info.SendMessageToChannel(socketMessage, delMessage);
+                if (i <= -1) 
+                    return;
+                UserData ud = _streamers.Keys.ElementAt(i);
+                string delMessage = "Successfully deleted " + ud.name;
+                if (Info.NoGuildID(ud.guildID))
+                    Info.SendMessageToUser(socketMessage.Author, delMessage);
+                else
+                    Info.SendMessageToChannel(socketMessage, delMessage);
 
-                    _fileSystem.DeleteLine(line);
-                    _streamers.Remove(ud);
-                    _users.RemoveAt(i);
-                }
+                _fileSystem.DeleteInFile(ud);
+                _streamers.Remove(ud);
+                _users.RemoveAt(i);
             }
         }
 
@@ -331,9 +327,9 @@ namespace ChronoBot
             return sgc;
         }
 
-        protected override void CreateSocialMediaUser(string name, ulong guildID, ulong channelID, string streamerID, bool saveToFile)
+        protected override void CreateSocialMediaUser(string name, ulong guildID, ulong channelId, string streamerId)
         {
-            base.CreateSocialMediaUser(name, guildID, channelID, streamerID, saveToFile);
+            base.CreateSocialMediaUser(name, guildID, channelId, streamerId);
             _streamers.Add(_users[_users.Count - 1], false);
         }
 

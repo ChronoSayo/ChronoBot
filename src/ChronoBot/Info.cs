@@ -11,7 +11,7 @@ namespace ChronoBot
     class Info
     {
         public static DiscordSocketClient CLIENT;
-        public static bool DEBUG = false;
+        public static bool DEBUG = true;
         public static int DELAY_TIMER = 3 * 1000;
         public static string ID_PREFIX = "%";
         public static string BULLET_LIST = "■";

@@ -44,7 +44,7 @@ namespace ChronoBot
             //_instagram = new Instagram(_client);
 
             //Tools
-            _remind = new Remind(_client);
+            //_remind = new Remind(_client);
             _selfie = new Selfie(_client);
             _calculator = new Calculator(_client);
 
