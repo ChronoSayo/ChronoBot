@@ -1,6 +1,7 @@
 ﻿using Discord.WebSocket;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using TweetSharp;
 
@@ -9,10 +10,6 @@ namespace ChronoBot
     sealed class Twitter : SocialMedia
     {
         private TwitterService _service;
-        private string _consumerKey;
-        private string _consumerKeySecret;
-        private string _accessToken;
-        private string _accessTokenSecret;
 
         public Twitter(DiscordSocketClient client) : base(client)
         {
@@ -26,6 +23,8 @@ namespace ChronoBot
             _hyperlink = "https://twitter.com/@name/status/@id";
 
             _howToMessage = _howToMessage.Replace(_USER_KEYWORD, "Twitter user");
+
+            LoadOrCreateFromFile();
         }
 
         private void PostRestOfImages(SocketMessage socketMessage)
@@ -101,11 +100,15 @@ namespace ChronoBot
             List<UserData> newTweets = new List<UserData>();
             for (int i = 0; i < _users.Count; i++)
             {
+                UserData user = _users[i];
+                if(user.socialMedia != "Twitter")
+                    continue;
+                
                 TwitterStatus tweet;
                 //Try-catch in case someone was removing a Twitter while posting update.
                 try
                 {
-                    tweet = GetLatestTwitter(_users[i]);
+                    tweet = GetLatestTwitter(user);
                     if (tweet.Id == -1)
                         continue;
                 }
@@ -114,13 +117,11 @@ namespace ChronoBot
                     continue;
                 }
 
-                if (!MessageDisplayed(tweet.Id.ToString(), _users[i].guildID))
+                if (!MessageDisplayed(tweet.Id.ToString(), user.guildID))
                 {
                     UpdateData(tweet, i);
-                    newTweets.Add(_users[i]);
-                    string line = FormatLineToFile(_users[i].name, _users[i].guildID, _users[i].channelID, _users[i].id);
-                    string find = line.Substring(0, line.Length - _users[i].id.Length);
-                    _fileSystem.UpdateFile(find, line);
+                    newTweets.Add(user);
+                    _fileSystem.UpdateFile(user);
                 }
             }
 
@@ -187,7 +188,7 @@ namespace ChronoBot
 
                 string username = split[1];
                 ulong guildId = Info.GetGuildIDFromSocketMessage(socketMessage);
-                if (!Duplicate(guildId, username))
+                if (!Duplicate(guildId, username, "Twitter"))
                 {
                     if (IsLegitTwitterHandle(username, out username))
                     {
@@ -195,7 +196,7 @@ namespace ChronoBot
                         if (split.Length > 2 && split[2].Contains(socketMessage.MentionedChannels.ElementAt(0).Id.ToString()))
                             channelId = socketMessage.MentionedChannels.ElementAt(0).Id;
 
-                        CreateSocialMediaUser(username, guildId, channelId, "0", true);
+                        CreateSocialMediaUser(username, guildId, channelId, "0", "Twitter");
 
                         string message = "Successfully added " + username + "\n" +
                             "https://twitter.com/" + username;
@@ -316,13 +317,8 @@ namespace ChronoBot
 
         private void Authenticate()
         {
-            _consumerKey = "UCGwoyki7MKzOa10KwfGUv62n";
-            _consumerKeySecret = "Sed76AmSZQvTIEUz7hxxq9JYExURxiGrUHSkJb1PGODlJwyqoH";
-            _accessToken = "813345883144261632-V5WRf6iInBPIBJM0ZSRHj5cMlvlPFmK";
-            _accessTokenSecret = "ryvvUSDuXf1rQWvFY4nQOFoYtEcPkyG8toNm7MxlwPpG0";
-
-            _service = new TwitterService(_consumerKey, _consumerKeySecret, _accessToken, _accessTokenSecret);
-            _service.TweetMode = "extended";
+            string[] lines = File.ReadAllLines("Memory Card/TwitterToken.txt");
+            _service = new TwitterService(lines[0], lines[1], lines[2], lines[3]) {TweetMode = "extended"};
         }
 
         public override void MessageReceivedSelf(SocketMessage socketMessage)

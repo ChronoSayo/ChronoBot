@@ -62,17 +62,17 @@ namespace ChronoBot
 
         private void CreateFile()
         {
-            _fileSystem = new FileSystem("remind", _client);
+            _fileSystem = new FileSystem();
 
-            if (_fileSystem.CheckFileExists())
-            {
-                List<string> newList = _fileSystem.Load();
-                if (newList.Count > 0)
-                {
-                    foreach (string s in newList)
-                        FormatReminders(s);
-                }
-            }
+            //if (_fileSystem.CheckFileExists())
+            //{
+            //    List<string> newList = _fileSystem.Load();
+            //    if (newList.Count > 0)
+            //    {
+            //        foreach (string s in newList)
+            //            FormatReminders(s);
+            //    }
+            //}
         }
 
         private void HowTo(SocketMessage socketMessage)
@@ -183,7 +183,7 @@ namespace ChronoBot
             int repeatDays = newReminder.repeatDays;
 
             string save = msg + "|" + time + "|" + userID + "|%" + id + "|" + repeat + "|" + repeatDays;
-            _fileSystem.Save(save);
+            //_fileSystem.Save(save);
 
             _reminders.Add(newReminder);
         }
@@ -199,7 +199,7 @@ namespace ChronoBot
             int repeatDays = newReminder.repeatDays;
 
             string updateText = msg + "|" + time + "|" + userID + "|%" + id + "|" + repeat + "|" + repeatDays;
-            _fileSystem.UpdateFile(Info.ID_PREFIX + id, updateText);
+            //_fileSystem.UpdateFile(Info.ID_PREFIX + id, updateText);
         }
 
         //Format text from file.
@@ -282,7 +282,7 @@ namespace ChronoBot
 
         private void EraseReminder(Reminders r)
         {
-            _fileSystem.FindAndDeleteByID(r.ID);
+            //_fileSystem.FindAndDeleteByID(r.ID);
             _reminders.Remove(r);
         }
 

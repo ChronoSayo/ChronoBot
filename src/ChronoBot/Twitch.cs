@@ -3,9 +3,11 @@ using Discord.WebSocket;
 using System;
 using System.Threading;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using TwitchLib.Api;
+using TwitchLib.Api.Helix.Models.Users;
 
 namespace ChronoBot
 {
@@ -21,20 +23,24 @@ namespace ChronoBot
         public Twitch(DiscordSocketClient client) : base(client)
         {
             _api = new TwitchAPI();
-            _api.InitializeAsync("l3ssdhahs25s2aab9fuu2r40hhhn34", "71fp2g750bexnluwvn74kt50a12rmj");
-            
+            string[] lines = File.ReadAllLines("Memory Card/TwitchToken.txt");
+            _api.Settings.AccessToken = lines[0];
+            _api.Settings.Secret = lines[1];
+
             UpdateTimer(60 * 2);//2 minutes.
 
             string s = "twitch";
             _mineTwitchCommmand = Info.COMMAND_PREFIX + s + "mine";
             SetCommands(s);
-            
+
             _howToMessage = _howToMessage.Replace(_USER_KEYWORD, "streamer");
             _howToMessage += "***\n" + _mineTwitchCommmand + " [name] [channel]\n" +
                     "***-Adds all streamers the user follows based on Discord name." +
                     " Add name if Discord name isn't the same as Twitch name. Max 100 per request.";
 
             _streamers = new Dictionary<UserData, bool>();
+
+            LoadOrCreateFromFile();
         }
 
         private string GetStreamID(string name)
@@ -42,7 +48,7 @@ namespace ChronoBot
             string foundStreamer;
             try
             {
-                var user = _api.Users.v5.GetUserByNameAsync(name).GetAwaiter().GetResult();
+                var user = _api.V5.Users.GetUserByNameAsync(name).GetAwaiter().GetResult();
                 foundStreamer = GetStreamer(name).Id;
             }
             catch
@@ -53,9 +59,9 @@ namespace ChronoBot
             return foundStreamer;
         }
 
-        private TwitchLib.Api.Models.v5.Users.User GetStreamer(string name)
+        private TwitchLib.Api.V5.Models.Users.User GetStreamer(string name)
         {
-            return _api.Users.v5.GetUserByNameAsync(name).GetAwaiter().GetResult().Matches.ElementAt(0);
+            return _api.V5.Users.GetUserByNameAsync(name).GetAwaiter().GetResult().Matches.ElementAt(0);
         }
 
         protected override void UpdateTimer(int seconds)
@@ -72,18 +78,21 @@ namespace ChronoBot
             for (int i = 0; i < _streamers.Keys.Count; i++)
             {
                 UserData ud = new UserData();
+
                 //Try-catch in case someone was removing a streamer while posting update.
                 try
                 {
                     ud = _streamers.Keys.ElementAt(i);
+                    if (ud.socialMedia != "Twitch")
+                        continue;
                 }
                 catch
                 {
                     return;
                 }
-                if (_streamers[ud] != _api.Streams.v5.BroadcasterOnlineAsync(ud.id).GetAwaiter().GetResult())
+                if (_streamers[ud] != _api.V5.Streams.BroadcasterOnlineAsync(ud.id).GetAwaiter().GetResult())
                 {
-                    _streamers[ud] = _api.Streams.v5.BroadcasterOnlineAsync(ud.id).GetAwaiter().GetResult();
+                    _streamers[ud] = _api.V5.Streams.BroadcasterOnlineAsync(ud.id).GetAwaiter().GetResult();
                     if (_streamers[ud] && !onlineStreamers.Contains(ud))
                         onlineStreamers.Add(ud);
                 }
@@ -105,7 +114,7 @@ namespace ChronoBot
 
                 string addName = split[1];
                 ulong guildID = Info.GetGuildIDFromSocketMessage(socketMessage);
-                if (!Duplicate(guildID, addName))
+                if (!Duplicate(guildID, addName, "Twitch"))
                 {
                     string streamerID = GetStreamID(addName);
                     if (!string.IsNullOrEmpty(streamerID))
@@ -117,7 +126,7 @@ namespace ChronoBot
                             split[2].Contains(socketMessage.MentionedChannels.ElementAt(0).Id.ToString()))
                             channelID = socketMessage.MentionedChannels.ElementAt(0).Id;
 
-                        CreateSocialMediaUser(username, guildID, channelID, streamerID);
+                        CreateSocialMediaUser(username, guildID, channelID, streamerID, "Twitch");
 
                         Info.SendMessageToChannel(socketMessage, "Successfully added " + username);
                     }
@@ -215,7 +224,7 @@ namespace ChronoBot
 
                     if (addToList)
                     {
-                        bool online = _api.Streams.v5.BroadcasterOnlineAsync(streamer.id).GetAwaiter().GetResult();
+                        bool online = _api.V5.Streams.BroadcasterOnlineAsync(streamer.id).GetAwaiter().GetResult();
                         string channelMention = privateDM ? "" :
                             _client.GetGuild(streamer.guildID).GetTextChannel(streamer.channelID).Mention + " ";
                         line += "■ " + streamer.name + " " + channelMention + 
@@ -261,7 +270,7 @@ namespace ChronoBot
                 else
                     streamerName = socketMessage.Author.Username;
 
-                TwitchLib.Api.Models.v5.Users.User mine = GetStreamer(streamerName);
+                TwitchLib.Api.V5.Models.Users.User mine = GetStreamer(streamerName);
                 if (mine == null)
                 {
                     Info.SendMessageToChannel(socketMessage, "Cannot find you.");
@@ -275,10 +284,10 @@ namespace ChronoBot
                 Thread.Sleep(500);
 
                 ulong guildID = Info.NO_GUILD_ID;
-                TwitchLib.Api.Models.Helix.Users.GetUsersFollows.GetUsersFollowsResponse getUsersFollows = 
-                    _api.Users.helix.GetUsersFollowsAsync(null, null, 100, mine.Id).GetAwaiter().GetResult();
+                TwitchLib.Api.Helix.Models.Users.GetUsersFollowsResponse getUsersFollows = 
+                    _api.Helix.Users.GetUsersFollowsAsync(null, null, 100, mine.Id).GetAwaiter().GetResult();
                 List<UserData> followers = new List<UserData>();
-                foreach (TwitchLib.Api.Models.Helix.Users.GetUsersFollows.Follow f in getUsersFollows.Follows)
+                foreach (Follow f in getUsersFollows.Follows)
                 {
                     string name = GetStreamerDisplayNameFromID(f.ToUserId);
 
@@ -290,13 +299,13 @@ namespace ChronoBot
                     if(channel != null)
                         guildID = Info.GetGuildIDFromSocketMessage(socketMessage);
 
-                    if (!Duplicate(guildID, name))
+                    if (!Duplicate(guildID, name, "Twitch"))
                     {
                         UserData temp = new UserData
                         {
                             name = name,
                             guildID = guildID,
-                            channelID = channel == null ? socketMessage.Author.Id : channel.Id,
+                            channelID = channel?.Id ?? socketMessage.Author.Id,
                             id = f.ToUserId
                         };
                         followers.Add(temp);
@@ -306,7 +315,7 @@ namespace ChronoBot
                 if (followers.Count > 0)
                 {
                     foreach (UserData ud in followers)
-                        CreateSocialMediaUser(ud.name, ud.guildID, ud.channelID, ud.id, true);
+                        CreateSocialMediaUser(ud.name, ud.guildID, ud.channelID, ud.id, ud.socialMedia);
 
                     string confirmed = "Successfully added followings of " + streamerName +
                         ". They will be @ when they go online.";
@@ -327,20 +336,20 @@ namespace ChronoBot
             return sgc;
         }
 
-        protected override void CreateSocialMediaUser(string name, ulong guildID, ulong channelId, string streamerId)
+        protected override void CreateSocialMediaUser(string name, ulong guildID, ulong channelId, string streamerId, string socialMedia)
         {
-            base.CreateSocialMediaUser(name, guildID, channelId, streamerId);
+            base.CreateSocialMediaUser(name, guildID, channelId, streamerId, socialMedia);
             _streamers.Add(_users[_users.Count - 1], false);
         }
 
         private string GetStreamerDisplayNameFromID(string id)
         {
-            return _api.Users.v5.GetUserByIDAsync(id).GetAwaiter().GetResult().DisplayName;
+            return _api.V5.Users.GetUserByIDAsync(id).GetAwaiter().GetResult().DisplayName;
         }
         //When a Twitch name has a non-English name, use this instead.
         private string GetStreamerNameFromID(string id)
         {
-            return _api.Users.v5.GetUserByIDAsync(id).GetAwaiter().GetResult().Name;
+            return _api.V5.Users.GetUserByIDAsync(id).GetAwaiter().GetResult().Name;
         }
 
         public override void MessageReceived(SocketMessage socketMessage)

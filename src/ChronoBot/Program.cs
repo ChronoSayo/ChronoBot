@@ -71,7 +71,7 @@ namespace ChronoBot
         {
             _client.Log += Logger;
             
-            await _client.LoginAsync(TokenType.Bot, "");
+            await _client.LoginAsync(TokenType.Bot, File.ReadAllText("Memory Card/DiscordToken.txt"));
             await _client.StartAsync();
 
             ChronoBot cb = new ChronoBot(_client);

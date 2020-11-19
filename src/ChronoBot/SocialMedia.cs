@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.IO;
 using System.Timers;
 using Discord.WebSocket;
 using TwitchLib.Api;
@@ -35,17 +34,18 @@ namespace ChronoBot
         protected virtual void LoadOrCreateFromFile()
         {
             _fileSystem = new FileSystem();
-            List<UserData> updatedList = _fileSystem.Load();
+            _users = _fileSystem.Load();
         }
         
-        protected virtual void CreateSocialMediaUser(string name, ulong guildId, ulong channelId, string id)
+        protected virtual void CreateSocialMediaUser(string name, ulong guildId, ulong channelId, string id, string socialMedia)
         {
             UserData temp = new UserData
             {
                 name = name,
                 guildID = guildId,
                 channelID = channelId,
-                id = id
+                id = id,
+                socialMedia = socialMedia
             };
             _users.Add(temp);
 
@@ -241,8 +241,8 @@ namespace ChronoBot
         //Display text for Twitch.
         protected virtual string GetStreamerURLAndGame(UserData ud, TwitchAPI api)
         {
-            TwitchLib.Api.Models.v5.Channels.Channel info =
-                api.Channels.v5.GetChannelByIDAsync(ud.id).GetAwaiter().GetResult();
+            var info =
+                api.V5.Channels.GetChannelByIDAsync(ud.id).GetAwaiter().GetResult();
             return FormatMarkup(ud.name) + " is playing " + info.Game + "\n" + info.Url + "\n\n";
         }
 
@@ -285,12 +285,15 @@ namespace ChronoBot
             return formatName;
         }
 
-        protected virtual bool Duplicate(ulong guildID, string name)
+        protected virtual bool Duplicate(ulong guildID, string name, string socialMedia)
         {
             bool duplicate = false;
 
             foreach (UserData ud in _users)
             {
+                if(ud.socialMedia != socialMedia)
+                    continue;
+                
                 if (ud.guildID == guildID && ud.name.ToLower() == name.ToLower())
                 {
                     duplicate = true;

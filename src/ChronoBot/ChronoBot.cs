@@ -98,7 +98,7 @@ namespace ChronoBot
             _twitch.MessageReceived(socketMessage);
             _youtube.MessageReceived(socketMessage);
 
-            _remind.MessageReceived(socketMessage);
+            //_remind.MessageReceived(socketMessage);
             _selfie.MessageReceived(socketMessage);
             _calculator.MessageReceived(socketMessage);
 

@@ -1,13 +1,8 @@
-﻿
-using Discord.WebSocket;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 using System.Xml.Linq;
-using System.Xml.Serialization;
-using TwitchLib.Api.Models.v5.Users;
 
 namespace ChronoBot
 {
@@ -17,7 +12,7 @@ namespace ChronoBot
 
         public FileSystem()
         {
-            _path = Path.Combine(System.Reflection.Assembly.GetEntryAssembly()?.Location ?? string.Empty, "MemoryCards");
+            _path = Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly()?.Location) ?? string.Empty, "Memory Card");
         }
 
         public void Save(SocialMedia.UserData userData)
@@ -70,10 +65,13 @@ namespace ChronoBot
 
         public List<SocialMedia.UserData> Load()
         {
-            List<XDocument> xmls = new List<XDocument>();
+            Dictionary<XDocument, ulong> xmls = new Dictionary<XDocument, ulong>();
             DirectoryInfo dirInfo = new DirectoryInfo(_path);
             foreach (FileInfo fi in dirInfo.GetFiles())
-                xmls.Add(XDocument.Load(fi.FullName));
+            {
+                if(fi.FullName.EndsWith(".xml"))
+                    xmls.Add(XDocument.Load(fi.FullName), ulong.Parse(Path.GetFileNameWithoutExtension(fi.Name)));
+            }
 
             if (xmls.Count == 0)
                 return new List<SocialMedia.UserData>();
@@ -85,17 +83,20 @@ namespace ChronoBot
             return ud;
         }
 
-        private List<SocialMedia.UserData> CollectUserData(List<XDocument> xmls, string socialMedia)
+        private List<SocialMedia.UserData> CollectUserData(Dictionary<XDocument, ulong> xmls, string socialMedia)
         {
             List<SocialMedia.UserData> ud = new List<SocialMedia.UserData>();
-            foreach (XDocument xml in xmls)
+            foreach (KeyValuePair<XDocument, ulong> xml in xmls)
             {
-                foreach (XElement e in xml.Descendants("Users").Descendants(socialMedia).Descendants("User"))
+                foreach (XElement e in xml.Key.Descendants("Users").Descendants(socialMedia).Descendants("User"))
                 {
                     SocialMedia.UserData user = new SocialMedia.UserData();
+                    if (xml.Key.Document != null)
+                        user.guildID = xml.Value;                    
                     user.name = e.Attribute("Name")?.Value;
                     user.channelID = ulong.Parse(e.Attribute("ChannelID")?.Value ?? string.Empty);
                     user.id = e.Attribute("ID")?.Value;
+                    user.socialMedia = socialMedia;
                     ud.Add(user);
                 }
             }
@@ -113,7 +114,7 @@ namespace ChronoBot
 
             XDocument xml = XDocument.Load(guildPath);
             List<SocialMedia.UserData> users = new List<SocialMedia.UserData>();
-            users.AddRange(CollectUserData(new List<XDocument> { xml }, ud.socialMedia));
+            users.AddRange(CollectUserData(new Dictionary<XDocument, ulong> { { xml, ud.guildID } }, ud.socialMedia));
             foreach(SocialMedia.UserData userData in users)
             {
                 if(ud.name == userData.name)
@@ -139,7 +140,7 @@ namespace ChronoBot
 
             XDocument xml = XDocument.Load(guildPath);
             List<SocialMedia.UserData> users = new List<SocialMedia.UserData>();
-            users.AddRange(CollectUserData(new List<XDocument> { xml }, socialMedia));
+            users.AddRange(CollectUserData(new Dictionary<XDocument, ulong> { { xml, ud.guildID } }, socialMedia));
             foreach (SocialMedia.UserData userData in users)
             {
                 if (ud.name != userData.name) 

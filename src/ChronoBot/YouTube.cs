@@ -2,6 +2,7 @@
 using Discord.WebSocket;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -33,7 +34,7 @@ namespace ChronoBot
 
             _howToMessage = _howToMessage.Replace(_USER_KEYWORD, "YouTube channel");
 
-            LoadOrCreateFromFile("youtubechannels");
+            LoadOrCreateFromFile();
         } 
         
         private List<string> GetVideoID(string user)
@@ -95,17 +96,18 @@ namespace ChronoBot
             for (int i = 0; i < _users.Count; i++)
             {
                 UserData data = _users[i];
+                if(data.socialMedia != "YouTube")
+                    continue;
+
                 List<string> channelInfo = GetVideoID(data.name);
                 if (channelInfo.Count == 0)
                     continue;
-                if (channelInfo[0] != data.id)
-                {
-                    UpdateData(data, channelInfo, i);
-                    newVideos.Add(_users[i]);
-                    string line = FormatLineToFile(_users[i].name, _users[i].guildID, _users[i].channelID, _users[i].id);
-                    string find = line.Substring(0, line.Length - _users[i].id.Length);
-                    _fileSystem.UpdateFile(find, line);
-                }
+                if (channelInfo[0] == data.id) 
+                    continue;
+
+                UpdateData(data, channelInfo, i);
+                newVideos.Add(_users[i]);
+                _fileSystem.UpdateFile(data);
             }
 
             UpdateSocialMedia(newVideos);
@@ -129,7 +131,7 @@ namespace ChronoBot
 
                 string user = split[1];
                 ulong guildID = Info.GetGuildIDFromSocketMessage(socketMessage);
-                if (!Duplicate(guildID, user))
+                if (!Duplicate(guildID, user, "YouTube"))
                 {
                     List<string> ytChannelInfo = GetVideoID(user); //0: Video ID. 1: Channel ID. 2: Username.
                     if (ytChannelInfo.Count > 0)
@@ -138,7 +140,7 @@ namespace ChronoBot
                         if (split.Length > 2 && split[2].Contains(socketMessage.MentionedChannels.ElementAt(0).Id.ToString()))
                             channelID = socketMessage.MentionedChannels.ElementAt(0).Id;
 
-                        CreateSocialMediaUser(user.ToLower(), guildID, channelID, "0", true);
+                        CreateSocialMediaUser(user.ToLower(), guildID, channelID, "0", "Twitter");
                         
                         Info.SendMessageToChannel(guildID, channelID, "Successfully added " + ytChannelInfo[2] + "\n" +
                             _channelLink + user);
@@ -233,12 +235,12 @@ namespace ChronoBot
         private void Authenticate()
         {
             _service = new YouTubeService(new BaseClientService.Initializer()
-            { ApiKey = "AIzaSyCGwcoiNxS2WyF2J3jdlLWZZvHVnJUZq1M", ApplicationName = "ChronoBot" });
+            { ApiKey = File.ReadAllText("Memory Card/YouTubeToken.txt"), ApplicationName = "ChronoBot" });
         }
 
-        protected override void CreateSocialMediaUser(string name, ulong guildID, ulong channelID, string id, bool saveToFile)
+        protected override void CreateSocialMediaUser(string name, ulong guildID, ulong channelId, string id, string socialMedia)
         {
-            base.CreateSocialMediaUser(name, guildID, channelID, id, saveToFile);
+            base.CreateSocialMediaUser(name, guildID, channelId, id, socialMedia);
         }
 
         public override void MessageReceived(SocketMessage socketMessage)
