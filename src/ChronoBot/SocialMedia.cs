@@ -50,6 +50,9 @@ namespace ChronoBot
             _users.Add(temp);
 
             _fileSystem.Save(temp);
+
+            UserData user = temp;
+            LogToFile($"Adding {user.name} {user.id} {user.channelID} {user.guildID} {user.socialMedia}");
         }
 
         protected virtual void SetCommands(string socialMedia)
@@ -150,10 +153,11 @@ namespace ChronoBot
                 int i = FindIndexByName(Info.GetGuildIDFromSocketMessage(socketMessage), split[1]);
                 if (i > -1)
                 {
-                    UserData ud = _users[i];
-                    _fileSystem.DeleteInFile(ud);
+                    UserData user = _users[i];
+                    _fileSystem.DeleteInFile(user);
                     _users.RemoveAt(i);
-                    Info.SendMessageToChannel(socketMessage, "Successfully deleted " + ud.name);
+                    Info.SendMessageToChannel(socketMessage, "Successfully deleted " + user.name);
+                    LogToFile($"Deleted {user.name} {user.id} {user.channelID} {user.guildID} {user.socialMedia}");
                 }
                 else
                     Info.SendMessageToChannel(socketMessage, "Failed to delete: " + split[1]);
@@ -162,7 +166,6 @@ namespace ChronoBot
 
         protected virtual void GetSocialMediaUser(SocketMessage socketMessage)
         {
-
         }
 
         protected virtual void ListSavedSocialMediaUsers(SocketMessage socketMessage)
@@ -179,13 +182,13 @@ namespace ChronoBot
             //Loop through all updated social media.
             for (int i = 0; i < users.Count; i++)
             {
-                ulong guildID = Info.DEBUG ? Info.DEBUG_GUILD_ID : users[i].guildID;
-                ulong channelID = Info.DEBUG ? Info.DEBUG_CHANNEL_ID : users[i].channelID;
+                ulong guildId = Info.DEBUG ? Info.DEBUG_GUILD_ID : users[i].guildID;
+                ulong channelId = Info.DEBUG ? Info.DEBUG_CHANNEL_ID : users[i].channelID;
                 //Checks if usedGuildIDs contains anything to see if the IDs has been posted already.
                 if (usedGuildIDs.Count > 0)
                 {
                     //Checks if both guild and channel ID's has been used.
-                    if (UsedID(usedGuildIDs, guildID) && UsedID(usedChannelIDs, channelID))
+                    if (UsedID(usedGuildIDs, guildId) && UsedID(usedChannelIDs, channelId))
                         continue;
                 }
                 string message = string.Empty;
@@ -194,32 +197,35 @@ namespace ChronoBot
                 {
                     //Adds all updated social media within the same server and channel.
                     //Adds them into a string so the bot can post once.
-                    if (guildID == users[j].guildID && channelID == users[j].channelID)
+                    if ((guildId == users[j].guildID && channelId == users[j].channelID) || Info.DEBUG)
                     {
                         //Add more cases here if more social media is added.
                         switch(_socialMedia)
                         {
                             case "!twitch":
-                                message += GetStreamerURLAndGame(users[j], api);
+                                message += GetStreamerUrlAndGame(users[j], api);
                                 break;
                             case "!twitter":
-                                message += GetTwitterURL(users[j]);
+                                message += GetTwitterUrl(users[j]);
                                 break;
                             case "!youtube":
                                 message += GetYouTuber(users[j]);
                                 break;
                         }
-                        usedGuildIDs.Add(guildID);
-                        usedChannelIDs.Add(channelID);
+                        usedGuildIDs.Add(guildId);
+                        usedChannelIDs.Add(channelId);
                     }
                 }
                 //Posts the updated social media.
                 if (!string.IsNullOrEmpty(message))
                 {
-                    if (Info.NoGuildID(guildID))
-                        Info.SendMessageToUser(_client.GetUser(channelID), message);
+                    if (Info.NoGuildID(guildId))
+                        Info.SendMessageToUser(_client.GetUser(channelId), message);
                     else
-                        _client.GetGuild(guildID).GetTextChannel(channelID).SendMessageAsync(message);
+                        _client.GetGuild(guildId).GetTextChannel(channelId).SendMessageAsync(message);
+
+                    UserData user = _users[i];
+                    LogToFile($"Updating {user.name} {user.id} {user.channelID} {user.guildID} {user.socialMedia}");
                 }
             }
         }
@@ -239,7 +245,7 @@ namespace ChronoBot
         }
 
         //Display text for Twitch.
-        protected virtual string GetStreamerURLAndGame(UserData ud, TwitchAPI api)
+        protected virtual string GetStreamerUrlAndGame(UserData ud, TwitchAPI api)
         {
             var info =
                 api.V5.Channels.GetChannelByIDAsync(ud.id).GetAwaiter().GetResult();
@@ -247,7 +253,7 @@ namespace ChronoBot
         }
 
         //Display text for Twitter.
-        protected virtual string GetTwitterURL(UserData ud)
+        protected virtual string GetTwitterUrl(UserData ud)
         {
             string message = _hyperlink.Replace("@name", ud.name);
             message = message.Replace("@id", ud.id);
@@ -321,6 +327,11 @@ namespace ChronoBot
             return index;
         }
 
+        protected virtual void LogToFile(string message)
+        {
+            Program.LogFile(message);
+        }
+
         public virtual void MessageReceived(SocketMessage socketMessage)
         {
             MessageReceivedSelf(socketMessage);
@@ -338,5 +349,6 @@ namespace ChronoBot
         {
 
         }
+
     }
 }

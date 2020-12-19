@@ -95,19 +95,19 @@ namespace ChronoBot
             List<UserData> newVideos = new List<UserData>();
             for (int i = 0; i < _users.Count; i++)
             {
-                UserData data = _users[i];
-                if(data.socialMedia != "YouTube")
+                UserData user = _users[i];
+                if(user.socialMedia != "YouTube")
                     continue;
 
-                List<string> channelInfo = GetVideoID(data.name);
+                List<string> channelInfo = GetVideoID(user.name);
                 if (channelInfo.Count == 0)
                     continue;
-                if (channelInfo[0] == data.id) 
+                if (channelInfo[0] == user.id) 
                     continue;
 
-                UpdateData(data, channelInfo, i);
+                UpdateData(user, channelInfo, i);
                 newVideos.Add(_users[i]);
-                _fileSystem.UpdateFile(data);
+                _fileSystem.UpdateFile(user);
             }
 
             UpdateSocialMedia(newVideos);

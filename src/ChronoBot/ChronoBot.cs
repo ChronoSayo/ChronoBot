@@ -84,7 +84,7 @@ namespace ChronoBot
             }
             catch(Exception e)
             {
-                Console.WriteLine(e.Message);
+                Program.LogFile(e.Message);
             }
             return Task.CompletedTask;
         }

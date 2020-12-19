@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Serilog;
 using TweetSharp;
 
 namespace ChronoBot
@@ -17,7 +18,7 @@ namespace ChronoBot
 
             Authenticate();
 
-            UpdateTimer(60);//1 minute.
+            UpdateTimer(1);//1 minute.
 
             SetCommands("twitter");
             _hyperlink = "https://twitter.com/@name/status/@id";
@@ -114,25 +115,21 @@ namespace ChronoBot
                 }
                 catch (Exception e)
                 {
+                    LogToFile(e.Message);
+                    LogToFile("Continuing");
                     continue;
                 }
 
-                if (!MessageDisplayed(tweet.Id.ToString(), user.guildID))
+                if (!MessageDisplayed(tweet.IdStr, user.guildID))
                 {
-                    UpdateData(tweet, i);
+                    user.id = tweet.IdStr;
+                    _users[i] = user;
                     newTweets.Add(user);
                     _fileSystem.UpdateFile(user);
                 }
             }
 
             UpdateSocialMedia(newTweets);
-        }
-
-        private void UpdateData(TwitterStatus tweet, int i)
-        {
-            UserData temp = _users[i];
-            temp.id = tweet == null ? "0" : tweet.IdStr;
-            _users[i] = temp;
         }
 
         private TwitterStatus GetLatestTwitter(UserData ud)
@@ -231,8 +228,10 @@ namespace ChronoBot
                         TwitterStatus tweet = GetLatestTwitter(_users[i]);
                         if (tweet != null)
                         {
-                            UpdateData(tweet, i);
-                            Info.SendMessageToChannel(socketMessage, GetTwitterURL(_users[i]));
+                            UserData temp = _users[i];
+                            temp.id = tweet.IdStr;
+                            _users[i] = temp;
+                            Info.SendMessageToChannel(socketMessage, GetTwitterUrl(_users[i]));
                         }
                         else
                             Info.SendMessageToChannel(socketMessage, 
@@ -326,6 +325,11 @@ namespace ChronoBot
             base.MessageReceivedSelf(socketMessage);
 
             //PostRestOfImages(socketMessage);
+        }
+
+        protected override void LogToFile(string message)
+        {
+            base.LogToFile(message);
         }
     }
 }

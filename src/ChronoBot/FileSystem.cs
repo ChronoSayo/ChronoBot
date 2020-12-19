@@ -24,7 +24,10 @@ namespace ChronoBot
             string socialMedia = userData.socialMedia;
 
             XElement user = new XElement("User");
-            user.Add(name, channelId, id);
+            XAttribute newName = new XAttribute("Name", name);
+            XAttribute newChannelId = new XAttribute("ChannelID", channelId);
+            XAttribute newId = new XAttribute("ID", id);
+            user.Add(newName, newChannelId, newId);
 
             XDocument xDoc;
             string guildPath = Path.Combine(_path, guildId + ".xml");
@@ -60,7 +63,7 @@ namespace ChronoBot
 
             xDoc.Save(guildPath);
 
-            Console.WriteLine($"Saved {0} in {1}.xml", userData.name, userData.guildID);
+            Program.LogFile($"Saved {userData.name} in {userData.guildID}.xml");
         }
 
         public List<SocialMedia.UserData> Load()
@@ -69,8 +72,19 @@ namespace ChronoBot
             DirectoryInfo dirInfo = new DirectoryInfo(_path);
             foreach (FileInfo fi in dirInfo.GetFiles())
             {
-                if(fi.FullName.EndsWith(".xml"))
-                    xmls.Add(XDocument.Load(fi.FullName), ulong.Parse(Path.GetFileNameWithoutExtension(fi.Name)));
+                if (fi.FullName.EndsWith(".xml"))
+                {
+                    try
+                    {
+                        xmls.Add(XDocument.Load(fi.FullName), ulong.Parse(Path.GetFileNameWithoutExtension(fi.Name)));
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e);
+                        Program.LogFile(e.Message);
+                        continue;
+                    }
+                }
             }
 
             if (xmls.Count == 0)
@@ -108,7 +122,7 @@ namespace ChronoBot
             string guildPath = Path.Combine(_path, ud.guildID + ".xml");
             if (!File.Exists(guildPath))
             {
-                Console.WriteLine($"Unable to update {0}", ud.name);
+                Console.WriteLine("Unable to update {0}", ud.name);
                 return;
             }
 
@@ -119,9 +133,11 @@ namespace ChronoBot
             {
                 if(ud.name == userData.name)
                 {
-                    xml.Descendants("Users").Descendants(ud.socialMedia).Descendants("User").Attributes("Name").First().Value = ud.name;
-                    xml.Descendants("Users").Descendants(ud.socialMedia).Descendants("User").Attributes("ChannelID").First().Value = ud.channelID.ToString();
-                    xml.Descendants("Users").Descendants(ud.socialMedia).Descendants("User").Attributes("ID").First().Value = ud.id;
+                    XElement found = xml.Descendants("Users").Descendants(ud.socialMedia).Descendants("User")
+                        .First(x => x.Attributes("Name").First().Value == ud.name);
+                    found.Attributes("Name").First().Value = ud.name;
+                    found.Attributes("ChannelID").First().Value = ud.channelID.ToString();
+                    found.Attributes("ID").First().Value = ud.id;
                     break;
                 }
             }

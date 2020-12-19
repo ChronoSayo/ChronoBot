@@ -1,19 +1,19 @@
 ﻿using Discord;
-using Discord.Commands;
 using Discord.WebSocket;
 using System;
+using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
-using System.Timers;
-using Microsoft.Extensions.DependencyInjection;
+using System.Threading;
 using System.Threading.Tasks;
-using System.Text;
 
 namespace ChronoBot
 {
     class Program
     {
         private readonly DiscordSocketClient _client;
-        private Timer _clearLog;
+        private static DateTime _today;
+        private static string _logFile;
 
         // Program entry point
         static void Main(string[] args)
@@ -27,19 +27,6 @@ namespace ChronoBot
             {
                 LogLevel = LogSeverity.Info,
             });
-        }
-
-        private void ClearLog()
-        {
-            _clearLog = new Timer(60 * 60 * 24 * 1000); //Once a day.
-            _clearLog.Enabled = true;
-            _clearLog.AutoReset = true;
-            _clearLog.Elapsed += _clearLog_Elapsed;
-        }
-
-        private void _clearLog_Elapsed(object sender, ElapsedEventArgs e)
-        {
-            Console.Clear();
         }
 
         private static Task Logger(LogMessage message)
@@ -62,22 +49,41 @@ namespace ChronoBot
                     Console.ForegroundColor = ConsoleColor.DarkGray;
                     break;
             }
-            Console.WriteLine($"{DateTime.Now,-19} [{message.Severity,8}] {message.Source}: {message.Message}");
             Console.ForegroundColor = cc;
+            Console.WriteLine($"{DateTime.Now,-19} [{message.Severity,8}] {message.Source}: {message.Message}");
+            LogFile($"{DateTime.Now,-19} [{message.Severity,8}] {message.Source}: {message.Message}");
             return Task.CompletedTask;
         }
 
         private async Task MainAsync()
         {
+            string exePath = Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly()?.Location);
+            if (!Directory.Exists(Path.Combine(exePath ?? string.Empty, "Log")))
+                Directory.CreateDirectory((Path.Combine(exePath ?? string.Empty, "Log")));
+            _logFile = Path.Combine(exePath ?? string.Empty, "Log",
+                "ChronoBotLog-" + DateTime.Today.ToString("yyyy-dd-M--HH-mm-ss") + ".txt");
+            _today = DateTime.Today;
+
             _client.Log += Logger;
             
             await _client.LoginAsync(TokenType.Bot, File.ReadAllText("Memory Card/DiscordToken.txt"));
             await _client.StartAsync();
 
             ChronoBot cb = new ChronoBot(_client);
-            ClearLog();
             
             await Task.Delay(-1);
+        }
+
+        public static void LogFile(string message)
+        {
+            if (!File.Exists(_logFile) || DateTime.Today != _today)
+            {
+                _today = DateTime.Today;
+                FileStream file = File.Create(_logFile);
+                file.Close();
+            }
+
+            File.AppendAllLines(_logFile, new List<string> { DateTime.Now.ToString(CultureInfo.InvariantCulture), message });
         }
     }
 

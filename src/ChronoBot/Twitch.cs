@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using Serilog;
 using TwitchLib.Api;
 using TwitchLib.Api.Helix.Models.Users;
 
@@ -86,8 +87,9 @@ namespace ChronoBot
                     if (ud.socialMedia != "Twitch")
                         continue;
                 }
-                catch
+                catch(Exception e)
                 {
+                    LogToFile(e.Message);
                     return;
                 }
                 if (_streamers[ud] != _api.V5.Streams.BroadcasterOnlineAsync(ud.id).GetAwaiter().GetResult())
@@ -182,7 +184,7 @@ namespace ChronoBot
                     if (i > -1)
                     {
                         UserData ud = _streamers.Keys.ElementAt(i);
-                        string message = GetStreamerURLAndGame(ud, _api);
+                        string message = GetStreamerUrlAndGame(ud, _api);
                         if (Info.NoGuildID(ud.guildID))
                             Info.SendMessageToUser(socketMessage.Author, message);
                         else
