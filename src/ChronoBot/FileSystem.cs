@@ -1,8 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Xml.Linq;
+using Discord;
 
 namespace ChronoBot
 {
@@ -63,7 +67,9 @@ namespace ChronoBot
 
             xDoc.Save(guildPath);
 
-            Program.LogFile($"Saved {userData.name} in {userData.guildID}.xml");
+            StackTrace st = new StackTrace();
+            MethodBase mb = st.GetFrame(1).GetMethod();
+            Program.Logger(new LogMessage(LogSeverity.Info, mb.ReflectedType + "." + mb, $"Saved {userData.name} in {userData.guildID}.xml"));
         }
 
         public List<SocialMedia.UserData> Load()
@@ -81,8 +87,9 @@ namespace ChronoBot
                     catch (Exception e)
                     {
                         Console.WriteLine(e);
-                        Program.LogFile(e.Message);
-                        continue;
+                        StackTrace st = new StackTrace();
+                        MethodBase mb = st.GetFrame(1).GetMethod();
+                        Program.Logger(new LogMessage(LogSeverity.Info, mb.ReflectedType + "." + mb, "Unable to load users."));
                     }
                 }
             }
@@ -165,7 +172,11 @@ namespace ChronoBot
                 break;
             }
             xml.Save(guildPath);
+
             Console.WriteLine("Deleted {0} in {1}.xml", ud.name, ud.guildID);
+            StackTrace st = new StackTrace();
+            MethodBase mb = st.GetFrame(1).GetMethod();
+            Program.Logger(new LogMessage(LogSeverity.Info, mb.ReflectedType + "." + mb, $"Deleted {ud.name} in {ud.guildID}.xml"));
         }
     }
 }

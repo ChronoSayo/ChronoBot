@@ -28,7 +28,7 @@ namespace ChronoBot
             _api.Settings.AccessToken = lines[0];
             _api.Settings.Secret = lines[1];
 
-            UpdateTimer(60 * 2);//2 minutes.
+            UpdateTimer(5);
 
             string s = "twitch";
             _mineTwitchCommmand = Info.COMMAND_PREFIX + s + "mine";
@@ -42,6 +42,9 @@ namespace ChronoBot
             _streamers = new Dictionary<UserData, bool>();
 
             LoadOrCreateFromFile();
+
+            foreach (UserData user in _users)
+                _streamers.Add(user, false);
         }
 
         private string GetStreamID(string name)
@@ -78,7 +81,7 @@ namespace ChronoBot
             List<UserData> onlineStreamers = new List<UserData>();
             for (int i = 0; i < _streamers.Keys.Count; i++)
             {
-                UserData ud = new UserData();
+                UserData ud;
 
                 //Try-catch in case someone was removing a streamer while posting update.
                 try
@@ -89,14 +92,21 @@ namespace ChronoBot
                 }
                 catch(Exception e)
                 {
-                    LogToFile(e.Message);
                     return;
                 }
-                if (_streamers[ud] != _api.V5.Streams.BroadcasterOnlineAsync(ud.id).GetAwaiter().GetResult())
+
+                try
                 {
-                    _streamers[ud] = _api.V5.Streams.BroadcasterOnlineAsync(ud.id).GetAwaiter().GetResult();
-                    if (_streamers[ud] && !onlineStreamers.Contains(ud))
-                        onlineStreamers.Add(ud);
+                    if (_streamers[ud] != _api.V5.Streams.BroadcasterOnlineAsync(ud.id).GetAwaiter().GetResult())
+                    {
+                        _streamers[ud] = _api.V5.Streams.BroadcasterOnlineAsync(ud.id).GetAwaiter().GetResult();
+                        if (_streamers[ud] && !onlineStreamers.Contains(ud))
+                            onlineStreamers.Add(ud);
+                    }
+                }
+                catch (Exception e)
+                {
+                    LogToFile(LogSeverity.Error, $"Unable to get status for {ud.name}.", e);
                 }
             }
             UpdateSocialMedia(onlineStreamers, _api);
@@ -115,8 +125,8 @@ namespace ChronoBot
                 }
 
                 string addName = split[1];
-                ulong guildID = Info.GetGuildIDFromSocketMessage(socketMessage);
-                if (!Duplicate(guildID, addName, "Twitch"))
+                ulong guildId = Info.GetGuildIDFromSocketMessage(socketMessage);
+                if (!Duplicate(guildId, addName, "Twitch"))
                 {
                     string streamerID = GetStreamID(addName);
                     if (!string.IsNullOrEmpty(streamerID))
@@ -128,7 +138,7 @@ namespace ChronoBot
                             split[2].Contains(socketMessage.MentionedChannels.ElementAt(0).Id.ToString()))
                             channelID = socketMessage.MentionedChannels.ElementAt(0).Id;
 
-                        CreateSocialMediaUser(username, guildID, channelID, streamerID, "Twitch");
+                        CreateSocialMediaUser(username, guildId, channelID, streamerID, "Twitch");
 
                         Info.SendMessageToChannel(socketMessage, "Successfully added " + username);
                     }
@@ -137,7 +147,7 @@ namespace ChronoBot
                 }
                 else
                 {
-                    UserData ud = _streamers.Keys.ElementAt(FindIndexByName(guildID, addName));
+                    UserData ud = _streamers.Keys.ElementAt(FindIndexByName(guildId, addName));
                     Info.SendMessageToChannel(socketMessage, "Already added " + ud.name);
                 }
             }
@@ -207,8 +217,7 @@ namespace ChronoBot
                 }
 
                 string line = "";
-                ulong guildID = Info.DEBUG_GUILD_ID;
-                bool privateDM = false;
+                bool privateDm = false;
                 for (int i = 0; i < _streamers.Keys.Count; i++)
                 {
                     UserData streamer = _streamers.Keys.ElementAt(i);
@@ -218,16 +227,16 @@ namespace ChronoBot
                         addToList = true;
                     else
                     {
-                        guildID = Info.GetGuildIDFromSocketMessage(socketMessage);
+                        var guildID = Info.GetGuildIDFromSocketMessage(socketMessage);
                         addToList = guildID == streamer.guildID;
                         if (Info.NoGuildID(guildID))
-                            privateDM = true;
+                            privateDm = true;
                     }
 
                     if (addToList)
                     {
                         bool online = _api.V5.Streams.BroadcasterOnlineAsync(streamer.id).GetAwaiter().GetResult();
-                        string channelMention = privateDM ? "" :
+                        string channelMention = privateDm ? "" :
                             _client.GetGuild(streamer.guildID).GetTextChannel(streamer.channelID).Mention + " ";
                         line += "■ " + streamer.name + " " + channelMention + 
                             (online ? "**ONLINE**" : "OFFLINE") + "\n";
@@ -237,7 +246,7 @@ namespace ChronoBot
                     Info.Shrug(socketMessage);
                 else
                 {
-                    if (privateDM)
+                    if (privateDm)
                         Info.SendMessageToUser(socketMessage.Author, line);
                     else
                         Info.SendMessageToChannel(socketMessage, line);

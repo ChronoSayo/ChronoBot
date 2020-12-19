@@ -1,8 +1,11 @@
 ﻿using Discord.WebSocket;
+using Discord.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
+using Discord;
 using Serilog;
 using TweetSharp;
 
@@ -18,7 +21,7 @@ namespace ChronoBot
 
             Authenticate();
 
-            UpdateTimer(1);//1 minute.
+            UpdateTimer(3);
 
             SetCommands("twitter");
             _hyperlink = "https://twitter.com/@name/status/@id";
@@ -105,20 +108,9 @@ namespace ChronoBot
                 if(user.socialMedia != "Twitter")
                     continue;
                 
-                TwitterStatus tweet;
-                //Try-catch in case someone was removing a Twitter while posting update.
-                try
-                {
-                    tweet = GetLatestTwitter(user);
-                    if (tweet.Id == -1)
-                        continue;
-                }
-                catch (Exception e)
-                {
-                    LogToFile(e.Message);
-                    LogToFile("Continuing");
+                TwitterStatus tweet = GetLatestTwitter(user);
+                if (tweet == null || tweet.Id == -1)
                     continue;
-                }
 
                 if (!MessageDisplayed(tweet.IdStr, user.guildID))
                 {
@@ -150,6 +142,11 @@ namespace ChronoBot
                 return null;
             }
 
+            if (tweets == null)
+            {
+                return null;
+            }
+
             var twitterStatuses = tweets as TwitterStatus[] ?? tweets.ToArray();
             if (!twitterStatuses.Any())
             {
@@ -159,7 +156,7 @@ namespace ChronoBot
             TwitterStatus tweet = twitterStatuses.ElementAt(0);
             if (_client.GetGuild(ud.guildID).GetTextChannel(ud.channelID).IsNsfw)
             {
-                if (!tweet.ExtendedEntities.Any() || !tweet.ExtendedEntities.Media.Any() ||
+                if (tweet.ExtendedEntities == null || !tweet.ExtendedEntities.Any() || !tweet.ExtendedEntities.Media.Any() ||
                     tweet.ExtendedEntities.Media.ElementAt(0).ExtendedEntityType != TwitterMediaType.Photo)
                     tweet.Id = -1;
             }
@@ -325,11 +322,6 @@ namespace ChronoBot
             base.MessageReceivedSelf(socketMessage);
 
             //PostRestOfImages(socketMessage);
-        }
-
-        protected override void LogToFile(string message)
-        {
-            base.LogToFile(message);
         }
     }
 }

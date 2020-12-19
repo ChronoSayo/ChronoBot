@@ -30,7 +30,7 @@ namespace ChronoBot
             _channelLink = "https://www.youtube.com/user/";
             _altCommand = Info.COMMAND_PREFIX + "yt";
 
-            UpdateTimer(60 * 5);//5 minutes
+            UpdateTimer(3);
 
             _howToMessage = _howToMessage.Replace(_USER_KEYWORD, "YouTube channel");
 
@@ -52,7 +52,7 @@ namespace ChronoBot
                 }
                 catch
                 {
-                    Console.WriteLine("NO VIDEO ID FOUND FOR " + user);
+                    // ignored
                 }
             }
 

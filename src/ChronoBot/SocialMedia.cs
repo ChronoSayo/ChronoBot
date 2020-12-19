@@ -1,5 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Timers;
+using Discord;
 using Discord.WebSocket;
 using TwitchLib.Api;
 
@@ -51,8 +55,7 @@ namespace ChronoBot
 
             _fileSystem.Save(temp);
 
-            UserData user = temp;
-            LogToFile($"Adding {user.name} {user.id} {user.channelID} {user.guildID} {user.socialMedia}");
+            LogToFile(LogSeverity.Info, $"Saved user: {temp.socialMedia} {temp.name} {temp.guildID} {temp.channelID} {temp.id}");
         }
 
         protected virtual void SetCommands(string socialMedia)
@@ -157,7 +160,7 @@ namespace ChronoBot
                     _fileSystem.DeleteInFile(user);
                     _users.RemoveAt(i);
                     Info.SendMessageToChannel(socketMessage, "Successfully deleted " + user.name);
-                    LogToFile($"Deleted {user.name} {user.id} {user.channelID} {user.guildID} {user.socialMedia}");
+                    //LogToFile(new LogMessage(LogSeverity.Info, "" $"Deleted {user.name} {user.id} {user.channelID} {user.guildID} {user.socialMedia}"));
                 }
                 else
                     Info.SendMessageToChannel(socketMessage, "Failed to delete: " + split[1]);
@@ -225,7 +228,7 @@ namespace ChronoBot
                         _client.GetGuild(guildId).GetTextChannel(channelId).SendMessageAsync(message);
 
                     UserData user = _users[i];
-                    LogToFile($"Updating {user.name} {user.id} {user.channelID} {user.guildID} {user.socialMedia}");
+                    //LogToFile($"Updating {user.name} {user.id} {user.channelID} {user.guildID} {user.socialMedia}");
                 }
             }
         }
@@ -327,9 +330,10 @@ namespace ChronoBot
             return index;
         }
 
-        protected virtual void LogToFile(string message)
+        protected virtual void LogToFile(LogSeverity severity, string message, Exception e = null, [CallerMemberName] string caller = null)
         {
-            Program.LogFile(message);
+            StackTrace st = new StackTrace();
+            Program.Logger(new LogMessage(severity, st.GetFrame(1).GetMethod().ReflectedType + "." + caller, message, e));
         }
 
         public virtual void MessageReceived(SocketMessage socketMessage)

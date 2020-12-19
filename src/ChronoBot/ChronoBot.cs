@@ -3,6 +3,8 @@ using Discord.WebSocket;
 using System.Timers;
 using System.Threading.Tasks;
 using System;
+using System.Diagnostics;
+using System.Reflection;
 
 namespace ChronoBot
 {
@@ -84,7 +86,10 @@ namespace ChronoBot
             }
             catch(Exception e)
             {
-                Program.LogFile(e.Message);
+                StackTrace st = new StackTrace();
+                MethodBase mb = st.GetFrame(1).GetMethod();
+                Program.Logger(new LogMessage(LogSeverity.Error, mb.ReflectedType + "." + mb,
+                    "Error receiving message.", e));
             }
             return Task.CompletedTask;
         }

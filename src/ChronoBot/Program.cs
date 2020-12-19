@@ -29,7 +29,7 @@ namespace ChronoBot
             });
         }
 
-        private static Task Logger(LogMessage message)
+        public static Task Logger(LogMessage message)
         {
             var cc = Console.ForegroundColor;
             switch (message.Severity)
@@ -50,8 +50,18 @@ namespace ChronoBot
                     break;
             }
             Console.ForegroundColor = cc;
-            Console.WriteLine($"{DateTime.Now,-19} [{message.Severity,8}] {message.Source}: {message.Message}");
-            LogFile($"{DateTime.Now,-19} [{message.Severity,8}] {message.Source}: {message.Message}");
+            string exception = message.Exception == null ? string.Empty : $"\n>>>>>{message.Exception}";
+            Console.WriteLine($"{DateTime.Now,-19} [{message.Severity,8}] {message.Source}: {message.Message} {exception}");
+
+            if (!File.Exists(_logFile) || DateTime.Today != _today)
+            {
+                _today = DateTime.Today;
+                FileStream file = File.Create(_logFile);
+                file.Close();
+            }
+
+            File.AppendAllLines(_logFile, new List<string> { $"{DateTime.Now,-19} [{message.Severity,8}] {message.Source}: {message.Message}" });
+
             return Task.CompletedTask;
         }
 
@@ -72,18 +82,6 @@ namespace ChronoBot
             ChronoBot cb = new ChronoBot(_client);
             
             await Task.Delay(-1);
-        }
-
-        public static void LogFile(string message)
-        {
-            if (!File.Exists(_logFile) || DateTime.Today != _today)
-            {
-                _today = DateTime.Today;
-                FileStream file = File.Create(_logFile);
-                file.Close();
-            }
-
-            File.AppendAllLines(_logFile, new List<string> { DateTime.Now.ToString(CultureInfo.InvariantCulture), message });
         }
     }
 
