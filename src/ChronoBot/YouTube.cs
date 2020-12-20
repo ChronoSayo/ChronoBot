@@ -1,11 +1,7 @@
-﻿using Discord;
-using Discord.WebSocket;
-using System;
+﻿using Discord.WebSocket;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Google.Apis.Services;
 using Google.Apis.YouTube.v3;
 using Google.Apis.YouTube.v3.Data;

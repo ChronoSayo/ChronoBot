@@ -1,12 +1,7 @@
 ﻿using Discord.WebSocket;
-using Discord.Logging;
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
-using Discord;
-using Serilog;
 using TweetSharp;
 
 namespace ChronoBot

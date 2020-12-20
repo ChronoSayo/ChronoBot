@@ -2,9 +2,7 @@
 using Discord.WebSocket;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace ChronoBot
