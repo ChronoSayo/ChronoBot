@@ -50,7 +50,7 @@ namespace ChronoBot
                     break;
             }
             Console.ForegroundColor = cc;
-            string exception = message.Exception == null ? string.Empty : $"\n>>>>>{message.Exception}";
+            string exception = message.Exception == null ? string.Empty : $"\n{message.Exception}";
             Console.WriteLine($"{DateTime.Now,-19} [{message.Severity,8}] {message.Source}: {message.Message} {exception}");
 
             if (!File.Exists(_logFile) || DateTime.Today != _today)
@@ -60,7 +60,7 @@ namespace ChronoBot
                 file.Close();
             }
 
-            File.AppendAllLines(_logFile, new List<string> { $"{DateTime.Now,-19} [{message.Severity,8}] {message.Source}: {message.Message}" });
+            File.AppendAllLines(_logFile, new List<string> { $"{DateTime.Now,-19} [{message.Severity,8}] {message.Source}: {message.Message} {exception}" });
 
             return Task.CompletedTask;
         }

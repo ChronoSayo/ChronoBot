@@ -25,7 +25,7 @@ namespace ChronoBot
         {
             _api = new TwitchAPI();
             string[] lines = File.ReadAllLines("Memory Card/TwitchToken.txt");
-            _api.Settings.AccessToken = lines[0];
+            _api.Settings.ClientId = lines[0];
             _api.Settings.Secret = lines[1];
 
             UpdateTimer(5);
@@ -55,8 +55,9 @@ namespace ChronoBot
                 var user = _api.V5.Users.GetUserByNameAsync(name).GetAwaiter().GetResult();
                 foundStreamer = GetStreamer(name).Id;
             }
-            catch
+            catch(Exception e)
             {
+                LogToFile(LogSeverity.Warning, $"Can't find {name}.", e);
                 foundStreamer = string.Empty;
             }
 
@@ -90,7 +91,7 @@ namespace ChronoBot
                     if (ud.socialMedia != "Twitch")
                         continue;
                 }
-                catch(Exception e)
+                catch
                 {
                     return;
                 }
