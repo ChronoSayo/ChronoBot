@@ -1,0 +1,2 @@
+Replace this text with your client ID here. 
+Replace this text with your secret here. 

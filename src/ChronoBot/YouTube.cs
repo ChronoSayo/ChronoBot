@@ -26,7 +26,7 @@ namespace ChronoBot
             _channelLink = "https://www.youtube.com/user/";
             _altCommand = Info.COMMAND_PREFIX + "yt";
 
-            UpdateTimer(3);
+            UpdateTimer(90);
 
             _howToMessage = _howToMessage.Replace(_USER_KEYWORD, "YouTube channel");
 
