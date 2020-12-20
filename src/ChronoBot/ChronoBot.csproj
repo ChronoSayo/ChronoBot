@@ -261,6 +261,25 @@
     <Error Condition="!Exists('..\..\packages\NETStandard.Library.2.0.3\build\netstandard2.0\NETStandard.Library.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\NETStandard.Library.2.0.3\build\netstandard2.0\NETStandard.Library.targets'))" />
   </Target>
   <PropertyGroup>
-    <PostBuildEvent>xcopy "$(TargetDir)*" "$(SolutionDir)build\" /y /i /r</PostBuildEvent>
+    <PostBuildEvent>xcopy "$(TargetDir)*" "$(SolutionDir)build\" /y /i /r
+
+mkdir "$(SolutionDir)build\Memory Card"
+cd "$(SolutionDir)build\Memory Card"
+
+type nul &gt; "DiscordToken.txt"
+echo Replace this text with your token here. &gt; "DiscordToken.txt"
+
+type nul &gt; "TwitterToken.txt"
+echo Replace this text with your consumer key here. &gt; "TwitterToken.txt"
+echo Replace this text with your consumer secret here. &gt;&gt; "TwitterToken.txt"
+echo Replace this text with your token here. &gt;&gt; "TwitterToken.txt"
+echo Replace this text with your token secret here. &gt;&gt; "TwitterToken.txt"
+
+type nul &gt; "TwitchToken.txt"
+echo Replace this text with your client ID here. &gt; "TwitchToken.txt"
+echo Replace this text with your secret here. &gt;&gt; "TwitchToken.txt"
+
+type nul &gt; "YouTubeToken.txt"
+echo Replace this text with your API key here. &gt; "YouTubeToken.txt"</PostBuildEvent>
   </PropertyGroup>
 </Project>

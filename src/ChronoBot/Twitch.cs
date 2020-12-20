@@ -27,7 +27,7 @@ namespace ChronoBot
             _api.Settings.ClientId = lines[0];
             _api.Settings.Secret = lines[1];
 
-            UpdateTimer(5);
+            UpdateTimer(120);
 
             string s = "twitch";
             _mineTwitchCommmand = Info.COMMAND_PREFIX + s + "mine";

@@ -16,7 +16,7 @@ namespace ChronoBot
 
             Authenticate();
 
-            UpdateTimer(3);
+            UpdateTimer(60);
 
             SetCommands("twitter");
             _hyperlink = "https://twitter.com/@name/status/@id";
