@@ -1,14 +1,9 @@
 ﻿using System;
 using System.Net;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.ImageSharp.Processing;
-using SixLabors.ImageSharp.Processing.Transforms;
 using System.IO;
 
 namespace ChronoBot
@@ -48,14 +43,14 @@ namespace ChronoBot
 
         public string AddImageToImage(string baseImage, string filePath, int width, int height)
         {
-            Image<Rgba32> background = Image.Load(baseImage);
+            Image<Rgba32> background = (Image<Rgba32>) Image.Load(baseImage);
             Image<Rgba32> image = null;
             string result = GetFilePathToImagesSelfie + "selfie.png";
             while (image == null)
             {
                 try
                 {
-                    image = Image.Load(filePath);
+                    image = (Image<Rgba32>)Image.Load(filePath);
                 }
                 catch (Exception e)
                 {

@@ -3,6 +3,8 @@ using Discord.WebSocket;
 using System.Timers;
 using System.Threading.Tasks;
 using System;
+using System.Diagnostics;
+using System.Reflection;
 
 namespace ChronoBot
 {
@@ -44,7 +46,7 @@ namespace ChronoBot
             //_instagram = new Instagram(_client);
 
             //Tools
-            _remind = new Remind(_client);
+            //_remind = new Remind(_client);
             _selfie = new Selfie(_client);
             _calculator = new Calculator(_client);
 
@@ -84,7 +86,10 @@ namespace ChronoBot
             }
             catch(Exception e)
             {
-                Console.WriteLine(e.Message);
+                StackTrace st = new StackTrace();
+                MethodBase mb = st.GetFrame(1).GetMethod();
+                Program.Logger(new LogMessage(LogSeverity.Error, mb.ReflectedType + "." + mb,
+                    "Error receiving message.", e));
             }
             return Task.CompletedTask;
         }
@@ -98,7 +103,7 @@ namespace ChronoBot
             _twitch.MessageReceived(socketMessage);
             _youtube.MessageReceived(socketMessage);
 
-            _remind.MessageReceived(socketMessage);
+            //_remind.MessageReceived(socketMessage);
             _selfie.MessageReceived(socketMessage);
             _calculator.MessageReceived(socketMessage);
 

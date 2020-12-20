@@ -1,6 +1,6 @@
 ﻿using Discord.WebSocket;
-using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using TweetSharp;
 
@@ -9,10 +9,6 @@ namespace ChronoBot
     sealed class Twitter : SocialMedia
     {
         private TwitterService _service;
-        private string _consumerKey;
-        private string _consumerKeySecret;
-        private string _accessToken;
-        private string _accessTokenSecret;
 
         public Twitter(DiscordSocketClient client) : base(client)
         {
@@ -20,14 +16,14 @@ namespace ChronoBot
 
             Authenticate();
 
-            UpdateTimer(60);//1 minute.
+            UpdateTimer(3);
 
             SetCommands("twitter");
             _hyperlink = "https://twitter.com/@name/status/@id";
 
             _howToMessage = _howToMessage.Replace(_USER_KEYWORD, "Twitter user");
 
-            LoadOrCreateFromFile("twitternames");
+            LoadOrCreateFromFile();
         }
 
         private void PostRestOfImages(SocketMessage socketMessage)
@@ -103,37 +99,24 @@ namespace ChronoBot
             List<UserData> newTweets = new List<UserData>();
             for (int i = 0; i < _users.Count; i++)
             {
-                TwitterStatus tweet;
-                //Try-catch in case someone was removing a Twitter while posting update.
-                try
-                {
-                    tweet = GetLatestTwitter(_users[i]);
-                    if (tweet.Id == -1)
-                        continue;
-                }
-                catch (Exception e)
-                {
+                UserData user = _users[i];
+                if(user.socialMedia != "Twitter")
                     continue;
-                }
+                
+                TwitterStatus tweet = GetLatestTwitter(user);
+                if (tweet == null || tweet.Id == -1)
+                    continue;
 
-                if (!MessageDisplayed(tweet.Id.ToString(), _users[i].guildID))
+                if (!MessageDisplayed(tweet.IdStr, user.guildID))
                 {
-                    UpdateData(tweet, i);
-                    newTweets.Add(_users[i]);
-                    string line = FormatLineToFile(_users[i].name, _users[i].guildID, _users[i].channelID, _users[i].id);
-                    string find = line.Substring(0, line.Length - _users[i].id.Length);
-                    _fileSystem.UpdateFile(find, line);
+                    user.id = tweet.IdStr;
+                    _users[i] = user;
+                    newTweets.Add(user);
+                    _fileSystem.UpdateFile(user);
                 }
             }
 
             UpdateSocialMedia(newTweets);
-        }
-
-        private void UpdateData(TwitterStatus tweet, int i)
-        {
-            UserData temp = _users[i];
-            temp.id = tweet == null ? "0" : tweet.IdStr;
-            _users[i] = temp;
         }
 
         private TwitterStatus GetLatestTwitter(UserData ud)
@@ -154,6 +137,11 @@ namespace ChronoBot
                 return null;
             }
 
+            if (tweets == null)
+            {
+                return null;
+            }
+
             var twitterStatuses = tweets as TwitterStatus[] ?? tweets.ToArray();
             if (!twitterStatuses.Any())
             {
@@ -163,7 +151,7 @@ namespace ChronoBot
             TwitterStatus tweet = twitterStatuses.ElementAt(0);
             if (_client.GetGuild(ud.guildID).GetTextChannel(ud.channelID).IsNsfw)
             {
-                if (!tweet.ExtendedEntities.Any() || !tweet.ExtendedEntities.Media.Any() ||
+                if (tweet.ExtendedEntities == null || !tweet.ExtendedEntities.Any() || !tweet.ExtendedEntities.Media.Any() ||
                     tweet.ExtendedEntities.Media.ElementAt(0).ExtendedEntityType != TwitterMediaType.Photo)
                     tweet.Id = -1;
             }
@@ -189,7 +177,7 @@ namespace ChronoBot
 
                 string username = split[1];
                 ulong guildId = Info.GetGuildIDFromSocketMessage(socketMessage);
-                if (!Duplicate(guildId, username))
+                if (!Duplicate(guildId, username, "Twitter"))
                 {
                     if (IsLegitTwitterHandle(username, out username))
                     {
@@ -197,7 +185,7 @@ namespace ChronoBot
                         if (split.Length > 2 && split[2].Contains(socketMessage.MentionedChannels.ElementAt(0).Id.ToString()))
                             channelId = socketMessage.MentionedChannels.ElementAt(0).Id;
 
-                        CreateSocialMediaUser(username, guildId, channelId, "0", true);
+                        CreateSocialMediaUser(username, guildId, channelId, "0", "Twitter");
 
                         string message = "Successfully added " + username + "\n" +
                             "https://twitter.com/" + username;
@@ -232,8 +220,10 @@ namespace ChronoBot
                         TwitterStatus tweet = GetLatestTwitter(_users[i]);
                         if (tweet != null)
                         {
-                            UpdateData(tweet, i);
-                            Info.SendMessageToChannel(socketMessage, GetTwitterURL(_users[i]));
+                            UserData temp = _users[i];
+                            temp.id = tweet.IdStr;
+                            _users[i] = temp;
+                            Info.SendMessageToChannel(socketMessage, GetTwitterUrl(_users[i]));
                         }
                         else
                             Info.SendMessageToChannel(socketMessage, 
@@ -318,13 +308,8 @@ namespace ChronoBot
 
         private void Authenticate()
         {
-            _consumerKey = "UCGwoyki7MKzOa10KwfGUv62n";
-            _consumerKeySecret = "Sed76AmSZQvTIEUz7hxxq9JYExURxiGrUHSkJb1PGODlJwyqoH";
-            _accessToken = "813345883144261632-V5WRf6iInBPIBJM0ZSRHj5cMlvlPFmK";
-            _accessTokenSecret = "ryvvUSDuXf1rQWvFY4nQOFoYtEcPkyG8toNm7MxlwPpG0";
-
-            _service = new TwitterService(_consumerKey, _consumerKeySecret, _accessToken, _accessTokenSecret);
-            _service.TweetMode = "extended";
+            string[] lines = File.ReadAllLines("Memory Card/TwitterToken.txt");
+            _service = new TwitterService(lines[0], lines[1], lines[2], lines[3]) {TweetMode = "extended"};
         }
 
         public override void MessageReceivedSelf(SocketMessage socketMessage)

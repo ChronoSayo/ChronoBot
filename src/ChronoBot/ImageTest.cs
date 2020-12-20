@@ -1,15 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Text;
-using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.ImageSharp.Processing;
-using SixLabors.ImageSharp.Processing.Transforms;
+using Image = SixLabors.ImageSharp.Image;
 
 //Test class; remove later
 namespace ChronoBot
@@ -51,13 +47,13 @@ namespace ChronoBot
                 WebClient wc = new WebClient();
                 wc.DownloadFile(url, $"Pics/test{count}.jpg");
 
-                using (Image<Rgba32> image = SixLabors.ImageSharp.Image.Load($"Pics/test{count}.jpg")) //open the file and detect the file type and decode it
+                using (Image<Rgba32> image = (Image < Rgba32 > )Image.Load($"Pics/test{count}.jpg")) //open the file and detect the file type and decode it
                 {
                     for (int i = 0; i < 500; i++)
                     {
                         int x = Info.GetRandom(0, 128);
                         int y = Info.GetRandom(0, 128);
-                        image[x, y] = Rgba32.Blue;
+                        image[x, y] = Rgba32.ParseHex("0000FF");
                     }
                     image.Save($"Pics/result{count}.jpg"); // based on the file extension pick an encoder then encode and write the data to disk
 
