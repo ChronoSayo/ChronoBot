@@ -5,13 +5,14 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Xml.Linq;
+using ChronoBot.SocialMedias;
 using Discord;
 
-namespace ChronoBot
+namespace ChronoBot.Systems
 {
     class FileSystem
     {
-        private string _path;
+        private readonly string _path;
 
         public FileSystem()
         {

@@ -1,24 +1,24 @@
-﻿using Discord;
-using Discord.WebSocket;
-using System;
-using System.Threading;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
+using Discord;
+using Discord.WebSocket;
 using TwitchLib.Api;
 using TwitchLib.Api.Helix.Models.Users;
 
-namespace ChronoBot
+namespace ChronoBot.SocialMedias
 {
     class Twitch : SocialMedia
     {
-        private TwitchAPI _api;
-        private string _mineTwitchCommmand;
+        private readonly TwitchAPI _api;
+        private readonly string _mineTwitchCommand;
         /// <summary>
         /// bool is to check if the streamer is online.
         /// </summary>
-        private Dictionary<UserData, bool> _streamers;
+        private readonly Dictionary<UserData, bool> _streamers;
 
         public Twitch(DiscordSocketClient client) : base(client)
         {
@@ -30,11 +30,11 @@ namespace ChronoBot
             UpdateTimer(120);
 
             string s = "twitch";
-            _mineTwitchCommmand = Info.COMMAND_PREFIX + s + "mine";
+            _mineTwitchCommand = Info.COMMAND_PREFIX + s + "mine";
             SetCommands(s);
 
             _howToMessage = _howToMessage.Replace(_USER_KEYWORD, "streamer");
-            _howToMessage += "***\n" + _mineTwitchCommmand + " [name] [channel]\n" +
+            _howToMessage += "***\n" + _mineTwitchCommand + " [name] [channel]\n" +
                     "***-Adds all streamers the user follows based on Discord name." +
                     " Add name if Discord name isn't the same as Twitch name. Max 100 per request.";
 
@@ -259,7 +259,7 @@ namespace ChronoBot
         private void AddMyTwitchFollows(SocketMessage socketMessage)
         {
             string message = socketMessage.ToString().ToLower();
-            if (message.Contains(_mineTwitchCommmand))
+            if (message.Contains(_mineTwitchCommand))
             {
                 string[] split = message.Split(' '); //0: Command. 1: User's name. 2: Channel.
                 if (split.Length > 3)

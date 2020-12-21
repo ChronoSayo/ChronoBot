@@ -5,12 +5,15 @@ using System.Threading.Tasks;
 using System;
 using System.Diagnostics;
 using System.Reflection;
+using ChronoBot.SocialMedias;
+using ChronoBot.Tests;
+using ChronoBot.Tools;
 
 namespace ChronoBot
 {
     class ChronoBot
     {
-        private DiscordSocketClient _client;
+        private readonly DiscordSocketClient _client;
         private Timer _delayInitiation;
         private SocialMedia _twitter, _twitch, _youtube, _instagram;
         private Remind _remind;
@@ -48,7 +51,7 @@ namespace ChronoBot
             //Tools
             //_remind = new Remind(_client);
             _selfie = new Selfie(_client);
-            _calculator = new Calculator(_client);
+            _calculator = new Calculator();
 
             //Debug
             test = new ImageTest(_client);

@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Timers;
+using ChronoBot.Systems;
 using Discord;
 using Discord.WebSocket;
 using TwitchLib.Api;
 
-namespace ChronoBot
+namespace ChronoBot.SocialMedias
 {
     class SocialMedia
     {

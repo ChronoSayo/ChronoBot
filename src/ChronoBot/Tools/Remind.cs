@@ -1,12 +1,8 @@
-﻿using Discord;
-using Discord.Commands;
-using Discord.WebSocket;
+﻿using Discord.WebSocket;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Timers;
-using System.Threading.Tasks;
+using ChronoBot.Systems;
 
 namespace ChronoBot
 {
@@ -19,33 +15,33 @@ namespace ChronoBot
     /// </summary>
     class Remind
     {
-        private DiscordSocketClient _client;
+        private readonly DiscordSocketClient _client;
         private Timer _checkInterval;
         private FileSystem _fileSystem;
-        private int _ID;
-        private List<Reminders> _reminders;
+        private int _id;
+        private readonly List<Reminders> _reminders;
 
-        private const string _ADD_COMMAND = Info.COMMAND_PREFIX + "remindme";
-        private const string _LIST_COMMAND = Info.COMMAND_PREFIX + "remindlist";
-        private const string _DELETE_COMMAND = Info.COMMAND_PREFIX + "reminddelete";
-        private const string _HOW_TO_COMMAND = Info.COMMAND_PREFIX + "remind";
-        private const string _HOW_TO = "__HOW TO USE REMIND COMMAND:__ \n" +
-            "***" + _ADD_COMMAND + "***\n" +
+        private const string AddCommand = Info.COMMAND_PREFIX + "remindme";
+        private const string ListCommand = Info.COMMAND_PREFIX + "remindlist";
+        private const string DeleteCommand = Info.COMMAND_PREFIX + "reminddelete";
+        private const string HowToCommand = Info.COMMAND_PREFIX + "remind";
+        private const string HowTo = "__HOW TO USE REMIND COMMAND:__ \n" +
+            "***" + AddCommand + "***\n" +
             "Message here. (Optional).\n" +
             "Time here ([hh:mm] [dd/mm]). If no time, remind is activated immediately. (Optional).\n" +
             "Repeat every [x] day(s) here. If no repeat, remind is once. (Optional).\n\n" +
-            "***" + _LIST_COMMAND + "*** shows list of your reminders.\n" +
-            "***" + _DELETE_COMMAND + "*** [id] deletes a reminder. " +
-                "[id] is the ID number displayed from ***" + _LIST_COMMAND + "***";
+            "***" + ListCommand + "*** shows list of your reminders.\n" +
+            "***" + DeleteCommand + "*** [id] deletes a reminder. " +
+                "[id] is the ID number displayed from ***" + ListCommand + "***";
 
         struct Reminders
         {
-            public ulong userID;
-            public DateTime time;
-            public string message;
-            public bool repeat;
-            public int repeatDays;
-            public int ID;
+            public ulong UserId;
+            public DateTime Time;
+            public string Message;
+            public bool Repeat;
+            public int RepeatDays;
+            public int Id;
         }
 
         public Remind(DiscordSocketClient client)
@@ -54,7 +50,7 @@ namespace ChronoBot
 
             _reminders = new List<Reminders>();
 
-            _ID = 0;
+            _id = 0;
 
             CreateFile();
             CheckInterval();
@@ -75,17 +71,17 @@ namespace ChronoBot
             //}
         }
 
-        private void HowTo(SocketMessage socketMessage)
+        private void HowToMessage(SocketMessage socketMessage)
         {
             string msg = socketMessage.ToString();
-            if (msg.ToLower() == _HOW_TO_COMMAND.ToLower())
-                Info.SendMessageToChannel(socketMessage, _HOW_TO);
+            if (msg.ToLower() == HowToCommand.ToLower())
+                Info.SendMessageToChannel(socketMessage, HowTo);
         }
 
         private void ListReminders(SocketMessage socketMessage)
         {
             string msg = socketMessage.ToString();
-            if (msg.ToLower() == _LIST_COMMAND.ToLower())
+            if (msg.ToLower() == ListCommand.ToLower())
             {
                 string list = string.Empty;
                 for (int i = 0; i < _reminders.Count; i++)
@@ -95,12 +91,12 @@ namespace ChronoBot
                     if (Info.DEBUG)
                         addToList = true;
                     else
-                        addToList = _reminders[i].userID == socketMessage.Author.Id;
+                        addToList = _reminders[i].UserId == socketMessage.Author.Id;
                     if (addToList)
                     {
-                        list += Info.BULLET_LIST + " " + _reminders[i].message + "\n*" +
-                            _client.GetUser(_reminders[i].userID).Username + "*\n" +
-                            _reminders[i].time + " **ID: " + _reminders[i].ID + "**\n";
+                        list += Info.BULLET_LIST + " " + _reminders[i].Message + "\n*" +
+                            _client.GetUser(_reminders[i].UserId).Username + "*\n" +
+                            _reminders[i].Time + " **ID: " + _reminders[i].Id + "**\n";
                     }
                 }
                 if (string.IsNullOrEmpty(list))
@@ -115,7 +111,7 @@ namespace ChronoBot
             string message = socketMessage.ToString();
             string[] split = message.Split(' ');
             string command = split[0];
-            if (command.ToLower() == _DELETE_COMMAND)
+            if (command.ToLower() == DeleteCommand)
             {
                 bool success = split.Length == 2;
                 if (success)
@@ -174,13 +170,13 @@ namespace ChronoBot
 
         private void Save(Reminders newReminder)
         {
-            string msg = newReminder.message;
-            string time = newReminder.time.ToString();
-            ulong userID = newReminder.userID;
-            _ID++;
-            int id = newReminder.ID = _ID;
-            int repeat = newReminder.repeat ? 1 : 0;
-            int repeatDays = newReminder.repeatDays;
+            string msg = newReminder.Message;
+            string time = newReminder.Time.ToString();
+            ulong userID = newReminder.UserId;
+            _id++;
+            int id = newReminder.Id = _id;
+            int repeat = newReminder.Repeat ? 1 : 0;
+            int repeatDays = newReminder.RepeatDays;
 
             string save = msg + "|" + time + "|" + userID + "|%" + id + "|" + repeat + "|" + repeatDays;
             //_fileSystem.Save(save);
@@ -191,12 +187,12 @@ namespace ChronoBot
         private void Update(Reminders newReminder, int i)
         {
             _reminders[i] = newReminder;
-            string msg = newReminder.message;
-            string time = newReminder.time.ToString();
-            ulong userID = newReminder.userID;
-            int id = newReminder.ID;
-            int repeat = newReminder.repeat ? 1 : 0;
-            int repeatDays = newReminder.repeatDays;
+            string msg = newReminder.Message;
+            string time = newReminder.Time.ToString();
+            ulong userID = newReminder.UserId;
+            int id = newReminder.Id;
+            int repeat = newReminder.Repeat ? 1 : 0;
+            int repeatDays = newReminder.RepeatDays;
 
             string updateText = msg + "|" + time + "|" + userID + "|%" + id + "|" + repeat + "|" + repeatDays;
             //_fileSystem.UpdateFile(Info.ID_PREFIX + id, updateText);
@@ -223,17 +219,17 @@ namespace ChronoBot
 
             Reminders remind = new Reminders
             {
-                message = msg,
-                time = DateTime.Parse(time),
-                userID = ulong.Parse(userID),
-                ID = int.Parse(id),
-                repeat = repeatText == "0" ? false : true,
-                repeatDays = int.Parse(repeatDays)
+                Message = msg,
+                Time = DateTime.Parse(time),
+                UserId = ulong.Parse(userID),
+                Id = int.Parse(id),
+                Repeat = repeatText == "0" ? false : true,
+                RepeatDays = int.Parse(repeatDays)
             };
 
             _reminders.Add(remind);
 
-            _ID = remind.ID;
+            _id = remind.Id;
         }
 
         private void CheckInterval()
@@ -256,17 +252,17 @@ namespace ChronoBot
             for (int i = 0; i < _reminders.Count; i++)
             {
                 Reminders r = _reminders[i];
-                if (r.time <= DateTime.Now)
+                if (r.Time <= DateTime.Now)
                 {
-                    SocketUser user = _client.GetUser(r.userID);
-                    string message = "***REMINDER*** \n" + r.message;
+                    SocketUser user = _client.GetUser(r.UserId);
+                    string message = "***REMINDER*** \n" + r.Message;
                     //Failed to give remind will push a message on how to do it.
-                    if (r.message == string.Empty)
-                        message += _HOW_TO;
+                    if (r.Message == string.Empty)
+                        message += HowTo;
                     Info.SendMessageToUser(user, message);
-                    if (r.repeat)
+                    if (r.Repeat)
                     {
-                        r.time = r.time.AddDays(r.repeatDays);
+                        r.Time = r.Time.AddDays(r.RepeatDays);
                         Update(r, i);
                     }
                     else
@@ -293,13 +289,13 @@ namespace ChronoBot
             HandleRemind(socketMessage);
             DeleteReminder(socketMessage);
             ListReminders(socketMessage);
-            HowTo(socketMessage);
+            HowToMessage(socketMessage);
         }
 
         private void HandleRemind(SocketMessage socketMessage)
         {
             string sm = socketMessage.ToString();
-            if (!sm.Contains(_ADD_COMMAND))
+            if (!sm.Contains(AddCommand))
                 return;
             Reminders newReminder = new Reminders();
             //0: command, 1: message, 2: time (optional), 3: repeat (optional, only if there is time)
@@ -308,37 +304,37 @@ namespace ChronoBot
             int i = 1;
             //Store message
             if (lines.Length > i)
-                newReminder.message = lines[i];
+                newReminder.Message = lines[i];
             else
-                newReminder.message = string.Empty;
+                newReminder.Message = string.Empty;
 
             //Store time
             i++;
             if (lines.Length > i)
-                newReminder.time = GetTime(lines[i]);
+                newReminder.Time = GetTime(lines[i]);
             else
-                newReminder.time = DateTime.Now;
+                newReminder.Time = DateTime.Now;
 
             //Store repeat and days
             i++;
-            if (newReminder.time != DateTime.Now && lines.Length > i)
+            if (newReminder.Time != DateTime.Now && lines.Length > i)
             {
                 int days = int.MinValue;
-                newReminder.repeat = GetRepeat(lines[i], out days);
-                if (newReminder.repeat)
-                    newReminder.repeatDays = days;
+                newReminder.Repeat = GetRepeat(lines[i], out days);
+                if (newReminder.Repeat)
+                    newReminder.RepeatDays = days;
             }
             else
-                newReminder.repeat = false;
+                newReminder.Repeat = false;
 
             //Store user ID
-            newReminder.userID = socketMessage.Author.Id;
+            newReminder.UserId = socketMessage.Author.Id;
 
             //Save
             Save(newReminder);
 
             //Confirm
-            string confirmedMessage = "Reminding " + socketMessage.Author.Mention + " at " + newReminder.time + ".";
+            string confirmedMessage = "Reminding " + socketMessage.Author.Mention + " at " + newReminder.Time + ".";
             Info.SendMessageToChannel(socketMessage, confirmedMessage);
         }
 
@@ -347,7 +343,7 @@ namespace ChronoBot
             int index = -1;
             for (int i = 0; i < _reminders.Count; i++)
             {
-                if (id == _reminders[i].ID)
+                if (id == _reminders[i].Id)
                 {
                     index = i;
                     break;

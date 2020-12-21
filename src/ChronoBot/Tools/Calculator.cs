@@ -2,17 +2,11 @@
 using System.Text.RegularExpressions;
 using Discord.WebSocket;
 
-namespace ChronoBot
+namespace ChronoBot.Tools
 {
     class Calculator
     {
-        private DiscordSocketClient _client;
-        private const string COMMAND = Info.COMMAND_PREFIX + "calc";
-
-        public Calculator(DiscordSocketClient client)
-        {
-            _client = client;
-        }
+        private const string Command = Info.COMMAND_PREFIX + "calc";
 
         public void MessageReceived(SocketMessage socketMessage)
         {
@@ -25,11 +19,11 @@ namespace ChronoBot
         private void Calculate(SocketMessage socketMessage)
         {
             string message = socketMessage.ToString();
-            if (!message.ToLower().Contains(COMMAND))
+            if (!message.ToLower().Contains(Command))
                 return;
 
             string[] split = message.Split(' '); //0: Command. >1: calculations
-            if (split[0] != COMMAND || split.Length == 1)
+            if (split[0] != Command || split.Length == 1)
                 return;
 
             string calculations = message.Remove(0, split[0].Length);

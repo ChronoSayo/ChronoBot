@@ -1,18 +1,18 @@
-﻿using Discord.WebSocket;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Discord.WebSocket;
 using Google.Apis.Services;
 using Google.Apis.YouTube.v3;
 using Google.Apis.YouTube.v3.Data;
 
-namespace ChronoBot
+namespace ChronoBot.SocialMedias
 {
     class YouTube : SocialMedia
     {
         private YouTubeService _service;
-        private string _channelLink;
-        private string _altCommand;
+        private readonly string _channelLink;
+        private readonly string _altCommand;
 
         public YouTube(DiscordSocketClient client) : base(client)
         {

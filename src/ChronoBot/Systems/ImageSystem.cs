@@ -1,25 +1,20 @@
 ﻿using System;
-using System.Net;
 using System.Collections.Generic;
+using System.IO;
+using System.Net;
 using System.Threading;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
-using System.IO;
 
-namespace ChronoBot
+namespace ChronoBot.Systems
 {
     class ImageSystem
     {
 
         public struct ImageInfo
         {
-            public string filePath;
-            public int w, h;
-        }
-
-        public ImageSystem()
-        {
-
+            public string FilePath;
+            public int W, H;
         }
 
         public string AddImagesToImage(string baseImage, List<ImageInfo> imageInfos)
@@ -35,7 +30,7 @@ namespace ChronoBot
                     if (i > 0)
                         bg = result;
 
-                    result = AddImageToImage(bg, ii.filePath, ii.w, ii.h);
+                    result = AddImageToImage(bg, ii.FilePath, ii.W, ii.H);
                 }
             }
             return result;
