@@ -232,6 +232,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Games\RockPaperScissors.cs" />
     <Compile Include="Tools\Calculator.cs" />
     <Compile Include="ChronoBot.cs" />
     <Compile Include="Systems\FileSystem.cs" />
