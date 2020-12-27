@@ -17,7 +17,7 @@ namespace ChronoBot
     {
         private readonly DiscordSocketClient _client;
         private Timer _checkInterval;
-        private FileSystem _fileSystem;
+        private SocialMediaFileSystem _fileSystem;
         private int _id;
         private readonly List<Reminders> _reminders;
 
@@ -58,7 +58,7 @@ namespace ChronoBot
 
         private void CreateFile()
         {
-            _fileSystem = new FileSystem();
+            _fileSystem = new SocialMediaFileSystem();
 
             //if (_fileSystem.CheckFileExists())
             //{

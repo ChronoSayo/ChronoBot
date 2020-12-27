@@ -233,9 +233,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Games\RockPaperScissors.cs" />
+    <Compile Include="Systems\RpsFileSystem.cs" />
     <Compile Include="Tools\Calculator.cs" />
     <Compile Include="ChronoBot.cs" />
-    <Compile Include="Systems\FileSystem.cs" />
+    <Compile Include="Systems\SocialMediaFileSystem.cs" />
     <Compile Include="Systems\ImageSystem.cs" />
     <Compile Include="Tests\ImageTest.cs" />
     <Compile Include="Info.cs" />
@@ -264,6 +265,9 @@
   </Target>
   <PropertyGroup>
     <PostBuildEvent>xcopy "$(TargetDir)*" "$(SolutionDir)build\" /y /i /r
+
+mkdir "$(SolutionDir)build\Images"
+xcopy "$(TargetDir)\Images\*" "$(SolutionDir)build\Images" /y /i /r /e
 
 mkdir "$(SolutionDir)build\Memory Card"
 cd "$(SolutionDir)build\Memory Card"

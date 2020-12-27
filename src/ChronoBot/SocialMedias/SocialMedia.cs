@@ -14,7 +14,7 @@ namespace ChronoBot.SocialMedias
     {
         protected DiscordSocketClient _client;
         protected Timer _updateTimer;
-        protected FileSystem _fileSystem;
+        protected SocialMediaFileSystem _fileSystem;
         protected string _hyperlink;
         protected string _addCommand, _deleteCommand, _getCommand, _listCommand, _socialMedia;
         protected string _howToMessage;
@@ -38,7 +38,7 @@ namespace ChronoBot.SocialMedias
         
         protected virtual void LoadOrCreateFromFile()
         {
-            _fileSystem = new FileSystem();
+            _fileSystem = new SocialMediaFileSystem();
             _users = _fileSystem.Load();
         }
         

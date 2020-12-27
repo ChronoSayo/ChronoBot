@@ -16,7 +16,16 @@ namespace ChronoBot
         // Program entry point
         static void Main(string[] args)
         {
-            new Program().MainAsync().GetAwaiter().GetResult();
+            try
+            {
+                new Program().MainAsync().GetAwaiter().GetResult();
+            }
+            catch (Exception e)
+            {
+                Logger(new LogMessage(LogSeverity.Critical, "Main", e.Message, e));
+                Console.WriteLine(e);
+                Console.WriteLine(e.Message);
+            }
         }
 
         private Program()

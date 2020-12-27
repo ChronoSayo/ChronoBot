@@ -10,11 +10,11 @@ using Discord;
 
 namespace ChronoBot.Systems
 {
-    class FileSystem
+    class SocialMediaFileSystem
     {
         private readonly string _path;
 
-        public FileSystem()
+        public SocialMediaFileSystem()
         {
             _path = Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly()?.Location) ?? string.Empty, "Memory Card");
         }
