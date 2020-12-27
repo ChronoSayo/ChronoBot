@@ -1,14 +1,15 @@
 ﻿using System.Collections.Generic;
+using ChronoBot.Systems;
 using Discord;
 using Discord.WebSocket;
 
-namespace ChronoBot
+namespace ChronoBot.Tools
 {
     class Selfie
     {
         private DiscordSocketClient _client;
-        private ImageSystem _imageSystem;
-        private const string _COMMAND = Info.COMMAND_PREFIX + "selfie";
+        private readonly ImageSystem _imageSystem;
+        private const string Command = Info.COMMAND_PREFIX + "selfie";
 
         public Selfie(DiscordSocketClient client)
         {
@@ -27,17 +28,19 @@ namespace ChronoBot
         private void TakeSelfie(SocketMessage socketMessage)
         {
             string message = socketMessage.ToString();
-            if (message != _COMMAND)
+            if (message != Command)
                 return;
 
             Info.SendMessageToChannel(socketMessage, ":camera_with_flash:");
 
             string filePath = _imageSystem.GetFilePathToImagesSelfie + "avatar.png";
             _imageSystem.DownloadImage(socketMessage.Author.GetAvatarUrl(ImageFormat.Png), filePath);
-            
-            List<ImageSystem.ImageInfo> images = new List<ImageSystem.ImageInfo>();
-            images.Add(CreateImageInfo(filePath, 28, 44));
-            images.Add(CreateImageInfo(_imageSystem.GetFilePathToImagesSelfie + "filter.png", 24, 41));
+
+            List<ImageSystem.ImageInfo> images = new List<ImageSystem.ImageInfo>
+            {
+                CreateImageInfo(filePath, 28, 44),
+                CreateImageInfo(_imageSystem.GetFilePathToImagesSelfie + "filter.png", 24, 41)
+            };
 
             string result = _imageSystem.AddImagesToImage(_imageSystem.GetFilePathToImagesSelfie + "frame.png", images);
 
@@ -49,9 +52,9 @@ namespace ChronoBot
         private ImageSystem.ImageInfo CreateImageInfo(string filePath, int w, int h)
         {
             ImageSystem.ImageInfo imageInfo = new ImageSystem.ImageInfo();
-            imageInfo.filePath = filePath;
-            imageInfo.w = w;
-            imageInfo.h = h;
+            imageInfo.FilePath = filePath;
+            imageInfo.W = w;
+            imageInfo.H = h;
             return imageInfo;
         }
     }

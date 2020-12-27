@@ -3,17 +3,18 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Timers;
+using ChronoBot.Systems;
 using Discord;
 using Discord.WebSocket;
 using TwitchLib.Api;
 
-namespace ChronoBot
+namespace ChronoBot.SocialMedias
 {
     class SocialMedia
     {
         protected DiscordSocketClient _client;
         protected Timer _updateTimer;
-        protected FileSystem _fileSystem;
+        protected SocialMediaFileSystem _fileSystem;
         protected string _hyperlink;
         protected string _addCommand, _deleteCommand, _getCommand, _listCommand, _socialMedia;
         protected string _howToMessage;
@@ -37,7 +38,7 @@ namespace ChronoBot
         
         protected virtual void LoadOrCreateFromFile()
         {
-            _fileSystem = new FileSystem();
+            _fileSystem = new SocialMediaFileSystem();
             _users = _fileSystem.Load();
         }
         

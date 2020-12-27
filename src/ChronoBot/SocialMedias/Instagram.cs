@@ -1,14 +1,12 @@
-﻿using Discord.WebSocket;
-using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using InstaSharper;
+using Discord.WebSocket;
 using InstaSharper.API;
 using InstaSharper.API.Builder;
 using InstaSharper.Classes;
 using InstaSharper.Classes.Models;
 
-namespace ChronoBot
+namespace ChronoBot.SocialMedias
 {
     class Instagram : SocialMedia
     {

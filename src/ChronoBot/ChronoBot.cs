@@ -5,19 +5,22 @@ using System.Threading.Tasks;
 using System;
 using System.Diagnostics;
 using System.Reflection;
+using ChronoBot.Games;
+using ChronoBot.SocialMedias;
+using ChronoBot.Tests;
+using ChronoBot.Tools;
 
 namespace ChronoBot
 {
     class ChronoBot
     {
-        private DiscordSocketClient _client;
+        private readonly DiscordSocketClient _client;
         private Timer _delayInitiation;
         private SocialMedia _twitter, _twitch, _youtube, _instagram;
         private Remind _remind;
         private Selfie _selfie;
         private Calculator _calculator;
-
-        ImageTest test;
+        private RockPaperScissors _rps;
 
         private const float _DELAY_INITIATION = 3;
 
@@ -39,7 +42,7 @@ namespace ChronoBot
 
         private void _delayInitiation_Elapsed(object sender, ElapsedEventArgs e)
         {
-            //Social media
+            //Social medias
             _twitter = new Twitter(_client);
             _twitch = new Twitch(_client);
             _youtube = new YouTube(_client);
@@ -48,10 +51,10 @@ namespace ChronoBot
             //Tools
             //_remind = new Remind(_client);
             _selfie = new Selfie(_client);
-            _calculator = new Calculator(_client);
+            _calculator = new Calculator();
 
-            //Debug
-            test = new ImageTest(_client);
+            //Games
+            _rps = new RockPaperScissors();
 
             _delayInitiation.Stop();
 
@@ -107,8 +110,7 @@ namespace ChronoBot
             _selfie.MessageReceived(socketMessage);
             _calculator.MessageReceived(socketMessage);
 
-
-            test.MessageReceived(socketMessage);
+            _rps.MessageReceived(socketMessage);
         }
     }
 }

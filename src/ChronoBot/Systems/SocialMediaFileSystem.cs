@@ -5,15 +5,16 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Xml.Linq;
+using ChronoBot.SocialMedias;
 using Discord;
 
-namespace ChronoBot
+namespace ChronoBot.Systems
 {
-    class FileSystem
+    class SocialMediaFileSystem
     {
-        private string _path;
+        private readonly string _path;
 
-        public FileSystem()
+        public SocialMediaFileSystem()
         {
             _path = Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly()?.Location) ?? string.Empty, "Memory Card");
         }

@@ -8,17 +8,17 @@ using SixLabors.ImageSharp.PixelFormats;
 using Image = SixLabors.ImageSharp.Image;
 
 //Test class; remove later
-namespace ChronoBot
+namespace ChronoBot.Tests
 {
     class ImageTest
     {
-        private DiscordSocketClient _client;
-        private int count;
+        private readonly DiscordSocketClient _client;
+        private int _count;
 
         public ImageTest(DiscordSocketClient client)
         {
             _client = client;
-            count = 0;
+            _count = 0;
         }
 
         public void MessageReceived(SocketMessage socketMessage)
@@ -42,12 +42,12 @@ namespace ChronoBot
                 if (users == null)
                     return;
 
-                count++;
+                _count++;
                 string url = _client.GetUser(users.ElementAt(0).Id).GetAvatarUrl(ImageFormat.Jpeg);
                 WebClient wc = new WebClient();
-                wc.DownloadFile(url, $"Pics/test{count}.jpg");
+                wc.DownloadFile(url, $"Pics/test{_count}.jpg");
 
-                using (Image<Rgba32> image = (Image < Rgba32 > )Image.Load($"Pics/test{count}.jpg")) //open the file and detect the file type and decode it
+                using (Image<Rgba32> image = (Image < Rgba32 > )Image.Load($"Pics/test{_count}.jpg")) //open the file and detect the file type and decode it
                 {
                     for (int i = 0; i < 500; i++)
                     {
@@ -55,9 +55,9 @@ namespace ChronoBot
                         int y = Info.GetRandom(0, 128);
                         image[x, y] = Rgba32.ParseHex("0000FF");
                     }
-                    image.Save($"Pics/result{count}.jpg"); // based on the file extension pick an encoder then encode and write the data to disk
+                    image.Save($"Pics/result{_count}.jpg"); // based on the file extension pick an encoder then encode and write the data to disk
 
-                    Info.SendFileToChannel(socketMessage, $"Pics/result{count}.jpg", "");
+                    Info.SendFileToChannel(socketMessage, $"Pics/result{_count}.jpg", "");
                     image.Dispose();
                 }
                 wc.Dispose();

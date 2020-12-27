@@ -1,10 +1,10 @@
-﻿using Discord.WebSocket;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Discord.WebSocket;
 using TweetSharp;
 
-namespace ChronoBot
+namespace ChronoBot.SocialMedias
 {
     sealed class Twitter : SocialMedia
     {
