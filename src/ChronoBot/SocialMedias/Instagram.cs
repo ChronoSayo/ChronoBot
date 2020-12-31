@@ -107,7 +107,7 @@ namespace ChronoBot.SocialMedias
         {
             _userSession = new UserSessionData();
             _userSession.UserName = "dawnkeebals9001";
-            _userSession.Password = "horunge666";
+            _userSession.Password = null;
 
             _api = InstaApiBuilder.CreateBuilder().SetUser(_userSession).SetRequestDelay(RequestDelay.FromSeconds(8, 10)).Build();
             var login = _api.LoginAsync().Result;

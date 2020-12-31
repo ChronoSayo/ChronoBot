@@ -13,7 +13,7 @@ namespace ChronoBot.Games
 {
     class RockPaperScissors
     {
-        private RpsFileSystem _fileSystem;
+        private readonly RpsFileSystem _fileSystem;
         private Timer _timerVs;
         private readonly List<UserData> _users;
 
@@ -41,10 +41,13 @@ namespace ChronoBot.Games
             public int Losses;
             public int Draws;
             public int Ratio;
+            public int CurrentStreak;
+            public int BestStreak;
             public int Resets;
             public int RockChosen;
             public int PaperChosen;
             public int ScissorsChosen;
+            public int Coins;
         }
 
         public RockPaperScissors()
@@ -119,7 +122,8 @@ namespace ChronoBot.Games
             int i = _users.FindIndex(x => x.UserId == userId);
             UserData ud = _users[i];
 
-            ud.Plays = ud.Wins = ud.Losses = ud.Draws = ud.Ratio = ud.RockChosen = ud.PaperChosen = ud.ScissorsChosen = 0;
+            ud.Plays = ud.Wins = ud.Losses = ud.Draws = ud.Ratio = ud.CurrentStreak =
+                ud.BestStreak = ud.RockChosen = ud.PaperChosen = ud.ScissorsChosen = ud.Coins = 0;
             ud.Resets++;
 
             _users[i] = ud;
@@ -144,10 +148,13 @@ namespace ChronoBot.Games
             sb.AppendLine($"**Losses:** {ud.Losses}");
             sb.AppendLine($"**Draws:** {ud.Draws}");
             sb.AppendLine($"**Win Ratio:** {ud.Ratio}%");
+            sb.AppendLine($"**Current Streak:** {ud.CurrentStreak}");
+            sb.AppendLine($"**Best Streak:** {ud.BestStreak}");
             sb.AppendLine($"**Resets:** {ud.Resets}");
             sb.AppendLine($"**Rocks Chosen:** {ud.RockChosen}");
             sb.AppendLine($"**Papers Chosen:** {ud.PaperChosen}");
             sb.AppendLine($"**Scissors Chosen:** {ud.ScissorsChosen}");
+            sb.AppendLine($"**Rings:** {ud.Coins}");
 
             Info.SendMessageToChannel(socketMessage, sb.ToString());
         }
@@ -156,41 +163,29 @@ namespace ChronoBot.Games
         {
             Random random = new Random();
             int bot = random.Next(0, (int)Actor.Max);
+            bot = (int) Actor.Paper;
             int player = (int) playerActor;
+            GameState state;
+            if ((bot + 1) % (int)Actor.Max == player)
+                state = GameState.Win;
+            else if ((player + 1) % (int)Actor.Max == bot)
+                state = GameState.Lose;
+            else
+                state = GameState.Draw;
+
+            ProcessResults(socketMessage, state, playerActor, (Actor)bot);
+        }
+
+        private void ProcessResults(SocketMessage socketMessage, GameState state, Actor playerActor, Actor botActor)
+        {
             string userMention = "You";
             if (socketMessage.Author.Mention != null)
                 userMention = socketMessage.Author.Mention;
 
             string botRespond =
-                $"{userMention} threw {ConvertActorToEmoji(playerActor)}\nBot threw {ConvertActorToEmoji((Actor) bot)}\n";
+                $"{userMention} threw {ConvertActorToEmoji(playerActor)}\nBot threw {ConvertActorToEmoji(botActor)}\n";
 
             string imagePath = "Images/RPS/";
-            GameState state;
-            if ((bot + 1) % (int)Actor.Max == player)
-            {
-                state = GameState.Win;
-                imagePath += "Lost.png";
-                botRespond += "You win!";
-            }
-            else if ((player + 1) % (int)Actor.Max == bot)
-            {
-                state = GameState.Lose;
-                imagePath += "Win.png";
-                botRespond += "You lost...";
-            }
-            else
-            {
-                state = GameState.Draw;
-                imagePath += "Draw.png";
-                botRespond += "Draw game.";
-            }
-
-            Info.SendFileToChannel(socketMessage, imagePath, botRespond);
-            AddToStats(socketMessage, state, playerActor);
-        }
-
-        private void AddToStats(SocketMessage socketMessage, GameState state, Actor actor)
-        {
             ulong userId = socketMessage.Author.Id;
             if (!_users.Exists(x => x.UserId == userId))
             {
@@ -207,12 +202,35 @@ namespace ChronoBot.Games
             {
                 case GameState.Win:
                     ud.Wins++;
+                    ud.CurrentStreak++;
+
+                    int bonus = CalculateStreakBonus(ud.CurrentStreak, ud.Plays);;
+                    ud.Coins += bonus;
+
+                    string newRecord = ud.CurrentStreak > ud.BestStreak ? "New streak record!!!" : string.Empty;
+                    string streak = ud.CurrentStreak > 1 ? ud.CurrentStreak + $" win streak! {newRecord}" : string.Empty;
+                    imagePath += "Lost.png";
+                    botRespond += $"You win!\n+{bonus} Coins. {streak}";
                     break;
                 case GameState.Lose:
                     ud.Losses++;
+
+                    ud.Coins--;
+                    bool emptyWallet = ud.Coins <= 0;
+                    if (emptyWallet)
+                        ud.Coins = 0;
+                    if (ud.CurrentStreak > ud.BestStreak)
+                        ud.BestStreak = ud.CurrentStreak;
+                    ud.CurrentStreak = 0;
+
+                    string loseCoin = emptyWallet ? string.Empty : "\n-1 Coin.";
+                    imagePath += "Win.png";
+                    botRespond += $"You lost...{loseCoin}";
                     break;
                 case GameState.Draw:
                     ud.Draws++;
+                    imagePath += "Draw.png";
+                    botRespond += "Draw game.";
                     break;
                 case GameState.None:
                     LogToFile(LogSeverity.Error, "Wrong game state was given.");
@@ -222,7 +240,7 @@ namespace ChronoBot.Games
                     break;
             }
 
-            switch (actor)
+            switch (playerActor)
             {
                 case Actor.Rock:
                     ud.RockChosen++;
@@ -246,9 +264,19 @@ namespace ChronoBot.Games
 
             _users[i] = ud;
             _fileSystem.UpdateFile(ud);
+
+            Info.SendFileToChannel(socketMessage, imagePath, botRespond);
         }
 
-        protected virtual void CreateUser(SocketMessage socketMessage)
+        private int CalculateStreakBonus(int streak, int plays)
+        {
+            int bonus = 1;
+            if (streak % 10 == 0)
+                bonus = streak + plays;
+            return (int)Math.Ceiling(bonus * 0.5f);
+        }
+
+        private void CreateUser(SocketMessage socketMessage)
         {
             ulong guildId = Info.GetGuildIDFromSocketMessage(socketMessage);
             ulong channelId = Info.DEBUG ? Info.DEBUG_CHANNEL_ID : socketMessage.Channel.Id;
