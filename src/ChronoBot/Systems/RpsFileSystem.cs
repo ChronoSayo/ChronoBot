@@ -14,10 +14,17 @@ namespace ChronoBot.Systems
     {
         private readonly string _path;
         private const string ElementRoot = "RockPaperScissors";
+        private readonly IEnumerable<string> _attributeNames;
 
         public RpsFileSystem()
         {
             _path = Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly()?.Location) ?? string.Empty, "Memory Card");
+            _attributeNames = new[]
+            {
+                "UserID", "ChannelID", "Plays", "TotalPlays", "Wins", "Losses", "Draws", "Ratio", "CurrentStreak",
+                "BestStreak", "Resets", "Rocks",
+                "Papers", "Scissors", "Coins"
+            };
         }
 
         public void Save(RockPaperScissors.UserData ud)
@@ -27,22 +34,17 @@ namespace ChronoBot.Systems
             string channelId = ud.ChannelId.ToString();
 
             XElement user = new XElement("User");
-            XAttribute newUserId = new XAttribute("UserID", userId);
-            XAttribute newChannelId = new XAttribute("ChannelID", channelId);
-            XAttribute plays = new XAttribute("Plays", 0);
-            XAttribute totalPlays = new XAttribute("TotalPlays", 0);
-            XAttribute wins = new XAttribute("Wins", 0);
-            XAttribute losses = new XAttribute("Losses", 0);
-            XAttribute draws = new XAttribute("Draws", 0);
-            XAttribute ratio = new XAttribute("Ratio", 0);
-            XAttribute currentStreak = new XAttribute("CurrentStreak", 0);
-            XAttribute bestStreak = new XAttribute("BestStreak", 0);
-            XAttribute resets = new XAttribute("Resets", 0);
-            XAttribute rocks = new XAttribute("Rocks", 0);
-            XAttribute papers = new XAttribute("Papers", 0);
-            XAttribute scissors = new XAttribute("Scissors", 0);
-            XAttribute coins = new XAttribute("Coins", 0);
-            user.Add(newUserId, newChannelId, plays, totalPlays, wins, losses, draws, ratio, currentStreak, bestStreak, resets, rocks, papers, scissors, coins);
+            List<XAttribute> attributes = new List<XAttribute>();
+            foreach (string name in _attributeNames)
+            {
+                object value = 0;
+                if(name == _attributeNames.ElementAt(0))
+                    value = userId;
+                else if (name == _attributeNames.ElementAt(1))
+                    value = channelId;
+                attributes.Add(new XAttribute(name, value));
+            }
+            user.Add(attributes);
 
             XDocument xDoc;
             string guildPath = Path.Combine(_path, guildId + ".xml");
@@ -123,25 +125,34 @@ namespace ChronoBot.Systems
                     RockPaperScissors.UserData user = new RockPaperScissors.UserData();
                     if (xml.Key.Document != null)
                         user.GuildId = xml.Value;
-                    user.UserId = ulong.Parse(e.Attribute("UserID")?.Value ?? string.Empty);
-                    user.ChannelId = ulong.Parse(e.Attribute("ChannelID")?.Value ?? string.Empty);
-                    user.Plays = int.Parse((e.Attribute("Plays")?.Value) ?? "0");
-                    user.TotalPlays = int.Parse((e.Attribute("TotalPlays")?.Value) ?? "0");
-                    user.Wins = int.Parse((e.Attribute("Wins")?.Value) ?? "0");
-                    user.Losses = int.Parse((e.Attribute("Losses")?.Value) ?? "0");
-                    user.Draws = int.Parse((e.Attribute("Draws")?.Value) ?? "0");
-                    user.Ratio = int.Parse((e.Attribute("Ratio")?.Value) ?? "0");
-                    user.CurrentStreak = int.Parse((e.Attribute("CurrentStreak")?.Value) ?? "0");
-                    user.BestStreak = int.Parse((e.Attribute("BestStreak")?.Value) ?? "0");
-                    user.Resets = int.Parse((e.Attribute("Resets")?.Value) ?? "0");
-                    user.RockChosen = int.Parse((e.Attribute("Rocks")?.Value) ?? "0");
-                    user.PaperChosen = int.Parse((e.Attribute("Papers")?.Value) ?? "0");
-                    user.ScissorsChosen = int.Parse((e.Attribute("Scissors")?.Value) ?? "0");
-                    user.Coins = int.Parse((e.Attribute("Coins")?.Value) ?? "0");
+
+                    int i = 0;
+                    user.UserId = (ulong)GetAttributeValue(_attributeNames.ElementAt(i++), e);
+                    user.ChannelId = (ulong)GetAttributeValue(_attributeNames.ElementAt(i++), e);
+                    user.Plays = (int)GetAttributeValue(_attributeNames.ElementAt(i++), e);
+                    user.TotalPlays = (int)GetAttributeValue(_attributeNames.ElementAt(i++), e);
+                    user.Wins = (int)GetAttributeValue(_attributeNames.ElementAt(i++), e);
+                    user.Losses = (int)GetAttributeValue(_attributeNames.ElementAt(i++), e);
+                    user.Draws = (int)GetAttributeValue(_attributeNames.ElementAt(i++), e);
+                    user.Ratio = (int)GetAttributeValue(_attributeNames.ElementAt(i++), e);
+                    user.CurrentStreak = (int)GetAttributeValue(_attributeNames.ElementAt(i++), e);
+                    user.BestStreak = (int)GetAttributeValue(_attributeNames.ElementAt(i++), e);
+                    user.Resets = (int)GetAttributeValue(_attributeNames.ElementAt(i++), e);
+                    user.RockChosen = (int)GetAttributeValue(_attributeNames.ElementAt(i++), e);
+                    user.PaperChosen = (int)GetAttributeValue(_attributeNames.ElementAt(i++), e);
+                    user.ScissorsChosen = (int)GetAttributeValue(_attributeNames.ElementAt(i++), e);
+                    user.Coins = (int)GetAttributeValue(_attributeNames.ElementAt(i), e);
                     ud.Add(user);
                 }
             }
             return ud;
+        }
+
+        private object GetAttributeValue(string name, XElement e)
+        {
+            if (name == _attributeNames.ElementAt(0) || name == _attributeNames.ElementAt(1))
+                return ulong.Parse(e.Attribute(name)?.Value ?? string.Empty);
+            return int.Parse((e.Attribute(name)?.Value) ?? "0");
         }
 
         public void UpdateFile(RockPaperScissors.UserData ud)
@@ -161,87 +172,37 @@ namespace ChronoBot.Systems
                 if (ud.UserId == userData.UserId)
                 {
                     XElement found = xml.Descendants("Users").Descendants(ElementRoot).Descendants("User")
-                        .First(x => x.Attributes("UserID").First().Value == ud.UserId.ToString());
-                    if(found.Attributes("UserID").First() != null)
-                        found.Attributes("UserID").First().Value = ud.UserId.ToString();
-                    else
-                        found.SetAttributeValue("UserID", 0);
+                        .First(x => x.Attributes(_attributeNames.ElementAt(0)).First().Value == ud.UserId.ToString());
 
-                    if (found.Attributes("ChannelID").First() != null)
-                        found.Attributes("ChannelID").First().Value = ud.ChannelId.ToString();
-                    else
-                        found.SetAttributeValue("ChannelID", 0);
 
-                    if (found.Attribute("Plays") Attributes("Plays") != null)
-                        found.Attributes("Plays").First().Value = ud.Plays.ToString();
-                    else
-                        found.SetAttributeValue("Plays", 0);
-
-                    if (found.Attributes("TotalPlays").First() != null)
-                        found.Attributes("TotalPlays").First().Value = ud.TotalPlays.ToString();
-                    else
-                        found.SetAttributeValue("TotalPlays", 0);
-
-                    if (found.Attributes("Wins").First() != null)
-                        found.Attributes("Wins").First().Value = ud.Wins.ToString();
-                    else
-                        found.SetAttributeValue("Wins", 0);
-
-                    if (found.Attributes("Losses").First() != null)
-                        found.Attributes("Losses").First().Value = ud.Losses.ToString();
-                    else
-                        found.SetAttributeValue("Losses", 0);
-
-                    if (found.Attributes("Draws").First() != null)
-                        found.Attributes("Draws").First().Value = ud.Draws.ToString();
-                    else
-                        found.SetAttributeValue("Draws", 0);
-
-                    if (found.Attributes("Ratio").First() != null)
-                        found.Attributes("Ratio").First().Value = ud.Ratio.ToString();
-                    else
-                        found.SetAttributeValue("Ratio", 0);
-
-                    if (found.Attributes("CurrentStreak").First() != null)
-                        found.Attributes("CurrentStreak").First().Value = ud.CurrentStreak.ToString();
-                    else
-                        found.SetAttributeValue("CurrentStreak", 0);
-
-                    if (found.Attributes("BestStreak").First() != null)
-                        found.Attributes("BestStreak").First().Value = ud.BestStreak.ToString();
-                    else
-                        found.SetAttributeValue("BestStreak", 0);
-
-                    if (found.Attributes("Resets").First() != null)
-                        found.Attributes("Resets").First().Value = ud.Resets.ToString();
-                    else
-                        found.SetAttributeValue("Resets", 0);
-
-                    if (found.Attributes("Rocks").First() != null)
-                        found.Attributes("Rocks").First().Value = ud.RockChosen.ToString();
-                    else
-                        found.SetAttributeValue("Rocks", 0);
-
-                    if (found.Attributes("Papers").First() != null)
-                        found.Attributes("Papers").First().Value = ud.PaperChosen.ToString();
-                    else
-                        found.SetAttributeValue("Papers", 0);
-
-                    if (found.Attributes("Scissors").First() != null)
-                        found.Attributes("Scissors").First().Value = ud.ScissorsChosen.ToString();
-                    else
-                        found.SetAttributeValue("Scissors", 0);
-
-                    if (found.Attributes("Coins").First() != null)
-                        found.Attributes("Coins").First().Value = ud.Coins.ToString();
-                    else
-                        found.SetAttributeValue("Coins", 0);
+                    int i = 0;
+                    GetAttribute(_attributeNames.ElementAt(i++), found).Value = ud.UserId.ToString();
+                    GetAttribute(_attributeNames.ElementAt(i++), found).Value = ud.ChannelId.ToString();
+                    GetAttribute(_attributeNames.ElementAt(i++), found).Value = ud.Plays.ToString();
+                    GetAttribute(_attributeNames.ElementAt(i++), found).Value = ud.TotalPlays.ToString();
+                    GetAttribute(_attributeNames.ElementAt(i++), found).Value = ud.Wins.ToString();
+                    GetAttribute(_attributeNames.ElementAt(i++), found).Value = ud.Losses.ToString();
+                    GetAttribute(_attributeNames.ElementAt(i++), found).Value = ud.Draws.ToString();
+                    GetAttribute(_attributeNames.ElementAt(i++), found).Value = ud.Ratio.ToString();
+                    GetAttribute(_attributeNames.ElementAt(i++), found).Value = ud.CurrentStreak.ToString();
+                    GetAttribute(_attributeNames.ElementAt(i++), found).Value = ud.BestStreak.ToString();
+                    GetAttribute(_attributeNames.ElementAt(i++), found).Value = ud.Resets.ToString();
+                    GetAttribute(_attributeNames.ElementAt(i++), found).Value = ud.RockChosen.ToString();
+                    GetAttribute(_attributeNames.ElementAt(i++), found).Value = ud.PaperChosen.ToString();
+                    GetAttribute(_attributeNames.ElementAt(i++), found).Value = ud.ScissorsChosen.ToString();
+                    GetAttribute(_attributeNames.ElementAt(i), found).Value = ud.Coins.ToString();
                     break;
                 }
             }
             xml.Save(guildPath);
         }
 
+        private XAttribute GetAttribute(string name, XElement found)
+        {
+            if (found.Attribute(name) == null)
+                found.SetAttributeValue(name, 0);
+            return found.Attribute(name);
+        }
 
         public void DeleteInFile(RockPaperScissors.UserData ud)
         {
@@ -259,7 +220,8 @@ namespace ChronoBot.Systems
             {
                 if (ud.UserId != userData.UserId)
                     continue;
-                xml.Descendants("Users").Descendants(ElementRoot).Descendants("User").Where(x => x.Attribute("UserID")?.Value == ud.UserId.ToString()).Remove();
+                xml.Descendants("Users").Descendants(ElementRoot).Descendants("User").Where(x =>
+                    x.Attribute(_attributeNames.ElementAt(0))?.Value == ud.UserId.ToString()).Remove();
                 break;
             }
             xml.Save(guildPath);

@@ -210,7 +210,7 @@ namespace ChronoBot.Games
                     string newRecord = ud.CurrentStreak > ud.BestStreak ? "New streak record!!!" : string.Empty;
                     string streak = ud.CurrentStreak > 1 ? ud.CurrentStreak + $" win streak! {newRecord}" : string.Empty;
                     imagePath += "Lost.png";
-                    botRespond += $"You win!\n+{bonus} Coins. {streak}";
+                    botRespond += $"You win!\n+{bonus} Rings. {streak}";
                     break;
                 case GameState.Lose:
                     ud.Losses++;
@@ -223,7 +223,7 @@ namespace ChronoBot.Games
                         ud.BestStreak = ud.CurrentStreak;
                     ud.CurrentStreak = 0;
 
-                    string loseCoin = emptyWallet ? string.Empty : "\n-1 Coin.";
+                    string loseCoin = emptyWallet ? string.Empty : "\n-1 Ring.";
                     imagePath += "Win.png";
                     botRespond += $"You lost...{loseCoin}";
                     break;
