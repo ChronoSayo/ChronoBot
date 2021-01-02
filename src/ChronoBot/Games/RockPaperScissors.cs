@@ -154,7 +154,8 @@ namespace ChronoBot.Games
             sb.AppendLine($"**Rocks Chosen:** {ud.RockChosen}");
             sb.AppendLine($"**Papers Chosen:** {ud.PaperChosen}");
             sb.AppendLine($"**Scissors Chosen:** {ud.ScissorsChosen}");
-            sb.AppendLine($"**Rings:** {ud.Coins}");
+            string plural = ud.Coins == 1 ? string.Empty : "s";
+            sb.AppendLine($"**Ring{plural}:** {ud.Coins}");
 
             Info.SendMessageToChannel(socketMessage, sb.ToString());
         }
@@ -163,7 +164,6 @@ namespace ChronoBot.Games
         {
             Random random = new Random();
             int bot = random.Next(0, (int)Actor.Max);
-            bot = (int) Actor.Paper;
             int player = (int) playerActor;
             GameState state;
             if ((bot + 1) % (int)Actor.Max == player)
@@ -210,7 +210,8 @@ namespace ChronoBot.Games
                     string newRecord = ud.CurrentStreak > ud.BestStreak ? "New streak record!!!" : string.Empty;
                     string streak = ud.CurrentStreak > 1 ? ud.CurrentStreak + $" win streak! {newRecord}" : string.Empty;
                     imagePath += "Lost.png";
-                    botRespond += $"You win!\n+{bonus} Rings. {streak}";
+                    string plural = ud.Coins == 1 ? string.Empty : "s";
+                    botRespond += $"You win!\n+{bonus} Ring{plural}. {streak}";
                     break;
                 case GameState.Lose:
                     ud.Losses++;
