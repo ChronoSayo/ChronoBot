@@ -23,8 +23,8 @@ namespace ChronoBot.Tools
 
         private async Task PlayMusic()
         {
-            ulong guildId = Info.DEBUG_GUILD_ID;
-            SocketVoiceChannel voiceChannel = _client.GetGuild(guildId).GetVoiceChannel(Info.DebugVoiceChannelId);
+            ulong guildId = 171304484096442368;//Info.DEBUG_GUILD_ID;
+            SocketVoiceChannel voiceChannel = _client.GetGuild(guildId).GetVoiceChannel(795044947815694366);
             LavalinkPlayer player =
                 _lavalinkManager.GetPlayer(guildId) ?? await _lavalinkManager.JoinAsync(voiceChannel);
 
