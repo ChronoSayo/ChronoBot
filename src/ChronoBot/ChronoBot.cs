@@ -9,24 +9,28 @@ using ChronoBot.Games;
 using ChronoBot.SocialMedias;
 using ChronoBot.Tests;
 using ChronoBot.Tools;
+using SharpLink;
 
 namespace ChronoBot
 {
     class ChronoBot
     {
         private readonly DiscordSocketClient _client;
+        private readonly LavalinkManager _lavalinkManager;
         private Timer _delayInitiation;
         private SocialMedia _twitter, _twitch, _youtube, _instagram;
         private Remind _remind;
         private Selfie _selfie;
         private Calculator _calculator;
         private RockPaperScissors _rps;
+        private Music _music;
 
         private const float _DELAY_INITIATION = 3;
 
-        public ChronoBot(DiscordSocketClient client)
+        public ChronoBot(DiscordSocketClient client, LavalinkManager lavalinkManager)
         {
             _client = client;
+            _lavalinkManager = lavalinkManager;
 
             Info.CLIENT = _client;
 
@@ -52,6 +56,7 @@ namespace ChronoBot
             //_remind = new Remind(_client);
             _selfie = new Selfie(_client);
             _calculator = new Calculator();
+            _music = new Music(_client, _lavalinkManager);
 
             //Games
             _rps = new RockPaperScissors();

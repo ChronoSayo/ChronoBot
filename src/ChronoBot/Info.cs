@@ -6,12 +6,13 @@ namespace ChronoBot
     class Info
     {
         public static DiscordSocketClient CLIENT;
-        public static bool DEBUG = false;
+        public static bool DEBUG = true;
         public static int DELAY_TIMER = 3 * 1000;
         public static string ID_PREFIX = "%";
         public static string BULLET_LIST = "■";
         public static ulong DEBUG_GUILD_ID = 386545577258778634;
         public static ulong DEBUG_CHANNEL_ID = 386545577258778637;
+        public static ulong DebugVoiceChannelId = 386545580593250306;
         public static ulong MY_ID = 171262429857185793;
         public static ulong NO_GUILD_ID = 0;
 
