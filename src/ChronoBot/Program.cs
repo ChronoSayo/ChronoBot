@@ -3,13 +3,16 @@ using Discord.WebSocket;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net;
 using System.Threading.Tasks;
+using SharpLink;
 
 namespace ChronoBot
 {
     class Program
     {
         private readonly DiscordSocketClient _client;
+        private LavalinkManager _lavalinkManager;
         private static DateTime _today;
         private static string _logFile;
 
@@ -82,11 +85,21 @@ namespace ChronoBot
             _today = DateTime.Today;
 
             _client.Log += Logger;
+
+            _lavalinkManager = new LavalinkManager(_client, new LavalinkManagerConfig()
+            {
+                RESTHost = "localhost",
+                RESTPort = 2333,
+                WebSocketHost = "localhost",
+                WebSocketPort = 2333,
+                TotalShards = 1
+            });
+            _client.Ready += async () => { await _lavalinkManager.StartAsync(); };
             
             await _client.LoginAsync(TokenType.Bot, File.ReadAllText("Memory Card/DiscordToken.txt"));
             await _client.StartAsync();
 
-            ChronoBot cb = new ChronoBot(_client);
+            ChronoBot cb = new ChronoBot(_client, _lavalinkManager);
             
             await Task.Delay(-1);
         }

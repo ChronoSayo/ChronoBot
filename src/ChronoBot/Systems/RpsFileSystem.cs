@@ -18,7 +18,7 @@ namespace ChronoBot.Systems
 
         public RpsFileSystem()
         {
-            _path = Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly()?.Location) ?? string.Empty, "Memory Card");
+            _path = Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly()?.Location) ?? string.Empty, "Memory Card");
             _attributeNames = new[]
             {
                 "UserID", "ChannelID", "Plays", "TotalPlays", "Wins", "Losses", "Draws", "Ratio", "CurrentStreak",
@@ -55,7 +55,7 @@ namespace ChronoBot.Systems
                 XElement sm = new XElement(ElementRoot);
                 sm.Add(user);
 
-                XElement root = new XElement("Users");
+                XElement root = new XElement("Service");
                 root.Add(sm);
 
                 xDoc.Add(root);
@@ -120,7 +120,7 @@ namespace ChronoBot.Systems
             List<RockPaperScissors.UserData> ud = new List<RockPaperScissors.UserData>();
             foreach (KeyValuePair<XDocument, ulong> xml in xmls)
             {
-                foreach (XElement e in xml.Key.Descendants("Users").Descendants(ElementRoot).Descendants("User"))
+                foreach (XElement e in xml.Key.Descendants("Service").Descendants(ElementRoot).Descendants("User"))
                 {
                     RockPaperScissors.UserData user = new RockPaperScissors.UserData();
                     if (xml.Key.Document != null)
@@ -171,7 +171,7 @@ namespace ChronoBot.Systems
             {
                 if (ud.UserId == userData.UserId)
                 {
-                    XElement found = xml.Descendants("Users").Descendants(ElementRoot).Descendants("User")
+                    XElement found = xml.Descendants("Service").Descendants(ElementRoot).Descendants("User")
                         .First(x => x.Attributes(_attributeNames.ElementAt(0)).First().Value == ud.UserId.ToString());
 
 
@@ -220,7 +220,7 @@ namespace ChronoBot.Systems
             {
                 if (ud.UserId != userData.UserId)
                     continue;
-                xml.Descendants("Users").Descendants(ElementRoot).Descendants("User").Where(x =>
+                xml.Descendants("Service").Descendants(ElementRoot).Descendants("User").Where(x =>
                     x.Attribute(_attributeNames.ElementAt(0))?.Value == ud.UserId.ToString()).Remove();
                 break;
             }
