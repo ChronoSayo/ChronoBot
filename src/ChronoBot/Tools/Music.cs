@@ -49,7 +49,7 @@ namespace ChronoBot.Tools
                 string[] splits = message.Split(' ');
                 command = splits[1];
                 if (splits.Length > 2)
-                    parameter = splits[2];
+                    parameter = string.Join(" ", splits.Skip(2));
 
             }
             catch
@@ -172,9 +172,16 @@ namespace ChronoBot.Tools
                 return;
             }
 
-            SocketVoiceChannel voiceChannel = Client.GetGuild(guildId).GetVoiceChannel(ud.ChannelId);
-            if (voiceChannel.Users.ToList().Exists(x => x.Id == Info.BotId))
+            foreach (SocketVoiceChannel channel in Client.GetGuild(guildId).VoiceChannels)
+            {
+                if(!channel.Users.ToList().Exists(x => x.Id == Info.BotId))
+                    continue;
+
                 await LeaveVoiceChannel(guildId);
+                break;
+            }
+
+            SocketVoiceChannel voiceChannel = Client.GetGuild(guildId).GetVoiceChannel(ud.ChannelId);
             await _lavalinkManager.JoinAsync(voiceChannel);
             ud.Name = voiceChannel.Name;
             Info.SendMessageToChannel(socketMessage, $"Joining voice channel: {ud.Name}");
