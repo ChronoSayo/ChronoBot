@@ -21,6 +21,7 @@ namespace ChronoBot.Tools
         private readonly MusicFileSystem _fileSystem;
         private readonly LavalinkManager _lavalinkManager;
         private readonly List<MusicUserData> _userData;
+        private readonly Timer _loopSong;
 
         public Music(DiscordSocketClient client, LavalinkManager lavalinkManager)
         {
@@ -32,6 +33,8 @@ namespace ChronoBot.Tools
             var loadUserData = _fileSystem.Load();
             foreach (IUserData userData in loadUserData)
                 _userData.Add((MusicUserData)userData);
+
+            _loopSong = new Timer { AutoReset = true, Enabled = true };
         }
 
         private void ProcessCommand(SocketMessage socketMessage)
@@ -91,7 +94,10 @@ namespace ChronoBot.Tools
             }
 
             if (player.Playing)
+            {
                 await player.StopAsync();
+                _loopSong.Stop();
+            }
 
             if(string.IsNullOrEmpty(parameter))
             {
@@ -128,18 +134,9 @@ namespace ChronoBot.Tools
             LavalinkTrack track = response.Tracks.First();
             await player.PlayAsync(track);
 
-            Timer loopTimer = new Timer { AutoReset = true, Enabled = true, Interval = track.Length.Seconds + 5000 };
-            loopTimer.Elapsed += async (sender, args) =>
-            {
-                if (player.Playing)
-                {
-                    loopTimer.Stop();
-                    loopTimer.Interval = 5000;
-                    loopTimer.Start();
-                }
-                await player.PlayAsync(track);
-                loopTimer.Interval = track.Length.Seconds + 5000;
-            };
+            _loopSong.Interval = track.Length.Seconds * 1000;
+            _loopSong.Elapsed += async (sender, args) => await player.PlayAsync(track);
+            _loopSong.Start();
 
             int i = _userData.FindIndex(x => x.GuildId == guildId);
             _userData[i].Id = track.TrackId;
@@ -197,6 +194,8 @@ namespace ChronoBot.Tools
 
             await _lavalinkManager.GetPlayer(guildId).StopAsync();
             await _lavalinkManager.LeaveAsync(guildId);
+
+            _loopSong.Stop();
 
             _fileSystem.DeleteInFile(_userData.Find(x => x.GuildId == guildId));
         }
