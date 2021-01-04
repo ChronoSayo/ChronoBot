@@ -327,7 +327,8 @@ namespace ChronoBot.Games
             }
             return s;
         }
-        protected virtual void LogToFile(LogSeverity severity, string message, Exception e = null, [CallerMemberName] string caller = null)
+        
+        private void LogToFile(LogSeverity severity, string message, Exception e = null, [CallerMemberName] string caller = null)
         {
             StackTrace st = new StackTrace();
             Program.Logger(new LogMessage(severity, st.GetFrame(1).GetMethod().ReflectedType + "." + caller, message, e));

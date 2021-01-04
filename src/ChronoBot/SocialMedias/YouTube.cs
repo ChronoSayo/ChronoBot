@@ -101,19 +101,13 @@ namespace ChronoBot.SocialMedias
                 if (channelInfo[0] == user.id) 
                     continue;
 
-                UpdateData(user, channelInfo, i);
+                user.id = channelInfo[0];
+                _users[i] = user;
                 newVideos.Add(_users[i]);
                 _fileSystem.UpdateFile(user);
             }
 
             UpdateSocialMedia(newVideos);
-        }
-
-        private void UpdateData(UserData data, List<string> channelInfo, int i)
-        {
-            UserData updateEntry = data;
-            updateEntry.id = channelInfo[0];
-            _users[i] = updateEntry;
         }
 
         protected override void AddSocialMediaUser(SocketMessage socketMessage)

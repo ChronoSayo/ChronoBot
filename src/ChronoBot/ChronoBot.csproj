@@ -24,6 +24,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <LangVersion>8.0</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -33,6 +34,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <LangVersion>8.0</LangVersion>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Discord.Net.Commands, Version=2.2.0.0, Culture=neutral, processorArchitecture=MSIL">
@@ -237,6 +239,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Games\RockPaperScissors.cs" />
+    <Compile Include="Interfaces\IBotInteraction.cs" />
+    <Compile Include="Interfaces\IFileSystem.cs" />
+    <Compile Include="Interfaces\IUserData.cs" />
+    <Compile Include="Systems\MusicFileSystem.cs" />
     <Compile Include="Systems\RpsFileSystem.cs" />
     <Compile Include="Tools\Calculator.cs" />
     <Compile Include="ChronoBot.cs" />
@@ -254,6 +260,7 @@
     <Compile Include="SocialMedias\Twitch.cs" />
     <Compile Include="SocialMedias\Twitter.cs" />
     <Compile Include="SocialMedias\YouTube.cs" />
+    <Compile Include="UserDatas\MusicUserData.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

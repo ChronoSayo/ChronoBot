@@ -55,7 +55,7 @@ namespace ChronoBot
             //Tools
             //_remind = new Remind(_client);
             _selfie = new Selfie(_client);
-            _calculator = new Calculator();
+            _calculator = new Calculator(_client);
             _music = new Music(_client, _lavalinkManager);
 
             //Games
@@ -114,6 +114,7 @@ namespace ChronoBot
             //_remind.MessageReceived(socketMessage);
             _selfie.MessageReceived(socketMessage);
             _calculator.MessageReceived(socketMessage);
+            _music.MessageReceived(socketMessage);
 
             _rps.MessageReceived(socketMessage);
         }

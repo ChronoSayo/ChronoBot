@@ -13,8 +13,10 @@ namespace ChronoBot
         public static ulong DEBUG_GUILD_ID = 386545577258778634;
         public static ulong DEBUG_CHANNEL_ID = 386545577258778637;
         public static ulong DebugVoiceChannelId = 386545580593250306;
+        public static ulong BotId = 432972357586649088;
         public static ulong MY_ID = 171262429857185793;
         public static ulong NO_GUILD_ID = 0;
+
 
         public const string COMMAND_PREFIX = "!";
 

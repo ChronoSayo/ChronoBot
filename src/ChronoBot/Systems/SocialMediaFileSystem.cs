@@ -42,7 +42,7 @@ namespace ChronoBot.Systems
                 XElement sm = new XElement(socialMedia);
                 sm.Add(user);
 
-                XElement root = new XElement("Users");
+                XElement root = new XElement("Service");
                 root.Add(sm);
 
                 xDoc.Add(root);
@@ -109,7 +109,7 @@ namespace ChronoBot.Systems
             List<SocialMedia.UserData> ud = new List<SocialMedia.UserData>();
             foreach (KeyValuePair<XDocument, ulong> xml in xmls)
             {
-                foreach (XElement e in xml.Key.Descendants("Users").Descendants(socialMedia).Descendants("User"))
+                foreach (XElement e in xml.Key.Descendants("Service").Descendants(socialMedia).Descendants("User"))
                 {
                     SocialMedia.UserData user = new SocialMedia.UserData();
                     if (xml.Key.Document != null)
@@ -140,7 +140,7 @@ namespace ChronoBot.Systems
             {
                 if(ud.name == userData.name)
                 {
-                    XElement found = xml.Descendants("Users").Descendants(ud.socialMedia).Descendants("User")
+                    XElement found = xml.Descendants("Service").Descendants(ud.socialMedia).Descendants("User")
                         .First(x => x.Attributes("Name").First().Value == ud.name);
                     found.Attributes("Name").First().Value = ud.name;
                     found.Attributes("ChannelID").First().Value = ud.channelID.ToString();
@@ -157,7 +157,7 @@ namespace ChronoBot.Systems
             string socialMedia = ud.socialMedia;
             if (!File.Exists(guildPath))
             {
-                Console.WriteLine("Unable to update {0}", ud.name);
+                Console.WriteLine("Unable to delete {0}", ud.name);
                 return;
             }
 
@@ -168,12 +168,11 @@ namespace ChronoBot.Systems
             {
                 if (ud.name != userData.name) 
                     continue;
-                xml.Descendants("Users").Descendants(socialMedia).Descendants("User").Where(x => x.Attribute("Name")?.Value == ud.name).Remove();
+                xml.Descendants("Service").Descendants(socialMedia).Descendants("User").Where(x => x.Attribute("Name")?.Value == ud.name).Remove();
                 break;
             }
             xml.Save(guildPath);
 
-            Console.WriteLine("Deleted {0} in {1}.xml", ud.name, ud.guildID);
             StackTrace st = new StackTrace();
             MethodBase mb = st.GetFrame(1).GetMethod();
             Program.Logger(new LogMessage(LogSeverity.Info, mb.ReflectedType + "." + mb, $"Deleted {ud.name} in {ud.guildID}.xml"));

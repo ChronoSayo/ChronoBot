@@ -1,12 +1,20 @@
 ﻿using System.Data;
 using System.Text.RegularExpressions;
+using ChronoBot.Interfaces;
 using Discord.WebSocket;
 
 namespace ChronoBot.Tools
 {
     class Calculator
     {
+        public DiscordSocketClient Client { get; }
         private const string Command = Info.COMMAND_PREFIX + "calc";
+
+
+        public Calculator(DiscordSocketClient client)
+        {
+            Client = client;
+        }
 
         public void MessageReceived(SocketMessage socketMessage)
         {
