@@ -587,7 +587,7 @@
         </member>
         <member name="E:Discord.Commands.CommandService.CommandExecuted">
             <summary>
-                Occurs when a command is successfully executed without any error.
+                Occurs when a command is executed.
             </summary>
             <remarks>
                 This event is fired when a command has been executed, successfully or not. When a command fails to
@@ -837,7 +837,7 @@
             </summary>
             <example>
             <code language="cs">
-            QuotationMarkAliasMap = new Dictionary&lt;char, char%gt;()
+            QuotationMarkAliasMap = new Dictionary&lt;char, char&gt;()
             {
                 {'\"', '\"' },
                 {'“', '”' },
@@ -1129,7 +1129,7 @@
             <seealso cref="T:Discord.Commands.ICommandContext" />
             <seealso cref="T:Discord.Commands.CommandContext" />
         </member>
-        <member name="M:Discord.Commands.ModuleBase`1.ReplyAsync(System.String,System.Boolean,Discord.Embed,Discord.RequestOptions)">
+        <member name="M:Discord.Commands.ModuleBase`1.ReplyAsync(System.String,System.Boolean,Discord.Embed,Discord.RequestOptions,Discord.AllowedMentions,Discord.MessageReference)">
             <summary>
                 Sends a message to the source channel.
             </summary>
@@ -1138,6 +1138,11 @@
             </param>
             <param name="isTTS">Specifies if Discord should read this <paramref name="message"/> aloud using text-to-speech.</param>
             <param name="embed">An embed to be displayed alongside the <paramref name="message"/>.</param>
+            <param name="allowedMentions">
+                Specifies if notifications are sent for mentioned users and roles in the <paramref name="message"/>.
+                If <c>null</c>, all mentioned roles and users will be notified.
+            </param>
+            <param name="messageReference">The message references to be included. Used to reply to specific messages.</param>
         </member>
         <member name="M:Discord.Commands.ModuleBase`1.BeforeExecute(Discord.Commands.CommandInfo)">
             <summary>
