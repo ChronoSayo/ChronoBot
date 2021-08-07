@@ -26,9 +26,9 @@ Discord bot with multiple helpful tools. Mostly for personal use.
   - Add user: ``<!twitteradd | !twitchadd | !youtubeadd> <(insert Twitter handle) | ( insert Twitch channel name) | (insert Youtube ID/name)> [(insert channel name)]``
   - Add your following channels from Twitch: ``<!mine>``
     - This only works if your Discord name is the same as your Twitch.
-  - Remove user: ``<!twitteradd | twitchadd | youtubeadddelete> <(insert Twitter handle) | ( insert Twitch channel name) | (insert Youtube ID/name)>``
-  - Get user: ``<!twitterget | twitchget | youtubeget> <(insert Twitter handle) | ( insert Twitch channel name) | (insert Youtube ID/name)>``
-  - List users: ``<!<twitterlist | twitchlist | youtubelist>``
+  - Remove user: ``<!twitteradd | !twitchadd | !youtubeadddelete> <(insert Twitter handle) | ( insert Twitch channel name) | (insert Youtube ID/name)>``
+  - Get user: ``<!twitterget | !twitchget | !youtubeget> <(insert Twitter handle) | ( insert Twitch channel name) | (insert Youtube ID/name)>``
+  - List users: ``<!<twitterlist | !twitchlist | !youtubelist>``
 - Games
   - Rock-Paper-Scissors 
     - Play: ``<!rps> <rock | r | paper | p | scissors | s>``
@@ -44,3 +44,5 @@ Discord bot with multiple helpful tools. Mostly for personal use.
   - Rock-Paper-Scissors against other players.
   - Casino slots.
   - Tic-tac-toe.
+- Others
+  - Slash commands.
