@@ -1,5 +1,8 @@
 ﻿using Discord.WebSocket;
 using System;
+using System.Security.Cryptography.X509Certificates;
+using System.Threading.Tasks;
+using Discord;
 
 namespace ChronoBot
 {
@@ -42,12 +45,14 @@ namespace ChronoBot
             else
                 socketMessage.Channel.SendMessageAsync(message);
         }
-        public static void SendMessageToUser(SocketUser socketUser, string message)
+        public static async void SendMessageToUser(SocketUser socketUser, string message)
         {
             if (DEBUG)
                 DebugSendMessageToMyself(message);
             else
-                socketUser.GetOrCreateDMChannelAsync().Result.SendMessageAsync(message);
+            {
+                await socketUser.GetOrCreateDMChannelAsync().Result.SendMessageAsync(message);
+            }
         }
 
         public static void SendFileToChannel(SocketMessage socketMessage, string filePath, string message)

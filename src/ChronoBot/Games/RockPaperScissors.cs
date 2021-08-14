@@ -2,12 +2,15 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Security.Cryptography;
 using System.Text;
 using Discord.WebSocket;
 using System.Timers;
 using ChronoBot.Systems;
 using Discord;
+using TwitchLib.Api.Core.Models.Undocumented.CSStreams;
 
 namespace ChronoBot.Games
 {
@@ -33,12 +36,15 @@ namespace ChronoBot.Games
         public struct UserData
         {
             public ulong UserId;
+            public ulong UserIdVs;
             public ulong GuildId;
             public ulong ChannelId;
             public int Plays;
             public int TotalPlays;
-            public int Wins;
-            public int Losses;
+            public int WinsBot;
+            public int WinsVs;
+            public int LossesBot;
+            public int LossesVs;
             public int Draws;
             public int Ratio;
             public int CurrentStreak;
@@ -48,6 +54,8 @@ namespace ChronoBot.Games
             public int PaperChosen;
             public int ScissorsChosen;
             public int Coins;
+            public DateTime DateVs;
+            public Actor ActorVs;
         }
 
         public RockPaperScissors()
@@ -122,7 +130,7 @@ namespace ChronoBot.Games
             int i = _users.FindIndex(x => x.UserId == userId);
             UserData ud = _users[i];
 
-            ud.Plays = ud.Wins = ud.Losses = ud.Draws = ud.Ratio = ud.CurrentStreak =
+            ud.Plays = ud.WinsBot = ud.WinsVs = ud.LossesBot = ud.LossesVs = ud.Draws = ud.Ratio = ud.CurrentStreak =
                 ud.BestStreak = ud.RockChosen = ud.PaperChosen = ud.ScissorsChosen = ud.Coins = 0;
             ud.Resets++;
 
@@ -144,8 +152,10 @@ namespace ChronoBot.Games
             sb.AppendLine($"Stats for {socketMessage.Author.Mention}");
             sb.AppendLine($"**Plays:** {ud.Plays}");
             sb.AppendLine($"**Total Plays:** {ud.TotalPlays}");
-            sb.AppendLine($"**Wins:** {ud.Wins}");
-            sb.AppendLine($"**Losses:** {ud.Losses}");
+            sb.AppendLine($"**Wins vs Bot:** {ud.WinsBot}");
+            sb.AppendLine($"**Losses vs Bot:** {ud.LossesBot}");
+            sb.AppendLine($"**Wins vs Player:** {ud.WinsVs}");
+            sb.AppendLine($"**Losses vs Player:** {ud.LossesVs}");
             sb.AppendLine($"**Draws:** {ud.Draws}");
             sb.AppendLine($"**Win Ratio:** {ud.Ratio}%");
             sb.AppendLine($"**Current Streak:** {ud.CurrentStreak}");
@@ -162,9 +172,69 @@ namespace ChronoBot.Games
 
         private void ProcessChosenActors(Actor playerActor, SocketMessage socketMessage)
         {
+            if(socketMessage.MentionedUsers.Count > 0)
+                VsPlayer(playerActor, socketMessage);
+            else
+                VsBot(playerActor, socketMessage);
+        }
+
+        private void VsPlayer(Actor playerActor, SocketMessage socketMessage)
+        {
+            SocketUser opponent = null;
+            try
+            {
+
+                opponent = socketMessage.MentionedUsers.ElementAt(0);
+            }
+            catch
+            {
+                Info.SendMessageToChannel(socketMessage, "Could not find user.");
+                return;
+            }
+
+            SocketUser player = socketMessage.Author;
+
+            ulong userIdVs = opponent.Id;
+            int i = _users.FindIndex(x => x.UserId == player.Id);
+            UserData udPlayer = _users[i];
+            if (udPlayer.UserIdVs == userIdVs && udPlayer.DateVs > DateTime.Now)
+            {
+                Info.SendMessageToChannel(socketMessage, $"Already in battle with {opponent.Mention}. Battle ends: {udPlayer.DateVs}");
+                return;
+            }
+
+            int j = _users.FindIndex(x => x.UserIdVs == opponent.Id);
+            UserData udOpponent = _users[i];
+
+            if (udOpponent.UserIdVs == player.Id)
+            {
+                GameState state;
+                int player1 = (int)udOpponent.ActorVs;
+                int player2 = (int)playerActor;
+                if ((player1 + 1) % (int)Actor.Max == player2)
+                    state = GameState.Win;
+                else if ((player2 + 1) % (int)Actor.Max == player1)
+                    state = GameState.Lose;
+                else
+                    state = GameState.Draw;
+                ProcessResultsVs(socketMessage);
+                return;
+            }
+
+            udPlayer.UserIdVs = userIdVs;
+            udPlayer.DateVs = DateTime.Now.AddDays(2);
+
+            socketMessage.DeleteAsync().GetAwaiter().GetResult();
+
+            Info.SendMessageToChannel(socketMessage, $"{player.Mention} is challenging {opponent.Mention} in Rock-Paper-Scissors. " +
+                                                     $"\n{player.Mention} has already made a move.");
+        }
+
+        private void VsBot(Actor playerActor, SocketMessage socketMessage)
+        {
             Random random = new Random();
             int bot = random.Next(0, (int)Actor.Max);
-            int player = (int) playerActor;
+            int player = (int)playerActor;
             GameState state;
             if ((bot + 1) % (int)Actor.Max == player)
                 state = GameState.Win;
@@ -173,10 +243,24 @@ namespace ChronoBot.Games
             else
                 state = GameState.Draw;
 
-            ProcessResults(socketMessage, state, playerActor, (Actor)bot);
+            ProcessResultsBot(socketMessage, state, playerActor, (Actor)bot);
         }
 
-        private void ProcessResults(SocketMessage socketMessage, GameState state, Actor playerActor, Actor botActor)
+        private void ProcessResultsVs(SocketMessage socketMessage, UserData player1, UserData player2)
+        {
+
+            GameState state;
+            int player1 = (int)udOpponent.ActorVs;
+            int player2 = (int)playerActor;
+            if ((player1 + 1) % (int)Actor.Max == player2)
+                state = GameState.Win;
+            else if ((player2 + 1) % (int)Actor.Max == player1)
+                state = GameState.Lose;
+            else
+                state = GameState.Draw;
+        }
+
+        private void ProcessResultsBot(SocketMessage socketMessage, GameState state, Actor playerActor, Actor botActor)
         {
             string userMention = "You";
             if (socketMessage.Author.Mention != null)
@@ -201,7 +285,7 @@ namespace ChronoBot.Games
             switch (state)
             {
                 case GameState.Win:
-                    ud.Wins++;
+                    ud.WinsBot++;
                     ud.CurrentStreak++;
 
                     int bonus = CalculateStreakBonus(ud.CurrentStreak, ud.Plays);;
@@ -214,7 +298,7 @@ namespace ChronoBot.Games
                     botRespond += $"You win!\n+{bonus} Ring{plural}. {streak}";
                     break;
                 case GameState.Lose:
-                    ud.Losses++;
+                    ud.LossesBot++;
 
                     ud.Coins--;
                     bool emptyWallet = ud.Coins <= 0;
@@ -260,7 +344,7 @@ namespace ChronoBot.Games
                     break;
             }
 
-            float ratio = (float)ud.Wins / ud.Plays;
+            float ratio = (float)(ud.WinsBot + ud.WinsVs) / ud.Plays;
             ud.Ratio = (int)(ratio * 100);
 
             _users[i] = ud;

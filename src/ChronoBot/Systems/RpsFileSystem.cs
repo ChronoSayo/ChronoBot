@@ -21,7 +21,7 @@ namespace ChronoBot.Systems
             _path = Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly()?.Location) ?? string.Empty, "Memory Card");
             _attributeNames = new[]
             {
-                "UserID", "ChannelID", "Plays", "TotalPlays", "Wins", "Losses", "Draws", "Ratio", "CurrentStreak",
+                "UserID", "UserIDOpponent", "ChannelID", "Plays", "TotalPlays", "Wins", "Losses", "Draws", "Ratio", "CurrentStreak",
                 "BestStreak", "Resets", "Rocks",
                 "Papers", "Scissors", "Coins"
             };
@@ -128,11 +128,14 @@ namespace ChronoBot.Systems
 
                     int i = 0;
                     user.UserId = (ulong)GetAttributeValue(_attributeNames.ElementAt(i++), e);
+                    user.UserIdVs = (ulong)GetAttributeValue(_attributeNames.ElementAt(i++), e);
                     user.ChannelId = (ulong)GetAttributeValue(_attributeNames.ElementAt(i++), e);
                     user.Plays = (int)GetAttributeValue(_attributeNames.ElementAt(i++), e);
                     user.TotalPlays = (int)GetAttributeValue(_attributeNames.ElementAt(i++), e);
-                    user.Wins = (int)GetAttributeValue(_attributeNames.ElementAt(i++), e);
-                    user.Losses = (int)GetAttributeValue(_attributeNames.ElementAt(i++), e);
+                    user.WinsBot = (int)GetAttributeValue(_attributeNames.ElementAt(i++), e);
+                    user.LossesBot = (int)GetAttributeValue(_attributeNames.ElementAt(i++), e);
+                    user.WinsVs = (int)GetAttributeValue(_attributeNames.ElementAt(i++), e);
+                    user.LossesVs = (int)GetAttributeValue(_attributeNames.ElementAt(i++), e);
                     user.Draws = (int)GetAttributeValue(_attributeNames.ElementAt(i++), e);
                     user.Ratio = (int)GetAttributeValue(_attributeNames.ElementAt(i++), e);
                     user.CurrentStreak = (int)GetAttributeValue(_attributeNames.ElementAt(i++), e);
@@ -177,11 +180,14 @@ namespace ChronoBot.Systems
 
                     int i = 0;
                     GetAttribute(_attributeNames.ElementAt(i++), found).Value = ud.UserId.ToString();
+                    GetAttribute(_attributeNames.ElementAt(i++), found).Value = ud.UserIdVs.ToString();
                     GetAttribute(_attributeNames.ElementAt(i++), found).Value = ud.ChannelId.ToString();
                     GetAttribute(_attributeNames.ElementAt(i++), found).Value = ud.Plays.ToString();
                     GetAttribute(_attributeNames.ElementAt(i++), found).Value = ud.TotalPlays.ToString();
-                    GetAttribute(_attributeNames.ElementAt(i++), found).Value = ud.Wins.ToString();
-                    GetAttribute(_attributeNames.ElementAt(i++), found).Value = ud.Losses.ToString();
+                    GetAttribute(_attributeNames.ElementAt(i++), found).Value = ud.WinsBot.ToString();
+                    GetAttribute(_attributeNames.ElementAt(i++), found).Value = ud.LossesBot.ToString();
+                    GetAttribute(_attributeNames.ElementAt(i++), found).Value = ud.WinsVs.ToString();
+                    GetAttribute(_attributeNames.ElementAt(i++), found).Value = ud.LossesVs.ToString();
                     GetAttribute(_attributeNames.ElementAt(i++), found).Value = ud.Draws.ToString();
                     GetAttribute(_attributeNames.ElementAt(i++), found).Value = ud.Ratio.ToString();
                     GetAttribute(_attributeNames.ElementAt(i++), found).Value = ud.CurrentStreak.ToString();
