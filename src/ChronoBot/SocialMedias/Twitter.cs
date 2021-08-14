@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Discord;
 using Discord.WebSocket;
 using TweetSharp;
 
@@ -310,6 +312,36 @@ namespace ChronoBot.SocialMedias
         {
             string[] lines = File.ReadAllLines("Memory Card/TwitterToken.txt");
             _service = new TwitterService(lines[0], lines[1], lines[2], lines[3]) {TweetMode = "extended"};
+        }
+
+        public override void MessageReceived(SocketMessage socketMessage)
+        {
+            if (!socketMessage.Embeds.Any(x => x.Url.ToLowerInvariant().Contains("https://twitter.com/"))) 
+                return;
+
+            Embed embed =
+                socketMessage.Embeds.FirstOrDefault(x => x.Url.ToLowerInvariant().Contains("https://twitter.com/"));
+            if (embed == null)
+                return;
+            string url = GetTweetFromPost(embed.Url.Split('/'), out string id);
+
+            GetTweetOptions options = new GetTweetOptions()
+            {
+                Id = long.Parse(id),
+                IncludeEntities = true
+            };
+            TwitterStatus tweet = _service.GetTweet(options);
+
+            if (tweet == null || tweet.ExtendedEntities == null || tweet.ExtendedEntities.Media.Count != 1)
+                return;
+
+            TwitterExtendedEntity tee = tweet.ExtendedEntities.Media.ElementAt(0);
+            if (tee.ExtendedEntityType != TwitterMediaType.Video)
+                return;
+
+            string message = url;
+            message = message.Replace("https://twitter", "https://fxtwitter");
+            Info.SendMessageToChannel(socketMessage, message);
         }
 
         public override void MessageReceivedSelf(SocketMessage socketMessage)
