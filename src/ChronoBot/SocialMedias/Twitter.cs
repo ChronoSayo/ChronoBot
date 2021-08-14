@@ -323,7 +323,7 @@ namespace ChronoBot.SocialMedias
                 socketMessage.Embeds.FirstOrDefault(x => x.Url.ToLowerInvariant().Contains("https://twitter.com/"));
             if (embed == null)
                 return;
-            string url = GetTweetFromPost(embed.Url.Split('/'), out string id);
+            GetTweetFromPost(embed.Url.Split('/'), out string id);
 
             GetTweetOptions options = new GetTweetOptions()
             {
@@ -339,9 +339,35 @@ namespace ChronoBot.SocialMedias
             if (tee.ExtendedEntityType != TwitterMediaType.Video)
                 return;
 
-            string message = url;
-            message = message.Replace("https://twitter", "https://fxtwitter");
-            Info.SendMessageToChannel(socketMessage, message);
+
+            try
+            {
+                int highest = 0;
+                int j = -1;
+                for(int i = 0; i < tee.VideoInfo.Variants.Count; i++)
+                {
+                    TwitterMediaVariant variant = tee.VideoInfo.Variants[i];
+                    string res = variant.Url.Segments[5].TrimEnd('/');
+                    string[] split = res.Split('x');
+
+                    if(!int.TryParse(split[0], out int x))
+                        continue;
+                    if (!int.TryParse(split[0], out int y))
+                        continue;
+
+                    int multiplyRes = x * y;
+                    if (multiplyRes <= highest) 
+                        continue;
+
+                    highest = multiplyRes;
+                    j = i;
+                }
+                Info.SendMessageToChannel(socketMessage, tee.VideoInfo.Variants[j].Url.ToString());
+            }
+            catch
+            {
+                // ignored
+            }
         }
 
         public override void MessageReceivedSelf(SocketMessage socketMessage)
