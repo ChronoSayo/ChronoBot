@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Discord;
 using Discord.WebSocket;
 using TweetSharp;
 
@@ -310,6 +312,62 @@ namespace ChronoBot.SocialMedias
         {
             string[] lines = File.ReadAllLines("Memory Card/TwitterToken.txt");
             _service = new TwitterService(lines[0], lines[1], lines[2], lines[3]) {TweetMode = "extended"};
+        }
+
+        public override void MessageReceived(SocketMessage socketMessage)
+        {
+            if (!socketMessage.Embeds.Any(x => x.Url.ToLowerInvariant().Contains("https://twitter.com/"))) 
+                return;
+
+            Embed embed =
+                socketMessage.Embeds.FirstOrDefault(x => x.Url.ToLowerInvariant().Contains("https://twitter.com/"));
+            if (embed == null)
+                return;
+            GetTweetFromPost(embed.Url.Split('/'), out string id);
+
+            GetTweetOptions options = new GetTweetOptions()
+            {
+                Id = long.Parse(id),
+                IncludeEntities = true
+            };
+            TwitterStatus tweet = _service.GetTweet(options);
+
+            if (tweet == null || tweet.ExtendedEntities == null || tweet.ExtendedEntities.Media.Count != 1)
+                return;
+
+            TwitterExtendedEntity tee = tweet.ExtendedEntities.Media.ElementAt(0);
+            if (tee.ExtendedEntityType != TwitterMediaType.Video)
+                return;
+
+
+            try
+            {
+                int highest = 0;
+                int j = -1;
+                for(int i = 0; i < tee.VideoInfo.Variants.Count; i++)
+                {
+                    TwitterMediaVariant variant = tee.VideoInfo.Variants[i];
+                    string res = variant.Url.Segments[5].TrimEnd('/');
+                    string[] split = res.Split('x');
+
+                    if(!int.TryParse(split[0], out int x))
+                        continue;
+                    if (!int.TryParse(split[0], out int y))
+                        continue;
+
+                    int multiplyRes = x * y;
+                    if (multiplyRes <= highest) 
+                        continue;
+
+                    highest = multiplyRes;
+                    j = i;
+                }
+                Info.SendMessageToChannel(socketMessage, tee.VideoInfo.Variants[j].Url.ToString());
+            }
+            catch
+            {
+                // ignored
+            }
         }
 
         public override void MessageReceivedSelf(SocketMessage socketMessage)
