@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Discord;
@@ -316,22 +315,29 @@ namespace ChronoBot.SocialMedias
 
         public override void MessageReceived(SocketMessage socketMessage)
         {
-            if (!socketMessage.Embeds.Any(x => x.Url.ToLowerInvariant().Contains("https://twitter.com/"))) 
-                return;
+            if (!socketMessage.Embeds.Any(x => x.Url.ToLowerInvariant().Contains("https://twitter.com/")))
+            {
+                if (!socketMessage.Content.Contains("https://twitter.com/") && !socketMessage.Content.Contains("/status/"))
+                    return;
+            }
 
             Embed embed =
                 socketMessage.Embeds.FirstOrDefault(x => x.Url.ToLowerInvariant().Contains("https://twitter.com/"));
+            string id;
             if (embed == null)
-                return;
-            GetTweetFromPost(embed.Url.Split('/'), out string id);
+                GetTweetFromPost(socketMessage.Content.Split('/'), out id);
+            else
+                GetTweetFromPost(embed.Url.Split('/'), out id);
 
-            GetTweetOptions options = new GetTweetOptions()
+            if(id == string.Empty)
+                return;
+
+            GetTweetOptions options = new GetTweetOptions
             {
                 Id = long.Parse(id),
                 IncludeEntities = true
             };
-            TwitterStatus tweet = _service.GetTweet(options);
-
+            var tweet = _service.GetTweet(options);
             if (tweet == null || tweet.ExtendedEntities == null || tweet.ExtendedEntities.Media.Count != 1)
                 return;
 
@@ -339,35 +345,40 @@ namespace ChronoBot.SocialMedias
             if (tee.ExtendedEntityType != TwitterMediaType.Video)
                 return;
 
-
-            try
+            int highest = 0;
+            int j = -1;
+            for(int i = 0; i < tee.VideoInfo.Variants.Count; i++)
             {
-                int highest = 0;
-                int j = -1;
-                for(int i = 0; i < tee.VideoInfo.Variants.Count; i++)
+                TwitterMediaVariant variant = tee.VideoInfo.Variants[i];
+                string res = string.Empty;
+                string[] segments = tee.VideoInfo.Variants[i].Url.Segments;
+                foreach (var s in segments)
                 {
-                    TwitterMediaVariant variant = tee.VideoInfo.Variants[i];
-                    string res = variant.Url.Segments[5].TrimEnd('/');
-                    string[] split = res.Split('x');
-
-                    if(!int.TryParse(split[0], out int x))
+                    if(!int.TryParse(s[0].ToString(), out _))
                         continue;
-                    if (!int.TryParse(split[0], out int y))
+                    if(s.Length <= 5)
+                        continue;
+                    if(s[2] != 'x' && s[3] != 'x' && s[4] != 'x')
                         continue;
 
-                    int multiplyRes = x * y;
-                    if (multiplyRes <= highest) 
-                        continue;
-
-                    highest = multiplyRes;
-                    j = i;
+                    res = s.TrimEnd('/');
+                    break;
                 }
-                Info.SendMessageToChannel(socketMessage, tee.VideoInfo.Variants[j].Url.ToString());
+
+                string[] split = res.Split('x');
+                if(!int.TryParse(split[0], out int x))
+                    continue;
+                if (!int.TryParse(split[0], out int y))
+                    continue;
+
+                int multiplyRes = x * y;
+                if (multiplyRes <= highest) 
+                    continue;
+
+                highest = multiplyRes;
+                j = i;
             }
-            catch
-            {
-                // ignored
-            }
+            Info.SendMessageToChannel(socketMessage, tee.VideoInfo.Variants[j].Url.ToString());
         }
 
         public override void MessageReceivedSelf(SocketMessage socketMessage)
