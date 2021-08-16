@@ -180,17 +180,18 @@ namespace ChronoBot.Games
 
         private void VsPlayer(Actor playerActor, SocketMessage socketMessage)
         {
-            SocketUser opponent = null;
-            try
-            {
+            ulong authorId = socketMessage.Author.Id;
+            ulong mentionId = socketMessage.MentionedUsers.ElementAt(0).Id;
 
-                opponent = socketMessage.MentionedUsers.ElementAt(0);
-            }
-            catch
-            {
-                Info.SendMessageToChannel(socketMessage, "Could not find user.");
-                return;
-            }
+            if(!_users.Exists(x => x.UserId == authorId))
+                CreateUser(socketMessage);
+
+            UserData authorUd = _users.Find(x => x.UserId == authorId);
+            if (!_users.Exists(x => x.UserId == mentionId) || authorUd.UserIdVs != mentionId)
+                Challenging(playerActor, authorUd, mentionId, socketMessage);
+            else
+                Responding();
+
 
             SocketUser player = socketMessage.Author;
 
@@ -228,6 +229,39 @@ namespace ChronoBot.Games
 
             Info.SendMessageToChannel(socketMessage, $"{player.Mention} is challenging {opponent.Mention} in Rock-Paper-Scissors. " +
                                                      $"\n{player.Mention} has already made a move.");
+        }
+
+        private void Challenging(Actor playerActor, UserData challengingUd, ulong challengerId, SocketMessage socketMessage)
+        {
+            challengingUd.UserIdVs = challengerId;
+            challengingUd.ActorVs = playerActor;
+            challengingUd.DateVs = DateTime.Now.AddDays(2);
+            int i = _users.FindIndex(x => x.UserId == challengingUd.UserId);
+            _users[i] = challengingUd;
+
+            Info.SendMessageToChannel(socketMessage, 
+                $"{socketMessage.Author.Mention} " +
+                "is challenging " +
+                $"{socketMessage.MentionedUsers.ElementAt(0).Mention} in Rock-Paper-Scissors!\n" +
+                $"Challenger has until {challengingUd.DateVs} to respond.");
+        }
+
+        private void Responding(UserData challengingUd, UserData mentionUd, Actor authorActor, SocketMessage socketMessage)
+        {
+            int mentionActor = (int)challengingUd.ActorVs;
+            string mention = socketMessage.MentionedUsers.ElementAt(0).Mention;
+            string result =
+                $"{mention} chose {ConvertActorToEmoji((Actor)mentionActor)}\n" +
+                $"{socketMessage.Author.Mention} chose {ConvertActorToEmoji(authorActor)}\n";
+            if ((mentionActor + 1) % (int)Actor.Max == (int)authorActor)
+                result += $"{socketMessage.Author.Mention} wins!";
+            else if (((int)authorActor + 1) % (int)Actor.Max == mentionActor)
+                result += $"{mention} wins!";
+            else
+                result += "Draw game.";
+
+            Info.SendMessageToChannel(socketMessage, result);
+
         }
 
         private void VsBot(Actor playerActor, SocketMessage socketMessage)
