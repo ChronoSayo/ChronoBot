@@ -20,6 +20,7 @@ namespace ChronoBot.Games
         private readonly RpsFileSystem _fileSystem;
         private Timer _timerVs;
         private readonly List<UserData> _users;
+        private const string ImagePath = "Images/RPS/";
 
         /// <summary>
         /// R < P < S < R
@@ -191,44 +192,6 @@ namespace ChronoBot.Games
                 Challenging(playerActor, authorUd, mentionUd, socketMessage);
             else
                 Responding(authorUd, mentionUd, playerActor, socketMessage);
-
-
-            //SocketUser player = socketMessage.Author;
-
-            //ulong userIdVs = opponent.Id;
-            //int i = _users.FindIndex(x => x.UserId == player.Id);
-            //UserData udPlayer = _users[i];
-            //if (udPlayer.UserIdVs == userIdVs && udPlayer.DateVs > DateTime.Now)
-            //{
-            //    Info.SendMessageToChannel(socketMessage, $"Already in battle with {opponent.Mention}. Battle ends: {udPlayer.DateVs}");
-            //    return;
-            //}
-
-            //int j = _users.FindIndex(x => x.UserIdVs == opponent.Id);
-            //UserData udOpponent = _users[i];
-
-            //if (udOpponent.UserIdVs == player.Id)
-            //{
-            //    GameState state;
-            //    int player1 = (int)udOpponent.ActorVs;
-            //    int player2 = (int)playerActor;
-            //    if ((player1 + 1) % (int)Actor.Max == player2)
-            //        state = GameState.Win;
-            //    else if ((player2 + 1) % (int)Actor.Max == player1)
-            //        state = GameState.Lose;
-            //    else
-            //        state = GameState.Draw;
-            //    ProcessResultsVs(socketMessage);
-            //    return;
-            //}
-
-            //udPlayer.UserIdVs = userIdVs;
-            //udPlayer.DateVs = DateTime.Now.AddDays(2);
-
-            //socketMessage.DeleteAsync().GetAwaiter().GetResult();
-
-            //Info.SendMessageToChannel(socketMessage, $"{player.Mention} is challenging {opponent.Mention} in Rock-Paper-Scissors. " +
-            //                                         $"\n{player.Mention} has already made a move.");
         }
 
         private void Challenging(Actor playerActor, UserData author, UserData mention, SocketMessage socketMessage)
@@ -284,10 +247,12 @@ namespace ChronoBot.Games
             mentionUd.TotalPlays++;
             authorUd.Plays++;
             mentionUd.Plays++;
+
             int i = FindIndex(authorUd);
             _users[i] = authorUd;
             i = FindIndex(mentionUd);
             _users[i] = mentionUd;
+
             Info.DeleteMessageInChannel(socketMessage);
             Info.SendMessageToChannel(socketMessage, result);
         }
@@ -317,7 +282,7 @@ namespace ChronoBot.Games
             string botRespond =
                 $"{userMention} threw {ConvertActorToEmoji(playerActor)}\nBot threw {ConvertActorToEmoji(botActor)}\n";
 
-            string imagePath = "Images/RPS/";
+            string imagePath = ImagePath;
             ulong userId = socketMessage.Author.Id;
             if (!Exists(userId))
             {
@@ -392,7 +357,7 @@ namespace ChronoBot.Games
                     break;
             }
 
-            float ratio = (float)(ud.Wins / ud.Plays);
+            float ratio = (float)ud.Wins / ud.Plays;
             ud.Ratio = (int)(ratio * 100);
 
             _users[i] = ud;
