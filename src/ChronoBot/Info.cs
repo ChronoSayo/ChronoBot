@@ -23,20 +23,20 @@ namespace ChronoBot
 
         public const string COMMAND_PREFIX = "!";
 
-        private static string _SHRUG = @"¯\_(ツ)_/¯";
+        private static readonly string _SHRUG = @"¯\_(ツ)_/¯";
 
-        private static Random _RANDOM = new Random();
+        private static readonly Random _RANDOM = new Random();
         public static int GetRandom(int min, int max)
         {
             return _RANDOM.Next(min, max);
         }
 
-        public static void SendMessageToChannel(ulong guildID, ulong channelID, string message)
+        public static void SendMessageToChannel(ulong guildId, ulong channelId, string message)
         {
             if (DEBUG)
                 DebugSendMessageToChannel(message);
             else
-                CLIENT.GetGuild(guildID).GetTextChannel(channelID).SendMessageAsync(message);
+                CLIENT.GetGuild(guildId).GetTextChannel(channelId).SendMessageAsync(message);
         }
         public static void SendMessageToChannel(SocketMessage socketMessage, string message)
         {
@@ -45,7 +45,21 @@ namespace ChronoBot
             else
                 socketMessage.Channel.SendMessageAsync(message);
         }
-        public static async void SendMessageToUser(SocketUser socketUser, string message)
+        public static void EditMessageInChannel(SocketMessage socketMessage, string message)
+        {
+            if (DEBUG)
+                DebugEditMessageInChannel(socketMessage.Id, message);
+            else
+                socketMessage.Channel.ModifyMessageAsync(socketMessage.Id, x => x.Content = message);
+        }
+        public static void DeleteMessageInChannel(SocketMessage socketMessage)
+        {
+            if (DEBUG)
+                DebugDeleteMessageInChannel(socketMessage.Id);
+            else
+                socketMessage.Channel.DeleteMessageAsync(socketMessage.Id);
+        }
+        public static void SendMessageToUser(SocketUser socketUser, string message)
         {
             if (DEBUG)
                 DebugSendMessageToMyself(message);
@@ -67,6 +81,21 @@ namespace ChronoBot
             ulong serverID = 386545577258778634;
             ulong channelID = 386545577258778637;
             CLIENT.GetGuild(serverID).GetTextChannel(channelID).SendMessageAsync(message);
+        }
+
+        //Edit message to my test channel.
+        private static void DebugEditMessageInChannel(ulong messageId, string message)
+        {
+            ulong serverID = 386545577258778634;
+            ulong channelID = 386545577258778637;
+            CLIENT.GetGuild(serverID).GetTextChannel(channelID).ModifyMessageAsync(messageId, x => x.Content = message);
+        }
+        //Send message to my test channel.
+        private static void DebugDeleteMessageInChannel(ulong messageId)
+        {
+            ulong serverID = 386545577258778634;
+            ulong channelID = 386545577258778637;
+            CLIENT.GetGuild(serverID).GetTextChannel(channelID).DeleteMessageAsync(messageId);
         }
         //Send message to myself.
         private static void DebugSendMessageToMyself(string message)
