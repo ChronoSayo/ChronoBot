@@ -107,9 +107,9 @@ namespace ChronoBot
             //if (socketMessage.Activity == null)
             //    return;
 
-            _twitter.MessageReceived(socketMessage);
-            _twitch.MessageReceived(socketMessage);
-            _youtube.MessageReceived(socketMessage);
+            //_twitter.MessageReceived(socketMessage);
+            //_twitch.MessageReceived(socketMessage);
+            //_youtube.MessageReceived(socketMessage);
 
             //_remind.MessageReceived(socketMessage);
             _selfie.MessageReceived(socketMessage);

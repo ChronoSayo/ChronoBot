@@ -55,7 +55,7 @@ namespace ChronoBot.Games
             public int ScissorsChosen;
             public int Coins;
             public DateTime DateVs;
-            public Actor ActorVs;
+            public Actor Actor;
         }
 
         public RockPaperScissors()
@@ -197,13 +197,13 @@ namespace ChronoBot.Games
         private void Challenging(Actor playerActor, UserData author, UserData mention, SocketMessage socketMessage)
         {
             author.UserIdVs = mention.UserId;
-            author.ActorVs = playerActor;
+            author.Actor = playerActor;
             author.DateVs = mention.DateVs = DateTime.Now.AddDays(2);
             int i = FindIndex(author.UserId);
             _users[i] = author;
 
             mention.UserIdVs = author.UserId;
-            mention.ActorVs = Actor.Max;
+            mention.Actor = Actor.Max;
             i = FindIndex(author.UserId);
             _users[i] = author;
 
@@ -217,60 +217,156 @@ namespace ChronoBot.Games
 
         private void Responding(UserData authorUd, UserData mentionUd, Actor authorActor, SocketMessage socketMessage)
         {
-            int mentionActor = (int)authorUd.ActorVs;
+            authorUd.Actor = authorActor;
+            int mentionActor = (int)mentionUd.Actor;
             string mention = socketMessage.MentionedUsers.ElementAt(0).Mention;
             string result =
-                $"{mention} chose {ConvertActorToEmoji((Actor)mentionActor)}\n" +
-                $"{socketMessage.Author.Mention} chose {ConvertActorToEmoji(authorActor)}\n";
+                $"{mention} chose {ConvertActorToEmoji(authorUd.Actor)}\n" +
+                $"{socketMessage.Author.Mention} chose {ConvertActorToEmoji(mentionUd.Actor)}\n";
+
+            GameState mentionState, authorState;
             //Responding wins
             if ((mentionActor + 1) % (int) Actor.Max == (int) authorActor)
             {
-                authorUd.Wins++;
-                mentionUd.Losses++;
                 result += $"{socketMessage.Author.Mention} wins!";
+                authorState = GameState.Win;
+                mentionState = GameState.Lose;
             }
             //Instigator wins
             else if (((int) authorActor + 1) % (int) Actor.Max == mentionActor)
             {
-                authorUd.Losses++;
-                mentionUd.Wins++;
                 result += $"{mention} wins!";
+                mentionState = GameState.Win;
+                authorState = GameState.Lose;
             }
             //Draw
             else
             {
-                authorUd.Draws++;
                 result += "Draw game.";
+                mentionState = authorState = GameState.Draw;
             }
 
-            authorUd.TotalPlays++;
-            mentionUd.TotalPlays++;
-            authorUd.Plays++;
-            mentionUd.Plays++;
+            ProcessResults(mentionUd, mentionState, result, mention, out result);
+            ProcessResults(authorUd, authorState, result, socketMessage.Author.Mention, out result);
 
-            int i = FindIndex(authorUd);
-            _users[i] = authorUd;
-            i = FindIndex(mentionUd);
-            _users[i] = mentionUd;
-
-            Info.DeleteMessageInChannel(socketMessage);
             Info.SendMessageToChannel(socketMessage, result);
+        }
+
+        private void ProcessResults(UserData ud, GameState state, string result, string mentionUser, out string resultText)
+        {
+            resultText = result;
+            ud.Plays++;
+            ud.TotalPlays++;
+            switch (ud.Actor)
+            {
+                case Actor.Rock:
+                    ud.RockChosen++;
+                    break;
+                case Actor.Paper:
+                    ud.PaperChosen++;
+                    break;
+                case Actor.Scissors:
+                    ud.ScissorsChosen++;
+                    break;
+                case Actor.Max:
+                    LogToFile(LogSeverity.Error, "Wrong actor was given.");
+                    break;
+                default:
+                    LogToFile(LogSeverity.Error, "No actor was given.");
+                    break;
+            }
+
+            switch (state)
+            {
+                case GameState.Win:
+                    ud.Wins++; 
+                    ud.CurrentStreak++;
+
+                    int bonus = CalculateStreakBonus(ud.CurrentStreak, ud.Plays);
+                    ud.Coins += bonus;
+
+                    string newRecord = ud.CurrentStreak > ud.BestStreak ? $"{mentionUser} has a new streak record!!!" : string.Empty;
+                    string streak = ud.CurrentStreak > 1 ? ud.CurrentStreak + $" win streak! {newRecord}" : string.Empty;
+                    string plural = ud.Coins == 1 ? string.Empty : "s";
+                    resultText += $"{mentionUser} win!\n+{bonus} Ring{plural}. {streak}";
+                    break;
+                case GameState.Lose:
+                    ud.Losses++;
+
+                    ud.Coins--;
+                    bool emptyWallet = ud.Coins <= 0;
+                    if (emptyWallet)
+                        ud.Coins = 0;
+                    if (ud.CurrentStreak > ud.BestStreak)
+                        ud.BestStreak = ud.CurrentStreak;
+                    ud.CurrentStreak = 0;
+
+                    string loseCoin = emptyWallet ? string.Empty : "\n-1 Ring.";
+                    resultText += $"{mentionUser} lost...{loseCoin}";
+                    break;
+                case GameState.Draw:
+                    ud.Draws++;
+                    resultText += "Draw game.";
+                    break;
+                case GameState.None:
+                    LogToFile(LogSeverity.Error, "Wrong game state was given.");
+                    break;
+                default:
+                    LogToFile(LogSeverity.Error, "No game state was given.");
+                    break;
+            }
+
+            ud.Actor = Actor.Max;
+            ud.UserIdVs = 0;
+            float ratio = (float)ud.Wins / ud.Plays;
+            ud.Ratio = (int)(ratio * 100);
+
+            int i = FindIndex(ud);
+            _users[i] = ud;
+            _fileSystem.UpdateFile(ud);
         }
 
         private void VsBot(Actor playerActor, SocketMessage socketMessage)
         {
+            string userMention = "You";
+            if (socketMessage.Author.Mention != null)
+                userMention = socketMessage.Author.Mention;
+
             Random random = new Random();
             int bot = random.Next(0, (int)Actor.Max);
             int player = (int)playerActor;
-            GameState state;
-            if ((bot + 1) % (int)Actor.Max == player)
-                state = GameState.Win;
-            else if ((player + 1) % (int)Actor.Max == bot)
-                state = GameState.Lose;
-            else
-                state = GameState.Draw;
+            string result =
+                $"{userMention} threw {ConvertActorToEmoji(playerActor)}\nBot threw {ConvertActorToEmoji((Actor)bot)}\n";
 
-            ProcessResults(socketMessage, state, playerActor, (Actor)bot);
+            string imagePath = ImagePath;
+            ulong userId = socketMessage.Author.Id;
+            if (!Exists(userId))
+            {
+                CreateUser(socketMessage);
+            }
+
+            GameState state;
+            if ((bot + 1) % (int) Actor.Max == player)
+            {
+                state = GameState.Win;
+                imagePath += "Lost.png";
+            }
+            else if ((player + 1) % (int) Actor.Max == bot)
+            {
+                state = GameState.Lose;
+                imagePath += "Win.png";
+            }
+            else
+            {
+                state = GameState.Draw;
+                imagePath += "Draw.png";
+                result += "Draw game.";
+            }
+
+            UserData ud = Find(socketMessage.Author.Id);
+            ProcessResults(ud, state, result, socketMessage.Author.Mention, out result);
+
+            Info.SendFileToChannel(socketMessage, imagePath, result);
         }
 
         private void ProcessResults(SocketMessage socketMessage, GameState state, Actor playerActor, Actor botActor)
