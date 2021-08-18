@@ -30,6 +30,7 @@ namespace ChronoBot.Systems
         public void Save(RockPaperScissors.UserData ud)
         {
             string userId = ud.UserId.ToString();
+            string userIdVs = ud.UserIdVs.ToString();
             string guildId = ud.GuildId.ToString();
             string channelId = ud.ChannelId.ToString();
 
@@ -41,6 +42,8 @@ namespace ChronoBot.Systems
                 if(name == _attributeNames.ElementAt(0))
                     value = userId;
                 else if (name == _attributeNames.ElementAt(1))
+                    value = userIdVs;
+                else if (name == _attributeNames.ElementAt(2))
                     value = channelId;
                 attributes.Add(new XAttribute(name, value));
             }
@@ -151,9 +154,10 @@ namespace ChronoBot.Systems
 
         private object GetAttributeValue(string name, XElement e)
         {
-            if (name == _attributeNames.ElementAt(0) || name == _attributeNames.ElementAt(1))
-                return ulong.Parse(e.Attribute(name)?.Value ?? string.Empty);
-            return int.Parse((e.Attribute(name)?.Value) ?? "0");
+            if (name == _attributeNames.ElementAt(0) || name == _attributeNames.ElementAt(1) ||
+                name == _attributeNames.ElementAt(2))
+                return ulong.Parse(e.Attribute(name)?.Value ?? "0");
+            return int.Parse(e.Attribute(name)?.Value ?? "0");
         }
 
         public void UpdateFile(RockPaperScissors.UserData ud)

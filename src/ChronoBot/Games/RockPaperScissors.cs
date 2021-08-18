@@ -91,7 +91,14 @@ namespace ChronoBot.Games
             string action = string.Empty;
             try
             {
-                action = message.Remove(0, (Info.COMMAND_PREFIX + "rps").Length).Replace(" ", string.Empty);
+                if (socketMessage.MentionedUsers.Count == 0)
+                    action = message.Remove(0, (Info.COMMAND_PREFIX + "rps").Length).Replace(" ", string.Empty);
+                else
+                {
+                    List<string> split = message.Split(' ').ToList();
+                    split.Remove(socketMessage.MentionedUsers.ElementAt(0).Mention);
+                    action = split[1];
+                }
                 actor = ConvertPlayerDecisionToActor(action);
             }
             catch

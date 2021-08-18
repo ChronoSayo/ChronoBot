@@ -64,9 +64,7 @@ namespace ChronoBot
             if (DEBUG)
                 DebugSendMessageToMyself(message);
             else
-            {
-                await socketUser.GetOrCreateDMChannelAsync().Result.SendMessageAsync(message);
-            }
+                socketUser.GetOrCreateDMChannelAsync().Result.SendMessageAsync(message);
         }
 
         public static void SendFileToChannel(SocketMessage socketMessage, string filePath, string message)
