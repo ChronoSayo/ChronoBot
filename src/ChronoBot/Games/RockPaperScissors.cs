@@ -21,6 +21,7 @@ namespace ChronoBot.Games
         private Timer _timerVs;
         private readonly List<UserData> _users;
         private const string ImagePath = "Images/RPS/";
+        private const string CoinsInKeyText = "&c";
 
         /// <summary>
         /// R < P < S < R
@@ -91,6 +92,9 @@ namespace ChronoBot.Games
             string action = string.Empty;
             try
             {
+                if (message.Contains("|"))
+                    message = message.Replace("|", string.Empty);
+
                 if (socketMessage.MentionedUsers.Count == 0)
                     action = message.Remove(0, (Info.COMMAND_PREFIX + "rps").Length).Replace(" ", string.Empty);
                 else
@@ -188,31 +192,43 @@ namespace ChronoBot.Games
             ulong authorId = socketMessage.Author.Id;
             ulong mentionId = socketMessage.MentionedUsers.ElementAt(0).Id;
 
+            if (authorId == mentionId)
+            {
+                Info.SendMessageToChannel(socketMessage, $"{socketMessage.Author.Mention} " +
+                                                         "If you have two hands, you can play against yourself that way.");
+                return;
+            }
+
             if(!Exists(authorId))
                 CreateUser(socketMessage);
             if (!Exists(mentionId))
                 CreateUser(socketMessage, mentionId);
 
             UserData authorUd = Find(authorId);
-            UserData mentionUd = Find(authorId);
-            if (!Exists(mentionId) || authorUd.UserIdVs != mentionId)
+            UserData mentionUd = Find(mentionId);
+            if (authorUd.UserIdVs != mentionId && mentionUd.UserIdVs == 0)
                 Challenging(playerActor, authorUd, mentionUd, socketMessage);
-            else
+            else if(authorUd.UserIdVs == mentionId)
                 Responding(authorUd, mentionUd, playerActor, socketMessage);
+            else
+                Info.SendMessageToChannel(socketMessage, $"{socketMessage.MentionedUsers.ElementAt(0).Username} is already in battle.");
         }
 
         private void Challenging(Actor playerActor, UserData author, UserData mention, SocketMessage socketMessage)
         {
             author.UserIdVs = mention.UserId;
             author.Actor = playerActor;
-            author.DateVs = mention.DateVs = DateTime.Now.AddDays(2);
+            author.DateVs = DateTime.Now.AddDays(2);
             int i = FindIndex(author.UserId);
             _users[i] = author;
+            _fileSystem.UpdateFile(author);
 
             mention.UserIdVs = author.UserId;
             mention.Actor = Actor.Max;
-            i = FindIndex(author.UserId);
-            _users[i] = author;
+            mention.DateVs = DateTime.Now.AddDays(2);
+            i = FindIndex(mention.UserId);
+            _users[i] = mention;
+            _fileSystem.UpdateFile(mention);
 
             string authorMention = socketMessage.Author.Mention;
             Info.DeleteMessageInChannel(socketMessage);
@@ -228,21 +244,21 @@ namespace ChronoBot.Games
             int mentionActor = (int)mentionUd.Actor;
             string mention = socketMessage.MentionedUsers.ElementAt(0).Mention;
             string result =
-                $"{mention} chose {ConvertActorToEmoji(authorUd.Actor)}\n" +
-                $"{socketMessage.Author.Mention} chose {ConvertActorToEmoji(mentionUd.Actor)}\n";
+                $"{mention} chose {ConvertActorToEmoji(mentionUd.Actor)}\n" +
+                $"{socketMessage.Author.Mention} chose {ConvertActorToEmoji(authorUd.Actor)}\n\n";
 
             GameState mentionState, authorState;
             //Responding wins
             if ((mentionActor + 1) % (int) Actor.Max == (int) authorActor)
             {
-                result += $"{socketMessage.Author.Mention} wins!";
+                result += $"{socketMessage.Author.Mention} wins! {CoinsInKeyText}";
                 authorState = GameState.Win;
                 mentionState = GameState.Lose;
             }
             //Instigator wins
             else if (((int) authorActor + 1) % (int) Actor.Max == mentionActor)
             {
-                result += $"{mention} wins!";
+                result += $"{mention} wins! {CoinsInKeyText}";
                 mentionState = GameState.Win;
                 authorState = GameState.Lose;
             }
@@ -257,6 +273,51 @@ namespace ChronoBot.Games
             ProcessResults(authorUd, authorState, result, socketMessage.Author.Mention, out result);
 
             Info.SendMessageToChannel(socketMessage, result);
+        }
+
+        private void VsBot(Actor playerActor, SocketMessage socketMessage)
+        {
+            string userMention = "You";
+            if (socketMessage.Author.Mention != null)
+                userMention = socketMessage.Author.Mention;
+
+            Random random = new Random();
+            int bot = random.Next(0, (int)Actor.Max);
+            int player = (int)playerActor;
+            string result =
+                $"{userMention} threw {ConvertActorToEmoji(playerActor)}\nBot threw {ConvertActorToEmoji((Actor)bot)}\n\n";
+
+            string imagePath = ImagePath;
+            ulong userId = socketMessage.Author.Id;
+            if (!Exists(userId))
+            {
+                CreateUser(socketMessage);
+            }
+
+            GameState state;
+            if ((bot + 1) % (int)Actor.Max == player)
+            {
+                state = GameState.Win;
+                imagePath += "Lost.png";
+                result += CoinsInKeyText;
+            }
+            else if ((player + 1) % (int)Actor.Max == bot)
+            {
+                state = GameState.Lose;
+                imagePath += "Win.png";
+            }
+            else
+            {
+                state = GameState.Draw;
+                imagePath += "Draw.png";
+                result += "Draw game.";
+            }
+
+            UserData ud = Find(socketMessage.Author.Id);
+            ud.Actor = playerActor;
+            ProcessResults(ud, state, result, socketMessage.Author.Mention, out result);
+
+            Info.SendFileToChannel(socketMessage, imagePath, result);
         }
 
         private void ProcessResults(UserData ud, GameState state, string result, string mentionUser, out string resultText)
@@ -292,10 +353,10 @@ namespace ChronoBot.Games
                     int bonus = CalculateStreakBonus(ud.CurrentStreak, ud.Plays);
                     ud.Coins += bonus;
 
-                    string newRecord = ud.CurrentStreak > ud.BestStreak ? $"{mentionUser} has a new streak record!!!" : string.Empty;
+                    string newRecord = ud.CurrentStreak > ud.BestStreak ? "New streak record!!!" : string.Empty;
                     string streak = ud.CurrentStreak > 1 ? ud.CurrentStreak + $" win streak! {newRecord}" : string.Empty;
-                    string plural = ud.Coins == 1 ? string.Empty : "s";
-                    resultText += $"{mentionUser} win!\n+{bonus} Ring{plural}. {streak}";
+                    string plural = bonus == 1 ? string.Empty : "s";
+                    resultText = resultText.Replace(CoinsInKeyText, $"+{bonus} Ring{plural}. {streak}\n");
                     break;
                 case GameState.Lose:
                     ud.Losses++;
@@ -304,16 +365,16 @@ namespace ChronoBot.Games
                     bool emptyWallet = ud.Coins <= 0;
                     if (emptyWallet)
                         ud.Coins = 0;
+                    else
+                        resultText += $"{mentionUser} -1 Ring";
+
+                    resultText += "\n";
                     if (ud.CurrentStreak > ud.BestStreak)
                         ud.BestStreak = ud.CurrentStreak;
                     ud.CurrentStreak = 0;
-
-                    string loseCoin = emptyWallet ? string.Empty : "\n-1 Ring.";
-                    resultText += $"{mentionUser} lost...{loseCoin}";
                     break;
                 case GameState.Draw:
                     ud.Draws++;
-                    resultText += "Draw game.";
                     break;
                 case GameState.None:
                     LogToFile(LogSeverity.Error, "Wrong game state was given.");
@@ -331,49 +392,6 @@ namespace ChronoBot.Games
             int i = FindIndex(ud);
             _users[i] = ud;
             _fileSystem.UpdateFile(ud);
-        }
-
-        private void VsBot(Actor playerActor, SocketMessage socketMessage)
-        {
-            string userMention = "You";
-            if (socketMessage.Author.Mention != null)
-                userMention = socketMessage.Author.Mention;
-
-            Random random = new Random();
-            int bot = random.Next(0, (int)Actor.Max);
-            int player = (int)playerActor;
-            string result =
-                $"{userMention} threw {ConvertActorToEmoji(playerActor)}\nBot threw {ConvertActorToEmoji((Actor)bot)}\n";
-
-            string imagePath = ImagePath;
-            ulong userId = socketMessage.Author.Id;
-            if (!Exists(userId))
-            {
-                CreateUser(socketMessage);
-            }
-
-            GameState state;
-            if ((bot + 1) % (int) Actor.Max == player)
-            {
-                state = GameState.Win;
-                imagePath += "Lost.png";
-            }
-            else if ((player + 1) % (int) Actor.Max == bot)
-            {
-                state = GameState.Lose;
-                imagePath += "Win.png";
-            }
-            else
-            {
-                state = GameState.Draw;
-                imagePath += "Draw.png";
-                result += "Draw game.";
-            }
-
-            UserData ud = Find(socketMessage.Author.Id);
-            ProcessResults(ud, state, result, socketMessage.Author.Mention, out result);
-
-            Info.SendFileToChannel(socketMessage, imagePath, result);
         }
 
         private void ProcessResults(SocketMessage socketMessage, GameState state, Actor playerActor, Actor botActor)
