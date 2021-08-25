@@ -1,13 +1,17 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Dynamic;
 using System.IO;
+using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Security.Cryptography;
 using System.Text;
 using Discord.WebSocket;
 using System.Timers;
 using ChronoBot.Systems;
 using Discord;
+using TwitchLib.Api.Core.Models.Undocumented.CSStreams;
 
 namespace ChronoBot.Games
 {
@@ -16,6 +20,8 @@ namespace ChronoBot.Games
         private readonly RpsFileSystem _fileSystem;
         private Timer _timerVs;
         private readonly List<UserData> _users;
+        private const string ImagePath = "Images/RPS/";
+        private const string CoinsInKeyText = "&c";
 
         /// <summary>
         /// R < P < S < R
@@ -33,6 +39,7 @@ namespace ChronoBot.Games
         public struct UserData
         {
             public ulong UserId;
+            public ulong UserIdVs;
             public ulong GuildId;
             public ulong ChannelId;
             public int Plays;
@@ -48,6 +55,8 @@ namespace ChronoBot.Games
             public int PaperChosen;
             public int ScissorsChosen;
             public int Coins;
+            public DateTime DateVs;
+            public Actor Actor;
         }
 
         public RockPaperScissors()
@@ -83,7 +92,17 @@ namespace ChronoBot.Games
             string action = string.Empty;
             try
             {
-                action = message.Remove(0, (Info.COMMAND_PREFIX + "rps").Length).Replace(" ", string.Empty);
+                if (message.Contains("|"))
+                    message = message.Replace("|", string.Empty);
+
+                if (socketMessage.MentionedUsers.Count == 0)
+                    action = message.Remove(0, (Info.COMMAND_PREFIX + "rps").Length).Replace(" ", string.Empty);
+                else
+                {
+                    List<string> split = message.Split(' ').ToList();
+                    split.Remove(socketMessage.MentionedUsers.ElementAt(0).Mention);
+                    action = split[1];
+                }
                 actor = ConvertPlayerDecisionToActor(action);
             }
             catch
@@ -116,10 +135,10 @@ namespace ChronoBot.Games
         private void ResetStats(SocketMessage socketMessage)
         {
             ulong userId = socketMessage.Author.Id;
-            if (!_users.Exists(x => x.UserId == userId))
+            if (!Exists(userId))
                 CreateUser(socketMessage);
 
-            int i = _users.FindIndex(x => x.UserId == userId);
+            int i = FindIndex(userId);
             UserData ud = _users[i];
 
             ud.Plays = ud.Wins = ud.Losses = ud.Draws = ud.Ratio = ud.CurrentStreak =
@@ -135,10 +154,10 @@ namespace ChronoBot.Games
         private void ShowStats(SocketMessage socketMessage)
         {
             ulong userId = socketMessage.Author.Id;
-            if (!_users.Exists(x => x.UserId == userId))
+            if (!Exists(userId))
                 CreateUser(socketMessage);
 
-            UserData ud = _users.Find(x => x.UserId == userId);
+            UserData ud = Find(userId);
 
             StringBuilder sb = new StringBuilder();
             sb.AppendLine($"Stats for {socketMessage.Author.Mention}");
@@ -162,18 +181,217 @@ namespace ChronoBot.Games
 
         private void ProcessChosenActors(Actor playerActor, SocketMessage socketMessage)
         {
+            if(socketMessage.MentionedUsers.Count > 0)
+                VsPlayer(playerActor, socketMessage);
+            else
+                VsBot(playerActor, socketMessage);
+        }
+
+        private void VsPlayer(Actor playerActor, SocketMessage socketMessage)
+        {
+            ulong authorId = socketMessage.Author.Id;
+            ulong mentionId = socketMessage.MentionedUsers.ElementAt(0).Id;
+
+            if (authorId == mentionId)
+            {
+                Info.SendMessageToChannel(socketMessage, $"{socketMessage.Author.Mention} " +
+                                                         "If you have two hands, you can play against yourself that way.");
+                return;
+            }
+
+            if(!Exists(authorId))
+                CreateUser(socketMessage);
+            if (!Exists(mentionId))
+                CreateUser(socketMessage, mentionId);
+
+            UserData authorUd = Find(authorId);
+            UserData mentionUd = Find(mentionId);
+            if (authorUd.UserIdVs != mentionId && mentionUd.UserIdVs == 0)
+                Challenging(playerActor, authorUd, mentionUd, socketMessage);
+            else if(authorUd.UserIdVs == mentionId)
+                Responding(authorUd, mentionUd, playerActor, socketMessage);
+            else
+                Info.SendMessageToChannel(socketMessage, $"{socketMessage.MentionedUsers.ElementAt(0).Username} is already in battle.");
+        }
+
+        private void Challenging(Actor playerActor, UserData author, UserData mention, SocketMessage socketMessage)
+        {
+            author.UserIdVs = mention.UserId;
+            author.Actor = playerActor;
+            author.DateVs = DateTime.Now.AddDays(2);
+            int i = FindIndex(author.UserId);
+            _users[i] = author;
+            _fileSystem.UpdateFile(author);
+
+            mention.UserIdVs = author.UserId;
+            mention.Actor = Actor.Max;
+            mention.DateVs = DateTime.Now.AddDays(2);
+            i = FindIndex(mention.UserId);
+            _users[i] = mention;
+            _fileSystem.UpdateFile(mention);
+
+            string authorMention = socketMessage.Author.Mention;
+            Info.DeleteMessageInChannel(socketMessage);
+            Info.SendMessageToChannel(socketMessage, 
+                $"{authorMention} is challenging " +
+                $"{socketMessage.MentionedUsers.ElementAt(0).Mention} in Rock-Paper-Scissors!\n" +
+                $"{authorMention} has already made a move.\nBattle ends: {author.DateVs}");
+        }
+
+        private void Responding(UserData authorUd, UserData mentionUd, Actor authorActor, SocketMessage socketMessage)
+        {
+            authorUd.Actor = authorActor;
+            int mentionActor = (int)mentionUd.Actor;
+            string mention = socketMessage.MentionedUsers.ElementAt(0).Mention;
+            string result =
+                $"{mention} chose {ConvertActorToEmoji(mentionUd.Actor)}\n" +
+                $"{socketMessage.Author.Mention} chose {ConvertActorToEmoji(authorUd.Actor)}\n\n";
+
+            GameState mentionState, authorState;
+            //Responding wins
+            if ((mentionActor + 1) % (int) Actor.Max == (int) authorActor)
+            {
+                result += $"{socketMessage.Author.Mention} wins! {CoinsInKeyText}";
+                authorState = GameState.Win;
+                mentionState = GameState.Lose;
+            }
+            //Instigator wins
+            else if (((int) authorActor + 1) % (int) Actor.Max == mentionActor)
+            {
+                result += $"{mention} wins! {CoinsInKeyText}";
+                mentionState = GameState.Win;
+                authorState = GameState.Lose;
+            }
+            //Draw
+            else
+            {
+                result += "Draw game.";
+                mentionState = authorState = GameState.Draw;
+            }
+
+            ProcessResults(mentionUd, mentionState, result, mention, out result);
+            ProcessResults(authorUd, authorState, result, socketMessage.Author.Mention, out result);
+
+            Info.SendMessageToChannel(socketMessage, result);
+        }
+
+        private void VsBot(Actor playerActor, SocketMessage socketMessage)
+        {
+            string userMention = "You";
+            if (socketMessage.Author.Mention != null)
+                userMention = socketMessage.Author.Mention;
+
             Random random = new Random();
             int bot = random.Next(0, (int)Actor.Max);
-            int player = (int) playerActor;
+            int player = (int)playerActor;
+            string result =
+                $"{userMention} threw {ConvertActorToEmoji(playerActor)}\nBot threw {ConvertActorToEmoji((Actor)bot)}\n\n";
+
+            string imagePath = ImagePath;
+            ulong userId = socketMessage.Author.Id;
+            if (!Exists(userId))
+            {
+                CreateUser(socketMessage);
+            }
+
             GameState state;
             if ((bot + 1) % (int)Actor.Max == player)
+            {
                 state = GameState.Win;
+                imagePath += "Lost.png";
+                result += CoinsInKeyText;
+            }
             else if ((player + 1) % (int)Actor.Max == bot)
+            {
                 state = GameState.Lose;
+                imagePath += "Win.png";
+            }
             else
+            {
                 state = GameState.Draw;
+                imagePath += "Draw.png";
+                result += "Draw game.";
+            }
 
-            ProcessResults(socketMessage, state, playerActor, (Actor)bot);
+            UserData ud = Find(socketMessage.Author.Id);
+            ud.Actor = playerActor;
+            ProcessResults(ud, state, result, socketMessage.Author.Mention, out result);
+
+            Info.SendFileToChannel(socketMessage, imagePath, result);
+        }
+
+        private void ProcessResults(UserData ud, GameState state, string result, string mentionUser, out string resultText)
+        {
+            resultText = result;
+            ud.Plays++;
+            ud.TotalPlays++;
+            switch (ud.Actor)
+            {
+                case Actor.Rock:
+                    ud.RockChosen++;
+                    break;
+                case Actor.Paper:
+                    ud.PaperChosen++;
+                    break;
+                case Actor.Scissors:
+                    ud.ScissorsChosen++;
+                    break;
+                case Actor.Max:
+                    LogToFile(LogSeverity.Error, "Wrong actor was given.");
+                    break;
+                default:
+                    LogToFile(LogSeverity.Error, "No actor was given.");
+                    break;
+            }
+
+            switch (state)
+            {
+                case GameState.Win:
+                    ud.Wins++; 
+                    ud.CurrentStreak++;
+
+                    int bonus = CalculateStreakBonus(ud.CurrentStreak, ud.Plays);
+                    ud.Coins += bonus;
+
+                    string newRecord = ud.CurrentStreak > ud.BestStreak ? "New streak record!!!" : string.Empty;
+                    string streak = ud.CurrentStreak > 1 ? ud.CurrentStreak + $" win streak! {newRecord}" : string.Empty;
+                    string plural = bonus == 1 ? string.Empty : "s";
+                    resultText = resultText.Replace(CoinsInKeyText, $"+{bonus} Ring{plural}. {streak}\n");
+                    break;
+                case GameState.Lose:
+                    ud.Losses++;
+
+                    ud.Coins--;
+                    bool emptyWallet = ud.Coins <= 0;
+                    if (emptyWallet)
+                        ud.Coins = 0;
+                    else
+                        resultText += $"{mentionUser} -1 Ring";
+
+                    resultText += "\n";
+                    if (ud.CurrentStreak > ud.BestStreak)
+                        ud.BestStreak = ud.CurrentStreak;
+                    ud.CurrentStreak = 0;
+                    break;
+                case GameState.Draw:
+                    ud.Draws++;
+                    break;
+                case GameState.None:
+                    LogToFile(LogSeverity.Error, "Wrong game state was given.");
+                    break;
+                default:
+                    LogToFile(LogSeverity.Error, "No game state was given.");
+                    break;
+            }
+
+            ud.Actor = Actor.Max;
+            ud.UserIdVs = 0;
+            float ratio = (float)ud.Wins / ud.Plays;
+            ud.Ratio = (int)(ratio * 100);
+
+            int i = FindIndex(ud);
+            _users[i] = ud;
+            _fileSystem.UpdateFile(ud);
         }
 
         private void ProcessResults(SocketMessage socketMessage, GameState state, Actor playerActor, Actor botActor)
@@ -185,14 +403,14 @@ namespace ChronoBot.Games
             string botRespond =
                 $"{userMention} threw {ConvertActorToEmoji(playerActor)}\nBot threw {ConvertActorToEmoji(botActor)}\n";
 
-            string imagePath = "Images/RPS/";
+            string imagePath = ImagePath;
             ulong userId = socketMessage.Author.Id;
-            if (!_users.Exists(x => x.UserId == userId))
+            if (!Exists(userId))
             {
                 CreateUser(socketMessage);
             }
 
-            int i = _users.FindIndex(x => x.UserId == userId);
+            int i = FindIndex(userId);
             UserData ud = _users[i];
 
             ud.Plays++;
@@ -204,7 +422,7 @@ namespace ChronoBot.Games
                     ud.Wins++;
                     ud.CurrentStreak++;
 
-                    int bonus = CalculateStreakBonus(ud.CurrentStreak, ud.Plays);;
+                    int bonus = CalculateStreakBonus(ud.CurrentStreak, ud.Plays);
                     ud.Coins += bonus;
 
                     string newRecord = ud.CurrentStreak > ud.BestStreak ? "New streak record!!!" : string.Empty;
@@ -277,14 +495,14 @@ namespace ChronoBot.Games
             return (int)Math.Ceiling(bonus * 0.5f);
         }
 
-        private void CreateUser(SocketMessage socketMessage)
+        private void CreateUser(SocketMessage socketMessage, ulong id = 0)
         {
             ulong guildId = Info.GetGuildIDFromSocketMessage(socketMessage);
             ulong channelId = Info.DEBUG ? Info.DEBUG_CHANNEL_ID : socketMessage.Channel.Id;
 
             UserData temp = new UserData
             {
-                UserId = socketMessage.Author.Id,
+                UserId = id == 0 ? socketMessage.Author.Id : id,
                 GuildId = guildId,
                 ChannelId = channelId
             };
@@ -327,7 +545,24 @@ namespace ChronoBot.Games
             }
             return s;
         }
-        
+
+        private UserData Find(ulong id)
+        {
+            return _users.Find(x => x.UserId == id);
+        }
+        private int FindIndex(UserData ud)
+        {
+            return _users.FindIndex(x => x.UserId == ud.UserId);
+        }
+        private int FindIndex(ulong id)
+        {
+            return _users.FindIndex(x => x.UserId == id);
+        }
+        private bool Exists(ulong id)
+        {
+            return _users.Exists(x => x.UserId == id);
+        }
+
         private void LogToFile(LogSeverity severity, string message, Exception e = null, [CallerMemberName] string caller = null)
         {
             StackTrace st = new StackTrace();

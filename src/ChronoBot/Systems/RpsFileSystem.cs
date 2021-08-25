@@ -21,7 +21,7 @@ namespace ChronoBot.Systems
             _path = Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly()?.Location) ?? string.Empty, "Memory Card");
             _attributeNames = new[]
             {
-                "UserID", "ChannelID", "Plays", "TotalPlays", "Wins", "Losses", "Draws", "Ratio", "CurrentStreak",
+                "UserID", "UserIDOpponent", "ChannelID", "Plays", "TotalPlays", "Wins", "Losses", "Draws", "Ratio", "CurrentStreak",
                 "BestStreak", "Resets", "Rocks",
                 "Papers", "Scissors", "Coins"
             };
@@ -30,6 +30,7 @@ namespace ChronoBot.Systems
         public void Save(RockPaperScissors.UserData ud)
         {
             string userId = ud.UserId.ToString();
+            string userIdVs = ud.UserIdVs.ToString();
             string guildId = ud.GuildId.ToString();
             string channelId = ud.ChannelId.ToString();
 
@@ -41,6 +42,8 @@ namespace ChronoBot.Systems
                 if(name == _attributeNames.ElementAt(0))
                     value = userId;
                 else if (name == _attributeNames.ElementAt(1))
+                    value = userIdVs;
+                else if (name == _attributeNames.ElementAt(2))
                     value = channelId;
                 attributes.Add(new XAttribute(name, value));
             }
@@ -128,6 +131,7 @@ namespace ChronoBot.Systems
 
                     int i = 0;
                     user.UserId = (ulong)GetAttributeValue(_attributeNames.ElementAt(i++), e);
+                    user.UserIdVs = (ulong)GetAttributeValue(_attributeNames.ElementAt(i++), e);
                     user.ChannelId = (ulong)GetAttributeValue(_attributeNames.ElementAt(i++), e);
                     user.Plays = (int)GetAttributeValue(_attributeNames.ElementAt(i++), e);
                     user.TotalPlays = (int)GetAttributeValue(_attributeNames.ElementAt(i++), e);
@@ -150,9 +154,10 @@ namespace ChronoBot.Systems
 
         private object GetAttributeValue(string name, XElement e)
         {
-            if (name == _attributeNames.ElementAt(0) || name == _attributeNames.ElementAt(1))
-                return ulong.Parse(e.Attribute(name)?.Value ?? string.Empty);
-            return int.Parse((e.Attribute(name)?.Value) ?? "0");
+            if (name == _attributeNames.ElementAt(0) || name == _attributeNames.ElementAt(1) ||
+                name == _attributeNames.ElementAt(2))
+                return ulong.Parse(e.Attribute(name)?.Value ?? "0");
+            return int.Parse(e.Attribute(name)?.Value ?? "0");
         }
 
         public void UpdateFile(RockPaperScissors.UserData ud)
@@ -177,6 +182,7 @@ namespace ChronoBot.Systems
 
                     int i = 0;
                     GetAttribute(_attributeNames.ElementAt(i++), found).Value = ud.UserId.ToString();
+                    GetAttribute(_attributeNames.ElementAt(i++), found).Value = ud.UserIdVs.ToString();
                     GetAttribute(_attributeNames.ElementAt(i++), found).Value = ud.ChannelId.ToString();
                     GetAttribute(_attributeNames.ElementAt(i++), found).Value = ud.Plays.ToString();
                     GetAttribute(_attributeNames.ElementAt(i++), found).Value = ud.TotalPlays.ToString();

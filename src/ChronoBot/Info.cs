@@ -1,5 +1,8 @@
 ﻿using Discord.WebSocket;
 using System;
+using System.Security.Cryptography.X509Certificates;
+using System.Threading.Tasks;
+using Discord;
 
 namespace ChronoBot
 {
