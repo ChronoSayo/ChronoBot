@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -21,9 +22,8 @@ namespace ChronoBot.Systems
             _path = Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly()?.Location) ?? string.Empty, "Memory Card");
             _attributeNames = new[]
             {
-                "UserID", "UserIDOpponent", "ChannelID", "Plays", "TotalPlays", "Wins", "Losses", "Draws", "Ratio", "CurrentStreak",
-                "BestStreak", "Resets", "Rocks",
-                "Papers", "Scissors", "Coins"
+                "UserID", "UserIDOpponent", "ChannelID", "Plays", "TotalPlays", "Wins", "Losses", "Draws", "Ratio",
+                "CurrentStreak", "BestStreak", "Resets", "Rocks", "Papers", "Scissors", "Coins", "Actor", "Deadline"
             };
         }
 
@@ -130,34 +130,48 @@ namespace ChronoBot.Systems
                         user.GuildId = xml.Value;
 
                     int i = 0;
-                    user.UserId = (ulong)GetAttributeValue(_attributeNames.ElementAt(i++), e);
-                    user.UserIdVs = (ulong)GetAttributeValue(_attributeNames.ElementAt(i++), e);
-                    user.ChannelId = (ulong)GetAttributeValue(_attributeNames.ElementAt(i++), e);
-                    user.Plays = (int)GetAttributeValue(_attributeNames.ElementAt(i++), e);
-                    user.TotalPlays = (int)GetAttributeValue(_attributeNames.ElementAt(i++), e);
-                    user.Wins = (int)GetAttributeValue(_attributeNames.ElementAt(i++), e);
-                    user.Losses = (int)GetAttributeValue(_attributeNames.ElementAt(i++), e);
-                    user.Draws = (int)GetAttributeValue(_attributeNames.ElementAt(i++), e);
-                    user.Ratio = (int)GetAttributeValue(_attributeNames.ElementAt(i++), e);
-                    user.CurrentStreak = (int)GetAttributeValue(_attributeNames.ElementAt(i++), e);
-                    user.BestStreak = (int)GetAttributeValue(_attributeNames.ElementAt(i++), e);
-                    user.Resets = (int)GetAttributeValue(_attributeNames.ElementAt(i++), e);
-                    user.RockChosen = (int)GetAttributeValue(_attributeNames.ElementAt(i++), e);
-                    user.PaperChosen = (int)GetAttributeValue(_attributeNames.ElementAt(i++), e);
-                    user.ScissorsChosen = (int)GetAttributeValue(_attributeNames.ElementAt(i++), e);
-                    user.Coins = (int)GetAttributeValue(_attributeNames.ElementAt(i), e);
+                    user.UserId = GetAttributeValueLong(_attributeNames.ElementAt(i++), e);
+                    user.UserIdVs = GetAttributeValueLong(_attributeNames.ElementAt(i++), e);
+                    user.ChannelId = GetAttributeValueLong(_attributeNames.ElementAt(i++), e);
+                    user.Plays = GetAttributeValueInt(_attributeNames.ElementAt(i++), e);
+                    user.TotalPlays = GetAttributeValueInt(_attributeNames.ElementAt(i++), e);
+                    user.Wins = GetAttributeValueInt(_attributeNames.ElementAt(i++), e);
+                    user.Losses = GetAttributeValueInt(_attributeNames.ElementAt(i++), e);
+                    user.Draws = GetAttributeValueInt(_attributeNames.ElementAt(i++), e);
+                    user.Ratio = GetAttributeValueInt(_attributeNames.ElementAt(i++), e);
+                    user.CurrentStreak = GetAttributeValueInt(_attributeNames.ElementAt(i++), e);
+                    user.BestStreak = GetAttributeValueInt(_attributeNames.ElementAt(i++), e);
+                    user.Resets = GetAttributeValueInt(_attributeNames.ElementAt(i++), e);
+                    user.RockChosen = GetAttributeValueInt(_attributeNames.ElementAt(i++), e);
+                    user.PaperChosen = GetAttributeValueInt(_attributeNames.ElementAt(i++), e);
+                    user.ScissorsChosen = GetAttributeValueInt(_attributeNames.ElementAt(i++), e);
+                    user.Coins = GetAttributeValueInt(_attributeNames.ElementAt(i++), e);
+                    user.Actor = GetAttributeValueActor(_attributeNames.ElementAt(i++), e);
+                    user.DateVs = GetAttributeValueDateTime(_attributeNames.ElementAt(i), e);
                     ud.Add(user);
                 }
             }
             return ud;
         }
 
-        private object GetAttributeValue(string name, XElement e)
+        private ulong GetAttributeValueLong(string name, XElement e)
         {
-            if (name == _attributeNames.ElementAt(0) || name == _attributeNames.ElementAt(1) ||
-                name == _attributeNames.ElementAt(2))
-                return ulong.Parse(e.Attribute(name)?.Value ?? "0");
+            return ulong.Parse(e.Attribute(name)?.Value ?? "0");   
+        }
+
+        private int GetAttributeValueInt(string name, XElement e)
+        {
             return int.Parse(e.Attribute(name)?.Value ?? "0");
+        }
+
+        private RockPaperScissors.Actor GetAttributeValueActor(string name, XElement e)
+        {
+            return (RockPaperScissors.Actor)Enum.Parse(typeof(RockPaperScissors.Actor), e.Attribute(name)?.Value ?? RockPaperScissors.Actor.Max.ToString());
+        }
+
+        private DateTime GetAttributeValueDateTime(string name, XElement e)
+        {
+            return DateTime.Parse(e.Attribute(name)?.Value ?? DateTime.Now.ToString(CultureInfo.InvariantCulture));
         }
 
         public void UpdateFile(RockPaperScissors.UserData ud)
@@ -196,7 +210,9 @@ namespace ChronoBot.Systems
                     GetAttribute(_attributeNames.ElementAt(i++), found).Value = ud.RockChosen.ToString();
                     GetAttribute(_attributeNames.ElementAt(i++), found).Value = ud.PaperChosen.ToString();
                     GetAttribute(_attributeNames.ElementAt(i++), found).Value = ud.ScissorsChosen.ToString();
-                    GetAttribute(_attributeNames.ElementAt(i), found).Value = ud.Coins.ToString();
+                    GetAttribute(_attributeNames.ElementAt(i++), found).Value = ud.Coins.ToString();
+                    GetAttribute(_attributeNames.ElementAt(i++), found).Value = ud.Actor.ToString();
+                    GetAttribute(_attributeNames.ElementAt(i), found).Value = ud.DateVs.ToString(CultureInfo.InvariantCulture);
                     break;
                 }
             }
