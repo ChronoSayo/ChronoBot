@@ -1,17 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Dynamic;
-using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Security.Cryptography;
 using System.Text;
 using Discord.WebSocket;
 using System.Timers;
 using ChronoBot.Systems;
 using Discord;
-using TwitchLib.Api.Core.Models.Undocumented.CSStreams;
 
 namespace ChronoBot.Games
 {
