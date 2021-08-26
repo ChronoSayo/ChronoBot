@@ -11,7 +11,6 @@ using Discord.WebSocket;
 using System.Timers;
 using ChronoBot.Systems;
 using Discord;
-using Google.Apis.YouTube.v3.Data;
 using TwitchLib.Api.Core.Models.Undocumented.CSStreams;
 
 namespace ChronoBot.Games
