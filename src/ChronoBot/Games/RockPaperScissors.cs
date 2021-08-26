@@ -1,17 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Dynamic;
-using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Security.Cryptography;
 using System.Text;
 using Discord.WebSocket;
 using System.Timers;
 using ChronoBot.Systems;
 using Discord;
-using TwitchLib.Api.Core.Models.Undocumented.CSStreams;
 
 namespace ChronoBot.Games
 {
@@ -20,6 +16,7 @@ namespace ChronoBot.Games
         private readonly RpsFileSystem _fileSystem;
         private Timer _timerVs;
         private readonly List<UserData> _users;
+        private readonly List<UserData> _usersActiveVs;
         private const string ImagePath = "Images/RPS/";
         private const string CoinsInKeyText = "&c";
 
@@ -63,18 +60,32 @@ namespace ChronoBot.Games
         {
             _fileSystem = new RpsFileSystem();
             _users = _fileSystem.Load();
+            _usersActiveVs = new List<UserData>();
             VersusTimer();
         }
 
         //Timer to check the dates of last player response. 
         private void VersusTimer()
         {
-            _timerVs = new Timer(60 * 60 * 1000)
+            _timerVs = new Timer(1000)
             {
-                AutoReset = false, 
+                AutoReset = true, 
                 Enabled = false
-            }; 
-            //_timerVs.Elapsed += ;
+            };
+            _timerVs.Elapsed += CheckVsTimers;
+        }
+
+        private void CheckVsTimers(object sender, ElapsedEventArgs e)
+        {
+            foreach (UserData ud in _usersActiveVs.Where(data => DateTime.Now > data.DateVs))
+            {
+                UserData temp = ud;
+                temp.DateVs = DateTime.Now;
+                temp.UserIdVs = 0;
+                int i = FindIndex(temp);
+                _users[i] = temp;
+                _fileSystem.UpdateFile(temp);
+            }
         }
 
         public void MessageReceived(SocketMessage socketMessage)
@@ -208,34 +219,40 @@ namespace ChronoBot.Games
             UserData mentionUd = Find(mentionId);
             if (authorUd.UserIdVs != mentionId && mentionUd.UserIdVs == 0)
                 Challenging(playerActor, authorUd, mentionUd, socketMessage);
-            else if(authorUd.UserIdVs == mentionId)
+            else if(authorUd.UserIdVs == mentionId && mentionUd.Actor != Actor.Max)
                 Responding(authorUd, mentionUd, playerActor, socketMessage);
             else
                 Info.SendMessageToChannel(socketMessage, $"{socketMessage.MentionedUsers.ElementAt(0).Username} is already in battle.");
         }
 
-        private void Challenging(Actor playerActor, UserData author, UserData mention, SocketMessage socketMessage)
+        private void Challenging(Actor playerActor, UserData authorUd, UserData mentionUd, SocketMessage socketMessage)
         {
-            author.UserIdVs = mention.UserId;
-            author.Actor = playerActor;
-            author.DateVs = DateTime.Now.AddDays(2);
-            int i = FindIndex(author.UserId);
-            _users[i] = author;
-            _fileSystem.UpdateFile(author);
+            authorUd.UserIdVs = mentionUd.UserId;
+            authorUd.Actor = playerActor;
+            authorUd.DateVs = DateTime.Now.AddDays(1);
+            int i = FindIndex(authorUd.UserId);
+            _users[i] = authorUd;
+            _fileSystem.UpdateFile(authorUd);
 
-            mention.UserIdVs = author.UserId;
-            mention.Actor = Actor.Max;
-            mention.DateVs = DateTime.Now.AddDays(2);
-            i = FindIndex(mention.UserId);
-            _users[i] = mention;
-            _fileSystem.UpdateFile(mention);
+            mentionUd.UserIdVs = authorUd.UserId;
+            mentionUd.Actor = Actor.Max;
+            mentionUd.DateVs = authorUd.DateVs;
+            i = FindIndex(mentionUd.UserId);
+            _users[i] = mentionUd;
+            _fileSystem.UpdateFile(mentionUd);
 
             string authorMention = socketMessage.Author.Mention;
             Info.DeleteMessageInChannel(socketMessage);
             Info.SendMessageToChannel(socketMessage, 
                 $"{authorMention} is challenging " +
                 $"{socketMessage.MentionedUsers.ElementAt(0).Mention} in Rock-Paper-Scissors!\n" +
-                $"{authorMention} has already made a move.\nBattle ends: {author.DateVs}");
+                $"{authorMention} has already made a move.\nBattle ends: {authorUd.DateVs}");
+
+            _usersActiveVs.Add(authorUd);
+            _usersActiveVs.Add(mentionUd);
+
+            if(!_timerVs.Enabled)
+                _timerVs.Start();
         }
 
         private void Responding(UserData authorUd, UserData mentionUd, Actor authorActor, SocketMessage socketMessage)
@@ -273,6 +290,12 @@ namespace ChronoBot.Games
             ProcessResults(authorUd, authorState, result, socketMessage.Author.Mention, out result);
 
             Info.SendMessageToChannel(socketMessage, result);
+
+            _usersActiveVs.Remove(authorUd);
+            _usersActiveVs.Remove(mentionUd);
+            
+            if(_usersActiveVs.Count == 0)
+                _timerVs.Stop();
         }
 
         private void VsBot(Actor playerActor, SocketMessage socketMessage)
