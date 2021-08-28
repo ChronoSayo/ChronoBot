@@ -122,10 +122,10 @@ namespace ChronoBot
             CLIENT.GetGuild(GetGuildIDFromSocketMessage(socketMessage)).
                 GetTextChannel(socketMessage.Channel.Id).SendFileAsync(filePath, message);
         }
-        public static void SendFileToChannel(SocketMessage socketMessage, string filePath, string message, Color color)
+        public static void SendFileToChannel(SocketMessage socketMessage, string filePath, Embed embed)
         {
             CLIENT.GetGuild(GetGuildIDFromSocketMessage(socketMessage)).
-                GetTextChannel(socketMessage.Channel.Id).SendFileAsync(filePath, string.Empty, embed: BuildEmbed(message, color, filePath));
+                GetTextChannel(socketMessage.Channel.Id).SendFileAsync(filePath, string.Empty, embed: embed);
         }
 
         //Send message to my test channel.
@@ -184,19 +184,14 @@ namespace ChronoBot
             DebugSendEmbeddedMessageToChannel(_SHRUG, Color.Red);
         }
 
-        private static Embed BuildEmbed(string message, Color color, string imageUrl = "")
+        private static Embed BuildEmbed(string message, Color color)
         {
             EmbedBuilder eb = new EmbedBuilder
             {
-                Author = new EmbedAuthorBuilder
-                {
-                    Name = BotUsername
-                },
                 Color = color,
                 Description = message
             };
-            if(imageUrl != "")
-                eb.WithImageUrl($"attachment://{imageUrl}");
+
             return eb.Build();
         }
 

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -243,9 +244,13 @@ namespace ChronoBot.Games
 
             string authorMention = socketMessage.Author.Mention;
             Info.DeleteMessageInChannel(socketMessage);
-            Info.SendMessageToChannelSuccess(socketMessage, $"{authorMention} is challenging " +
-                        $"{socketMessage.MentionedUsers.ElementAt(0).Mention} in Rock-Paper-Scissors!\n" +
-                        $"{authorMention} has already made a move.\nBattle ends: {authorUd.DateVs}");
+            EmbedBuilder embed = new EmbedBuilder();
+            embed.WithDescription($"{authorMention} is challenging " +
+                                  $"{socketMessage.MentionedUsers.ElementAt(0).Mention} in Rock-Paper-Scissors!\n" +
+                                  $"{authorMention} has already made a move.");
+            embed.WithFields(new EmbedFieldBuilder { IsInline = true, Name = "Ends", Value = authorUd.DateVs });
+            embed.WithColor(Color.Green);
+            Info.SendMessageToChannel(socketMessage, embed.Build());
 
             _usersActiveVs.Add(authorUd);
             _usersActiveVs.Add(mentionUd);
@@ -287,7 +292,6 @@ namespace ChronoBot.Games
 
             ProcessResults(mentionUd, mentionState, result, mention, out result);
             ProcessResults(authorUd, authorState, result, socketMessage.Author.Mention, out result);
-
             Info.SendMessageToChannelSuccess(socketMessage, result);
             
             _usersActiveVs.Remove(authorUd);
@@ -306,7 +310,7 @@ namespace ChronoBot.Games
             Random random = new Random();
             int bot = random.Next(0, (int)Actor.Max);
             int player = (int)playerActor;
-            string result =
+            string competition =
                 $"{userMention} threw {ConvertActorToEmoji(playerActor)}\nBot threw {ConvertActorToEmoji((Actor)bot)}\n\n";
 
             string imagePath = ImagePath;
@@ -317,41 +321,48 @@ namespace ChronoBot.Games
             }
 
             GameState state;
+            string processed = string.Empty;
             if ((bot + 1) % (int)Actor.Max == player)
             {
                 state = GameState.Win;
                 imagePath += "Lost.png";
-                result += $"You won! {CoinsInKeyText}\n";
+                processed = CoinsInKeyText;
             }
             else if ((player + 1) % (int)Actor.Max == bot)
             {
                 state = GameState.Lose;
                 imagePath += "Win.png";
-                result += "You lost...\n";
             }
             else
             {
                 state = GameState.Draw;
                 imagePath += "Draw.png";
-                result += "Draw game.";
             }
 
             UserData ud = Find(socketMessage.Author.Id);
             ud.Actor = playerActor;
-            ProcessResults(ud, state, result, socketMessage.Author.Mention, out result);
+            ProcessResults(ud, state, processed, socketMessage.Author.Mention, out processed);
 
+            EmbedBuilder embed = new EmbedBuilder();
+            embed.WithDescription(competition);
             switch (state)
             {
                 case GameState.Win:
-                    Info.SendFileToChannel(socketMessage, imagePath, result, Color.Green);
+                    embed.WithColor(Color.Green);
+                    processed = processed.Replace(socketMessage.Author.Mention ?? string.Empty, "");
+                    embed.WithFields(new EmbedFieldBuilder { IsInline = true, Name = "You won", Value = processed });
                     break;
                 case GameState.Lose:
-                    Info.SendFileToChannel(socketMessage, imagePath, result, Color.Red);
+                    embed.WithColor(Color.Red);
+                    processed = processed.Replace(socketMessage.Author.Mention ?? string.Empty, "");
+                    embed.WithFields(new EmbedFieldBuilder { IsInline = true, Name = "You lost", Value = processed });
                     break;
                 case GameState.Draw:
-                    Info.SendFileToChannel(socketMessage, imagePath, result, Color.Gold);
+                    embed.WithColor(Color.Gold);
+                    embed.WithFields(new EmbedFieldBuilder { IsInline = true, Name = "Draw game", Value = "+0 Rings" });
                     break;
             }
+            Info.SendFileToChannel(socketMessage, imagePath, embed.Build());
         }
 
         private void ProcessResults(UserData ud, GameState state, string result, string mentionUser, out string resultText)
