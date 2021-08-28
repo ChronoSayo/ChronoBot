@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Discord;
 using Discord.WebSocket;
 using Google.Apis.Services;
 using Google.Apis.YouTube.v3;
@@ -132,16 +133,16 @@ namespace ChronoBot.SocialMedias
 
                         CreateSocialMediaUser(user.ToLower(), guildID, channelID, "0", "Twitter");
                         
-                        Info.SendMessageToChannel(guildID, channelID, "Successfully added " + ytChannelInfo[2] + "\n" +
+                        Info.SendMessageToChannelSuccess(socketMessage, "Successfully added " + ytChannelInfo[2] + "\n" +
                             _channelLink + user);
                     }
                     else
-                        Info.SendMessageToChannel(socketMessage, "Can't find " + user);
+                        Info.SendMessageToChannelFail(socketMessage, "Can't find " + user);
                 }
                 else
                 {
                     UserData ud = _users[FindIndexByName(guildID, user)];
-                    Info.SendMessageToChannel(socketMessage, "Already added " + ud.name);
+                    Info.SendMessageToChannelFail(socketMessage, "Already added " + ud.name);
                 }
             }
         }
@@ -177,7 +178,7 @@ namespace ChronoBot.SocialMedias
                     }
                 }
                 else
-                    Info.SendMessageToChannel(socketMessage, "Something is wrong with your command.");
+                    Info.SendMessageToChannelFail(socketMessage, "Something is wrong with your command.");
             }
         }
 
@@ -213,7 +214,7 @@ namespace ChronoBot.SocialMedias
                 if (line == "")
                     Info.Shrug(socketMessage);
                 else
-                    socketMessage.Channel.SendMessageAsync(line);
+                    Info.SendMessageToChannelSuccess(socketMessage, line);
             }
         }
 

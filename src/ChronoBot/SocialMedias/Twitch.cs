@@ -120,7 +120,7 @@ namespace ChronoBot.SocialMedias
                 string[] split = message.ToLower().Split(' '); //0: Command. 1: Streamer. 2: Channel ID
                 if (split.Length == 1)
                 {
-                    Info.SendMessageToChannel(socketMessage, "Missing Twitch name.");
+                    Info.SendMessageToChannelFail(socketMessage, "Missing Twitch name.");
                     return;
                 }
 
@@ -140,15 +140,15 @@ namespace ChronoBot.SocialMedias
 
                         CreateSocialMediaUser(username, guildId, channelID, streamerID, "Twitch");
 
-                        Info.SendMessageToChannel(socketMessage, "Successfully added " + username);
+                        Info.SendMessageToChannelSuccess(socketMessage, "Successfully added " + username);
                     }
                     else
-                        Info.SendMessageToChannel(socketMessage, "Can't find " + addName);
+                        Info.SendMessageToChannelFail(socketMessage, "Can't find " + addName);
                 }
                 else
                 {
                     UserData ud = _streamers.Keys.ElementAt(FindIndexByName(guildId, addName));
-                    Info.SendMessageToChannel(socketMessage, "Already added " + ud.name);
+                    Info.SendMessageToChannelFail(socketMessage, "Already added " + ud.name);
                 }
             }
         }
@@ -170,7 +170,7 @@ namespace ChronoBot.SocialMedias
                 if (Info.NoGuildID(ud.guildID))
                     Info.SendMessageToUser(socketMessage.Author, delMessage);
                 else
-                    Info.SendMessageToChannel(socketMessage, delMessage);
+                    Info.SendMessageToChannelSuccess(socketMessage, delMessage);
 
                 _fileSystem.DeleteInFile(ud);
                 _streamers.Remove(ud);
@@ -198,7 +198,7 @@ namespace ChronoBot.SocialMedias
                         if (Info.NoGuildID(ud.guildID))
                             Info.SendMessageToUser(socketMessage.Author, message);
                         else
-                            Info.SendMessageToChannel(socketMessage, message);
+                            Info.SendMessageToChannelSuccess(socketMessage, message);
                     }
                     else
                         Info.Shrug(socketMessage);
@@ -249,7 +249,7 @@ namespace ChronoBot.SocialMedias
                     if (privateDm)
                         Info.SendMessageToUser(socketMessage.Author, line);
                     else
-                        Info.SendMessageToChannel(socketMessage, line);
+                        Info.SendMessageToChannelSuccess(socketMessage, line);
                 }
             }
         }
@@ -284,14 +284,14 @@ namespace ChronoBot.SocialMedias
                 TwitchLib.Api.V5.Models.Users.User mine = GetStreamer(streamerName);
                 if (mine == null)
                 {
-                    Info.SendMessageToChannel(socketMessage, "Cannot find you.");
+                    Info.SendMessageToChannelFail(socketMessage, "Cannot find you.");
                     return;
                 }
 
                 //Display loading message, then find streamers. If no delay, loading message will delay with the finding code.
                 string loading = "Adding streamers. This may take a few seconds depending on how many " +
                     streamerName + " follows.";
-                Info.SendMessageToChannel(socketMessage, loading);
+                Info.SendMessageToChannelOther(socketMessage, loading);
                 Thread.Sleep(500);
 
                 ulong guildID = Info.NO_GUILD_ID;

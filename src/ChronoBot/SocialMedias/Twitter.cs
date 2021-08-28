@@ -17,7 +17,7 @@ namespace ChronoBot.SocialMedias
 
             Authenticate();
 
-            UpdateTimer(60);
+            UpdateTimer(10);
 
             SetCommands("twitter");
             _hyperlink = "https://twitter.com/@name/status/@id";
@@ -172,7 +172,7 @@ namespace ChronoBot.SocialMedias
                 string[] split = socketMessage.ToString().Split(' '); //0: Command. 1: Twitter handle. 2: Channel.
                 if (split.Length == 1)
                 {
-                    Info.SendMessageToChannel(socketMessage, "Missing Twitter handle.");
+                    Info.SendMessageToChannelFail(socketMessage, "Missing Twitter handle.");
                     return;
                 }
 
@@ -190,15 +190,15 @@ namespace ChronoBot.SocialMedias
 
                         string message = "Successfully added " + username + "\n" +
                             "https://twitter.com/" + username;
-                        _client.GetGuild(guildId).GetTextChannel(channelId).SendMessageAsync(message);
+                        Info.SendMessageToChannel(socketMessage, message);
                     }
                     else
-                        Info.SendMessageToChannel(socketMessage, "Can't find " + username);
+                        Info.SendMessageToChannelFail(socketMessage, "Can't find " + username);
                 }
                 else
                 {
                     IsLegitTwitterHandle(username, out username);
-                    Info.SendMessageToChannel(socketMessage, "Already added " + username);
+                    Info.SendMessageToChannelFail(socketMessage, "Already added " + username);
                 }
             }
         }
@@ -227,14 +227,13 @@ namespace ChronoBot.SocialMedias
                             Info.SendMessageToChannel(socketMessage, GetTwitterUrl(_users[i]));
                         }
                         else
-                            Info.SendMessageToChannel(socketMessage, 
-                                _users[i].name + " hasn't tweeted yet or for a while.");
+                            Info.SendMessageToChannelFail(socketMessage, _users[i].name + " hasn't tweeted yet or for a while.");
                     }
                     else
                         Info.Shrug(socketMessage);
                 }
                 else
-                    Info.SendMessageToChannel(socketMessage, "No Twitter handle added.");
+                    Info.SendMessageToChannelFail(socketMessage, "No Twitter handle added.");
             }
         }
 
@@ -272,7 +271,7 @@ namespace ChronoBot.SocialMedias
                 if(line == "")
                     Info.Shrug(socketMessage);
                 else
-                    socketMessage.Channel.SendMessageAsync(line);
+                    Info.SendMessageToChannelSuccess(socketMessage, line);
             }
         }
 
@@ -313,7 +312,7 @@ namespace ChronoBot.SocialMedias
             _service = new TwitterService(lines[0], lines[1], lines[2], lines[3]) {TweetMode = "extended"};
         }
 
-        public override void MessageReceived(SocketMessage socketMessage)
+        protected override void OtherCommands(SocketMessage socketMessage)
         {
             if (!socketMessage.Embeds.Any(x => x.Url.ToLowerInvariant().Contains("https://twitter.com/")))
             {

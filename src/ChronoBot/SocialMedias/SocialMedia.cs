@@ -226,12 +226,21 @@ namespace ChronoBot.SocialMedias
                     if (Info.NoGuildID(guildId))
                         Info.SendMessageToUser(_client.GetUser(channelId), message);
                     else
-                        _client.GetGuild(guildId).GetTextChannel(channelId).SendMessageAsync(message);
+                        Info.SendMessageToChannel(guildId, channelId, message);
 
                     UserData user = _users[i];
                     //LogToFile($"Updating {user.name} {user.id} {user.channelID} {user.guildID} {user.socialMedia}");
                 }
             }
+        }
+
+        /// <summary>
+        /// Implement social media specific functions here.
+        /// </summary>
+        /// <param name="socketMessage"></param>
+        protected virtual void OtherCommands(SocketMessage socketMessage)
+        {
+
         }
 
         private bool UsedID(List<ulong> idList, ulong id)
@@ -348,6 +357,8 @@ namespace ChronoBot.SocialMedias
             GetSocialMediaUser(socketMessage);
             ListSavedSocialMediaUsers(socketMessage);
             HowTo(socketMessage);
+
+            OtherCommands(socketMessage);
         }
 
         public virtual void MessageReceivedSelf(SocketMessage socketMessage)

@@ -8,6 +8,7 @@ using Discord.WebSocket;
 using System.Timers;
 using ChronoBot.Systems;
 using Discord;
+using Color = Discord.Color;
 
 namespace ChronoBot.Games
 {
@@ -133,9 +134,8 @@ namespace ChronoBot.Games
                         ResetStats(socketMessage);
                         break;
                     default:
-                        Info.SendMessageToChannel(socketMessage,
-                            "Wrong input. \nType either rock(r), paper(p), or scissors(s) to play." +
-                            "\nType statistics(stats) to show stats.\nType reset to reset the statistics.");
+                        Info.SendMessageToChannelFail(socketMessage, "Wrong input. \nType either rock(r), paper(p), or scissors(s) to play." +
+                                    "\nType statistics(stats) to show stats.\nType reset to reset the statistics.");
                         break;
                 }
             }
@@ -159,7 +159,7 @@ namespace ChronoBot.Games
             _users[i] = ud;
             _fileSystem.UpdateFile(ud);
 
-            Info.SendMessageToChannel(socketMessage, $"Stats for {socketMessage.Author.Mention} has been reset.");
+            Info.SendMessageToChannelOther(socketMessage, $"Stats for {socketMessage.Author.Mention} has been reset.");
         }
 
         private void ShowStats(SocketMessage socketMessage)
@@ -187,7 +187,7 @@ namespace ChronoBot.Games
             string plural = ud.Coins == 1 ? string.Empty : "s";
             sb.AppendLine($"**Ring{plural}:** {ud.Coins}");
 
-            Info.SendMessageToChannel(socketMessage, sb.ToString());
+            Info.SendMessageToChannelOther(socketMessage, sb.ToString());
         }
 
         private void ProcessChosenActors(Actor playerActor, SocketMessage socketMessage)
@@ -205,8 +205,8 @@ namespace ChronoBot.Games
 
             if (authorId == mentionId)
             {
-                Info.SendMessageToChannel(socketMessage, $"{socketMessage.Author.Mention} " +
-                                                         "If you have two hands, you can play against yourself that way.");
+                Info.SendMessageToChannelFail(socketMessage, $"{socketMessage.Author.Mention} " +
+                            "If you have two hands, you can play against yourself that way.");
                 return;
             }
 
@@ -222,7 +222,7 @@ namespace ChronoBot.Games
             else if(authorUd.UserIdVs == mentionId && mentionUd.Actor != Actor.Max)
                 Responding(authorUd, mentionUd, playerActor, socketMessage);
             else
-                Info.SendMessageToChannel(socketMessage, $"{socketMessage.MentionedUsers.ElementAt(0).Username} is already in battle.");
+                Info.SendMessageToChannelFail(socketMessage, $"{socketMessage.MentionedUsers.ElementAt(0).Username} is already in battle.");
         }
 
         private void Challenging(Actor playerActor, UserData authorUd, UserData mentionUd, SocketMessage socketMessage)
@@ -243,10 +243,9 @@ namespace ChronoBot.Games
 
             string authorMention = socketMessage.Author.Mention;
             Info.DeleteMessageInChannel(socketMessage);
-            Info.SendMessageToChannel(socketMessage, 
-                $"{authorMention} is challenging " +
-                $"{socketMessage.MentionedUsers.ElementAt(0).Mention} in Rock-Paper-Scissors!\n" +
-                $"{authorMention} has already made a move.\nBattle ends: {authorUd.DateVs}");
+            Info.SendMessageToChannelSuccess(socketMessage, $"{authorMention} is challenging " +
+                        $"{socketMessage.MentionedUsers.ElementAt(0).Mention} in Rock-Paper-Scissors!\n" +
+                        $"{authorMention} has already made a move.\nBattle ends: {authorUd.DateVs}");
 
             _usersActiveVs.Add(authorUd);
             _usersActiveVs.Add(mentionUd);
@@ -289,8 +288,8 @@ namespace ChronoBot.Games
             ProcessResults(mentionUd, mentionState, result, mention, out result);
             ProcessResults(authorUd, authorState, result, socketMessage.Author.Mention, out result);
 
-            Info.SendMessageToChannel(socketMessage, result);
-
+            Info.SendMessageToChannelSuccess(socketMessage, result);
+            
             _usersActiveVs.Remove(authorUd);
             _usersActiveVs.Remove(mentionUd);
             
@@ -322,12 +321,13 @@ namespace ChronoBot.Games
             {
                 state = GameState.Win;
                 imagePath += "Lost.png";
-                result += CoinsInKeyText;
+                result += $"You won! {CoinsInKeyText}\n";
             }
             else if ((player + 1) % (int)Actor.Max == bot)
             {
                 state = GameState.Lose;
                 imagePath += "Win.png";
+                result += "You lost...\n";
             }
             else
             {
@@ -340,7 +340,18 @@ namespace ChronoBot.Games
             ud.Actor = playerActor;
             ProcessResults(ud, state, result, socketMessage.Author.Mention, out result);
 
-            Info.SendFileToChannel(socketMessage, imagePath, result);
+            switch (state)
+            {
+                case GameState.Win:
+                    Info.SendFileToChannel(socketMessage, imagePath, result, Color.Green);
+                    break;
+                case GameState.Lose:
+                    Info.SendFileToChannel(socketMessage, imagePath, result, Color.Red);
+                    break;
+                case GameState.Draw:
+                    Info.SendFileToChannel(socketMessage, imagePath, result, Color.Gold);
+                    break;
+            }
         }
 
         private void ProcessResults(UserData ud, GameState state, string result, string mentionUser, out string resultText)
@@ -415,99 +426,6 @@ namespace ChronoBot.Games
             int i = FindIndex(ud);
             _users[i] = ud;
             _fileSystem.UpdateFile(ud);
-        }
-
-        private void ProcessResults(SocketMessage socketMessage, GameState state, Actor playerActor, Actor botActor)
-        {
-            string userMention = "You";
-            if (socketMessage.Author.Mention != null)
-                userMention = socketMessage.Author.Mention;
-
-            string botRespond =
-                $"{userMention} threw {ConvertActorToEmoji(playerActor)}\nBot threw {ConvertActorToEmoji(botActor)}\n";
-
-            string imagePath = ImagePath;
-            ulong userId = socketMessage.Author.Id;
-            if (!Exists(userId))
-            {
-                CreateUser(socketMessage);
-            }
-
-            int i = FindIndex(userId);
-            UserData ud = _users[i];
-
-            ud.Plays++;
-            ud.TotalPlays++;
-
-            switch (state)
-            {
-                case GameState.Win:
-                    ud.Wins++;
-                    ud.CurrentStreak++;
-
-                    int bonus = CalculateStreakBonus(ud.CurrentStreak, ud.Plays);
-                    ud.Coins += bonus;
-
-                    string newRecord = ud.CurrentStreak > ud.BestStreak ? "New streak record!!!" : string.Empty;
-                    string streak = ud.CurrentStreak > 1 ? ud.CurrentStreak + $" win streak! {newRecord}" : string.Empty;
-                    imagePath += "Lost.png";
-                    string plural = ud.Coins == 1 ? string.Empty : "s";
-                    botRespond += $"You win!\n+{bonus} Ring{plural}. {streak}";
-                    break;
-                case GameState.Lose:
-                    ud.Losses++;
-
-                    ud.Coins--;
-                    bool emptyWallet = ud.Coins <= 0;
-                    if (emptyWallet)
-                        ud.Coins = 0;
-                    if (ud.CurrentStreak > ud.BestStreak)
-                        ud.BestStreak = ud.CurrentStreak;
-                    ud.CurrentStreak = 0;
-
-                    string loseCoin = emptyWallet ? string.Empty : "\n-1 Ring.";
-                    imagePath += "Win.png";
-                    botRespond += $"You lost...{loseCoin}";
-                    break;
-                case GameState.Draw:
-                    ud.Draws++;
-                    imagePath += "Draw.png";
-                    botRespond += "Draw game.";
-                    break;
-                case GameState.None:
-                    LogToFile(LogSeverity.Error, "Wrong game state was given.");
-                    break;
-                default:
-                    LogToFile(LogSeverity.Error, "No game state was given.");
-                    break;
-            }
-
-            switch (playerActor)
-            {
-                case Actor.Rock:
-                    ud.RockChosen++;
-                    break;
-                case Actor.Paper:
-                    ud.PaperChosen++;
-                    break;
-                case Actor.Scissors:
-                    ud.ScissorsChosen++;
-                    break;
-                case Actor.Max:
-                    LogToFile(LogSeverity.Error, "Wrong actor was given.");
-                    break;
-                default:
-                    LogToFile(LogSeverity.Error, "No actor was given.");
-                    break;
-            }
-
-            float ratio = (float)ud.Wins / ud.Plays;
-            ud.Ratio = (int)(ratio * 100);
-
-            _users[i] = ud;
-            _fileSystem.UpdateFile(ud);
-
-            Info.SendFileToChannel(socketMessage, imagePath, botRespond);
         }
 
         private int CalculateStreakBonus(int streak, int plays)

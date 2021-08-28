@@ -1,5 +1,6 @@
 ﻿using Discord.WebSocket;
 using System;
+using System.Collections.Generic;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using Discord;
@@ -9,7 +10,7 @@ namespace ChronoBot
     class Info
     {
         public static DiscordSocketClient CLIENT;
-        public static bool DEBUG = false;
+        public static bool DEBUG = true;
         public static int DELAY_TIMER = 3 * 1000;
         public static string ID_PREFIX = "%";
         public static string BULLET_LIST = "■";
@@ -26,6 +27,9 @@ namespace ChronoBot
         private static readonly string _SHRUG = @"¯\_(ツ)_/¯";
 
         private static readonly Random _RANDOM = new Random();
+
+        public static string BotUsername => CLIENT.CurrentUser.Username;
+
         public static int GetRandom(int min, int max)
         {
             return _RANDOM.Next(min, max);
@@ -44,6 +48,52 @@ namespace ChronoBot
                 DebugSendMessageToChannel(message);
             else
                 socketMessage.Channel.SendMessageAsync(message);
+        }
+
+        public static void SendMessageToChannel(SocketMessage socketMessage, string message, Color color)
+        {
+            if (DEBUG)
+                DebugSendEmbeddedMessageToChannel(BuildEmbed(message, color));
+            else
+                socketMessage.Channel.SendMessageAsync(string.Empty, embed: BuildEmbed(message, color));
+        }
+        public static void SendMessageToChannelSuccess(SocketMessage socketMessage, string message)
+        {
+            Color color = Color.Green;
+            if (DEBUG)
+                DebugSendEmbeddedMessageToChannel(BuildEmbed(message, color));
+            else
+                socketMessage.Channel.SendMessageAsync(string.Empty, embed: BuildEmbed(message, color));
+        }
+        public static void SendMessageToChannelFail(SocketMessage socketMessage, string message)
+        {
+            Color color = Color.Red;
+            if (DEBUG)
+                DebugSendEmbeddedMessageToChannel(BuildEmbed(message, color));
+            else
+                socketMessage.Channel.SendMessageAsync(string.Empty, embed: BuildEmbed(message, color));
+        }
+        public static void SendMessageToChannelOther(SocketMessage socketMessage, string message)
+        {
+            Color color = Color.Gold;
+            if (DEBUG)
+                DebugSendEmbeddedMessageToChannel(BuildEmbed(message, color));
+            else
+                socketMessage.Channel.SendMessageAsync(string.Empty, embed: BuildEmbed(message, color));
+        }
+        public static void SendMessageToChannel(SocketMessage socketMessage, Embed embed)
+        {
+            if (DEBUG)
+                DebugSendEmbeddedMessageToChannel(embed);
+            else
+                socketMessage.Channel.SendMessageAsync(string.Empty, embed: embed);
+        }
+        public static void SendMessageToChannel(ulong guildId, ulong channelId, string message, Color color)
+        {
+            if (DEBUG)
+                DebugSendEmbeddedMessageToChannel(BuildEmbed(message, color));
+            else
+                CLIENT.GetGuild(guildId).GetTextChannel(channelId).SendMessageAsync(string.Empty, embed: BuildEmbed(message, color));
         }
         public static void EditMessageInChannel(SocketMessage socketMessage, string message)
         {
@@ -72,6 +122,11 @@ namespace ChronoBot
             CLIENT.GetGuild(GetGuildIDFromSocketMessage(socketMessage)).
                 GetTextChannel(socketMessage.Channel.Id).SendFileAsync(filePath, message);
         }
+        public static void SendFileToChannel(SocketMessage socketMessage, string filePath, string message, Color color)
+        {
+            CLIENT.GetGuild(GetGuildIDFromSocketMessage(socketMessage)).
+                GetTextChannel(socketMessage.Channel.Id).SendFileAsync(filePath, string.Empty, embed: BuildEmbed(message, color, filePath));
+        }
 
         //Send message to my test channel.
         private static void DebugSendMessageToChannel(string message)
@@ -79,6 +134,21 @@ namespace ChronoBot
             ulong serverID = 386545577258778634;
             ulong channelID = 386545577258778637;
             CLIENT.GetGuild(serverID).GetTextChannel(channelID).SendMessageAsync(message);
+        }    
+
+        //Send embedded message to my test channel.
+        private static void DebugSendEmbeddedMessageToChannel(Embed embed)
+        {
+            ulong serverID = 386545577258778634;
+            ulong channelID = 386545577258778637;
+            CLIENT.GetGuild(serverID).GetTextChannel(channelID).SendMessageAsync(string.Empty, embed: embed);
+        }
+        //Send embedded message to my test channel.
+        private static void DebugSendEmbeddedMessageToChannel(string message, Color color)
+        {
+            ulong serverID = 386545577258778634;
+            ulong channelID = 386545577258778637;
+            CLIENT.GetGuild(serverID).GetTextChannel(channelID).SendMessageAsync(string.Empty, false, BuildEmbed(message, color));
         }
 
         //Edit message to my test channel.
@@ -107,11 +177,27 @@ namespace ChronoBot
             if (DEBUG)
                 DebugShrug();
             else
-                SendMessageToChannel(socket, _SHRUG);
+                SendMessageToChannel(socket, _SHRUG, Color.Red);
         }
         private static void DebugShrug()
         {
-            DebugSendMessageToChannel(_SHRUG);
+            DebugSendEmbeddedMessageToChannel(_SHRUG, Color.Red);
+        }
+
+        private static Embed BuildEmbed(string message, Color color, string imageUrl = "")
+        {
+            EmbedBuilder eb = new EmbedBuilder
+            {
+                Author = new EmbedAuthorBuilder
+                {
+                    Name = BotUsername
+                },
+                Color = color,
+                Description = message
+            };
+            if(imageUrl != "")
+                eb.WithImageUrl($"attachment://{imageUrl}");
+            return eb.Build();
         }
 
         public static ulong GetGuildIDFromSocketMessage(SocketMessage socketMessage)
