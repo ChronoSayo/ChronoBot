@@ -1,6 +1,7 @@
 ﻿using System.Data;
 using System.Text.RegularExpressions;
 using ChronoBot.Interfaces;
+using Discord;
 using Discord.WebSocket;
 
 namespace ChronoBot.Tools
@@ -39,9 +40,11 @@ namespace ChronoBot.Tools
             if (Regex.IsMatch(calculations, @"[a-zA-Z]"))
                 return;
 
+            string result = calculations;
             calculations = new DataTable().Compute(calculations, null).ToString();
+            result += " = " + calculations;
 
-            Info.SendMessageToChannel(socketMessage, calculations);
+            Info.SendMessageToChannelSuccess(socketMessage, result);
         }
     }
 }
