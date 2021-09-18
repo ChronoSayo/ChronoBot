@@ -15,7 +15,7 @@ namespace ChronoBot
         private static DateTime _today;
         private static string _logFile;
 
-        // Program entry point
+
         static void Main(string[] args)
         {
             try
@@ -94,12 +94,12 @@ namespace ChronoBot
                 TotalShards = 1
             });
             _client.Ready += async () => { await _lavalinkManager.StartAsync(); };
-            
+
             await _client.LoginAsync(TokenType.Bot, File.ReadAllText("Memory Card/DiscordToken.txt"));
             await _client.StartAsync();
 
             ChronoBot cb = new ChronoBot(_client, _lavalinkManager);
-            
+
             await Task.Delay(-1);
         }
     }
