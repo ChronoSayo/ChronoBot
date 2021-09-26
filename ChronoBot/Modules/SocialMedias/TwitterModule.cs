@@ -56,21 +56,5 @@ namespace ChronoBot.Modules.SocialMedias
             var embed = HowToText(SocialMediaCommand);
             await SendMessage(embed);
         }
-
-        protected override async Task SendMessage(string result)
-        {
-            if (Statics.DEBUG)
-                await Statics.DebugSendMessageToChannel(result);
-            else
-                await ReplyAsync(result);
-        }
-
-        protected override async Task SendMessage(Embed result)
-        {
-            if (Statics.DEBUG)
-                await Statics.DebugSendMessageToChannel(result);
-            else
-                await ReplyAsync(embed: result);
-        }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using Discord;
@@ -42,6 +43,10 @@ namespace ChronoBot
         public static async Task DebugSendMessageToChannel(Embed message)
         {
             await CLIENT.GetGuild(DEBUG_GUILD_ID).GetTextChannel(DEBUG_CHANNEL_ID).SendMessageAsync(embed: message);
+        }
+        public static async Task DebugSendFileToChannel(Embed message, string file)
+        {
+            await CLIENT.GetGuild(DEBUG_GUILD_ID).GetTextChannel(DEBUG_CHANNEL_ID).SendFileAsync(file, null, embed: message);
         }
     }
 }

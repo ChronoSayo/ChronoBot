@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net.NetworkInformation;
 using System.Reflection;
 using System.Text;
@@ -8,6 +9,7 @@ using ChronoBot.Modules.Tools;
 using ChronoBot.Utilities.SocialMedias;
 using Discord;
 using Discord.Commands;
+using Discord.Rest;
 using Microsoft.Extensions.Logging;
 
 namespace ChronoBot.Modules.SocialMedias
@@ -51,9 +53,11 @@ namespace ChronoBot.Modules.SocialMedias
 
         protected virtual Embed HowToText(string socialMedia)
         {
+            string thumbnail = Path.Combine(Environment.CurrentDirectory, $@"Resources/Images/SocialMedia/{socialMedia}.png");
             return new EmbedBuilder()
                 .WithTitle($"How to use {socialMedia.ToUpper()}")
-                .AddField("Add", $"{Statics.CommandPrefix}{socialMedia.ToLowerInvariant()}add <name> [channel]", true)
+                .WithThumbnailUrl("https://cdn.discordapp.com/attachments/891627208089698384/891627590023000074/Twitter_social_icons_-_circle_-_blue.png")
+                .AddField("Add ", $"{Statics.CommandPrefix}{socialMedia.ToLowerInvariant()}add <name> [channel]", true)
                 .AddField("Delete", $"{Statics.CommandPrefix}{socialMedia.ToLowerInvariant()}delete <name>", true)
                 .AddField("Get", $"{Statics.CommandPrefix}{socialMedia.ToLowerInvariant()}get <name>", true)
                 .AddField("List", $"{Statics.CommandPrefix}{socialMedia.ToLowerInvariant()}list", true)
@@ -74,6 +78,13 @@ namespace ChronoBot.Modules.SocialMedias
             else
                 await ReplyAsync(embed: result);
         }
-
+        protected virtual async Task SendFile(Embed result, string socialMedia)
+        {
+            string thumbnail = Path.Combine(Environment.CurrentDirectory, $@"Resources\Images\SocialMedia\{socialMedia}.png");
+            if (Statics.DEBUG)
+                await Statics.DebugSendFileToChannel(result, thumbnail);
+            else
+                await Context.Channel.SendFileAsync(thumbnail, embed: result);
+        }
     }
 }
