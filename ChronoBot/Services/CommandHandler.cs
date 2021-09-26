@@ -27,6 +27,8 @@ namespace ChronoBot.Services
             _provider = provider;
             _service = service;
             _configuration = configuration;
+
+            Statics.CLIENT = _client;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)

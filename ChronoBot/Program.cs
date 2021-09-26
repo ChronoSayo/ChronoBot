@@ -57,6 +57,7 @@ namespace ChronoBot
                     services
                         .AddHostedService<CommandHandler>()
                         .AddSingleton<Calculator>()
+                        .AddSingleton<SocialMedia>()
                         .AddSingleton<Twitter>();
                 })
                 .UseConsoleLifetime();
