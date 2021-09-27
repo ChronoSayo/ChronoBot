@@ -13,11 +13,10 @@ namespace ChronoBot.Interfaces
     {
         string PathToSaveFile { get; }
         string Category { get; set; }
-        Task SaveAsync(IUserData userData);
-        Task<IEnumerable<IUserData>> LoadAsync();
-        IEnumerable<IUserData> CollectUserDataAsync(Dictionary<XDocument, ulong> xmls, string category);
-        Task UpdateFileAsync(IUserData userData);
-        Task DeleteInFileAsync(IUserData userData);
-        Stream GetPathInStream(string path);
+        void Save(IUserData userData);
+        IEnumerable<IUserData> Load();
+        IEnumerable<IUserData> CollectUserData(Dictionary<XDocument, ulong> xmls, string category);
+        void UpdateFile(IUserData userData);
+        void DeleteInFile(IUserData userData);
     }
 }

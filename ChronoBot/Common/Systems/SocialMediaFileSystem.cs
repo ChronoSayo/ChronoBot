@@ -4,9 +4,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Xml.Linq;
 using ChronoBot.Common.UserDatas;
 using ChronoBot.Interfaces;
@@ -17,13 +14,13 @@ namespace ChronoBot.Common.Systems
     {
         public SocialMediaFileSystem()
         {
-            PathToSaveFile = Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly()?.Location) ?? string.Empty, "Memory Card");
+            PathToSaveFile = Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly()?.Location) ?? string.Empty, @"Resources\Memory Card");
         }
 
         public string PathToSaveFile { get; }
         public string Category { get; set; }
 
-        public async Task SaveAsync(IUserData userData)
+        public void Save(IUserData userData)
         {
             var socialMediaUserData = (SocialMediaUserData) userData;
             string guildId = socialMediaUserData.GuildId.ToString();
@@ -70,14 +67,14 @@ namespace ChronoBot.Common.Systems
                 }
             }
 
-            await xDoc.SaveAsync(GetPathInStream(guildPath), SaveOptions.None, CancellationToken.None);
+            xDoc.Save(guildPath);
 
             StackTrace st = new StackTrace();
             MethodBase mb = st.GetFrame(1).GetMethod();
             //Program.Logger(new LogMessage(LogSeverity.Info, mb.ReflectedType + "." + mb, $"Saved {userData.name} in {userData.guildID}.xml"));
         }
 
-        public async Task<IEnumerable<IUserData>> LoadAsync()
+        public IEnumerable<IUserData> Load()
         {
             Dictionary<XDocument, ulong> xmls = new Dictionary<XDocument, ulong>();
             DirectoryInfo dirInfo = new DirectoryInfo(PathToSaveFile);
@@ -88,7 +85,7 @@ namespace ChronoBot.Common.Systems
 
                 try
                 {
-                    var load = await XDocument.LoadAsync(GetPathInStream(fi.FullName), LoadOptions.None, CancellationToken.None);
+                    var load = XDocument.Load(fi.FullName);
                     xmls.Add(load, ulong.Parse(Path.GetFileNameWithoutExtension(fi.Name)));
                 }
                 catch (Exception e)
@@ -101,16 +98,16 @@ namespace ChronoBot.Common.Systems
             }
 
             if (xmls.Count == 0)
-                return await Task.FromResult(new List<IUserData>());
+                return new List<IUserData>();
 
             List<SocialMediaUserData> ud = new List<SocialMediaUserData>();
-            ud.AddRange(CollectUserDataAsync(xmls, "YouTube").Cast<SocialMediaUserData>());
-            ud.AddRange(CollectUserDataAsync(xmls, "Twitter").Cast<SocialMediaUserData>());
-            ud.AddRange(CollectUserDataAsync(xmls, "Twitch").Cast<SocialMediaUserData>());
-            return await Task.FromResult(ud);
+            ud.AddRange(CollectUserData(xmls, "YouTube").Cast<SocialMediaUserData>());
+            ud.AddRange(CollectUserData(xmls, "Twitter").Cast<SocialMediaUserData>());
+            ud.AddRange(CollectUserData(xmls, "Twitch").Cast<SocialMediaUserData>());
+            return ud;
         }
 
-        public IEnumerable<IUserData> CollectUserDataAsync(Dictionary<XDocument, ulong> xmls, string socialMedia)
+        public IEnumerable<IUserData> CollectUserData(Dictionary<XDocument, ulong> xmls, string socialMedia)
         {
             List<SocialMediaUserData> ud = new List<SocialMediaUserData>();
             foreach (KeyValuePair<XDocument, ulong> xml in xmls)
@@ -130,7 +127,7 @@ namespace ChronoBot.Common.Systems
             return ud;
         }
 
-        public async Task UpdateFileAsync(IUserData userData)
+        public void UpdateFile(IUserData userData)
         {
             if (userData is SocialMediaUserData socialMediaUserData)
             {
@@ -141,10 +138,9 @@ namespace ChronoBot.Common.Systems
                     return;
                 }
 
-                var stream = GetPathInStream(guildPath);
-                var xml = await XDocument.LoadAsync(stream, LoadOptions.None, CancellationToken.None);
+                var xml = XDocument.Load(guildPath);
                 List<SocialMediaUserData> users = new List<SocialMediaUserData>();
-                var collection = CollectUserDataAsync(new Dictionary<XDocument, ulong> {{xml, socialMediaUserData.GuildId}},
+                var collection = CollectUserData(new Dictionary<XDocument, ulong> {{xml, socialMediaUserData.GuildId}},
                     socialMediaUserData.SocialMedia).Cast<SocialMediaUserData>();
                 users.AddRange(collection);
                 foreach(SocialMediaUserData ud in users)
@@ -159,11 +155,12 @@ namespace ChronoBot.Common.Systems
                         break;
                     }
                 }
-                await xml.SaveAsync(GetPathInStream(guildPath), SaveOptions.None, CancellationToken.None);
+
+                xml.Save(guildPath);
             }
         }
 
-        public async Task DeleteInFileAsync(IUserData ud)
+        public void DeleteInFile(IUserData ud)
         {
             if (ud is SocialMediaUserData socialMediaUserData)
             {
@@ -178,7 +175,7 @@ namespace ChronoBot.Common.Systems
 
                     XDocument xml = XDocument.Load(guildPath);
                     List<SocialMediaUserData> users = new List<SocialMediaUserData>();
-                    var collection = CollectUserDataAsync(new Dictionary<XDocument, ulong> {{xml, ud.GuildId}}, socialMedia)
+                    var collection = CollectUserData(new Dictionary<XDocument, ulong> {{xml, ud.GuildId}}, socialMedia)
                         .Cast<SocialMediaUserData>();
                     users.AddRange(collection);
                     foreach (SocialMediaUserData userData in users)
@@ -189,19 +186,13 @@ namespace ChronoBot.Common.Systems
                         break;
                     }
 
-                    await xml.SaveAsync(GetPathInStream(guildPath), SaveOptions.None, CancellationToken.None);
+                    xml.Save(guildPath);
                 }
             }
 
             StackTrace st = new StackTrace();
             MethodBase mb = st.GetFrame(1).GetMethod();
             //Program.Logger(new LogMessage(LogSeverity.Info, mb.ReflectedType + "." + mb, $"Deleted {ud.name} in {ud.guildID}.xml"));
-        }
-
-        public Stream GetPathInStream(string path)
-        {
-            byte[] byteArray = Encoding.UTF8.GetBytes(path);
-            return new MemoryStream(byteArray);
         }
     }
 }

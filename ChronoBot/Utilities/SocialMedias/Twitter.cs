@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using ChronoBot.Common.UserDatas;
+using ChronoBot.Helpers;
 using Discord.Commands;
 using Discord.WebSocket;
 using Microsoft.Extensions.Configuration;
@@ -13,19 +14,17 @@ namespace ChronoBot.Utilities.SocialMedias
 {
     public sealed class Twitter : SocialMedia
     {
-        private readonly IConfiguration _config;
         private TwitterService _service;
 
-        public Twitter(IConfiguration config) : base(config)
+        public Twitter(IConfiguration config, DiscordSocketClient client) : base(config, client)
         {
-            _config = config;
             Authenticate();
 
-            OnUpdateTimer(60);
+            OnUpdateTimer(10);
 
             Hyperlink = "https://twitter.com/@name/status/@id";
 
-            _ = LoadOrCreateFromFile();
+            LoadOrCreateFromFile();
         }
 
         //private void PostRestOfImages(SocketMessage socketMessage)
@@ -105,7 +104,7 @@ namespace ChronoBot.Utilities.SocialMedias
                 if(user.SocialMedia != "Twitter")
                     continue;
 
-                var channel = Statics.CLIENT.GetGuild(Users[i].GuildId).GetTextChannel(Users[i].ChannelId);
+                var channel = Client.GetGuild(Users[i].GuildId).GetTextChannel(Users[i].ChannelId);
                 TwitterStatus tweet = await GetLatestTwitter(user, channel);
                 if (tweet == null || tweet.Id == -1)
                     continue;
@@ -115,11 +114,11 @@ namespace ChronoBot.Utilities.SocialMedias
                     user.Id = tweet.IdStr;
                     Users[i] = user;
                     newTweets.Add(user);
-                    await FileSystem.UpdateFileAsync(user);
+                    FileSystem.UpdateFile(user);
                 }
             }
 
-            UpdateSocialMedia(newTweets);
+            await UpdateSocialMedia(newTweets);
         }
 
         private async Task<TwitterStatus> GetLatestTwitter(SocialMediaUserData ud, SocketTextChannel channel)
@@ -175,9 +174,9 @@ namespace ChronoBot.Utilities.SocialMedias
                 if (isLegit)
                 {
                     if (channelId == 0)
-                        channelId = Statics.DEBUG ? Statics.DEBUG_CHANNEL_ID : context.Channel.Id;
+                        channelId = Statics.Debug ? Statics.DebugChannelId : context.Channel.Id;
 
-                    await CreateSocialMediaUser(legitUsername, context.Guild.Id, channelId, "0", "Twitter");
+                    CreateSocialMediaUser(legitUsername, context.Guild.Id, channelId, "0", "Twitter");
 
                     return await Task.FromResult("Successfully added " + legitUsername + "\n" + "https://twitter.com/" + legitUsername);
                 }
@@ -216,7 +215,7 @@ namespace ChronoBot.Utilities.SocialMedias
             foreach (var user in Users)
             {
                 bool addToList;
-                if (Statics.DEBUG)
+                if (Statics.Debug)
                     addToList = true;
                 else
                 {
@@ -269,10 +268,10 @@ namespace ChronoBot.Utilities.SocialMedias
 
         private void Authenticate()
         {
-            string consumerKey = _config["Tokens:Twitter:ConsumerKey"];
-            string consumerSecret = _config["Tokens:Twitter:ConsumerSecret"];
-            string token = _config["Tokens:Twitter:Token"];
-            string secret = _config["Tokens:Twitter:Secret"];
+            string consumerKey = Config["Tokens:Twitter:ConsumerKey"];
+            string consumerSecret = Config["Tokens:Twitter:ConsumerSecret"];
+            string token = Config["Tokens:Twitter:Token"];
+            string secret = Config["Tokens:Twitter:Secret"];
             _service = new TwitterService(consumerKey, consumerSecret, token, secret)
             {
                 TweetMode = "extended",

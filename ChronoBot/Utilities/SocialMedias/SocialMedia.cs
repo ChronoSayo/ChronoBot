@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Timers;
 using ChronoBot.Common.Systems;
 using ChronoBot.Common.UserDatas;
+using ChronoBot.Helpers;
+using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using Microsoft.Extensions.Configuration;
@@ -12,26 +15,30 @@ namespace ChronoBot.Utilities.SocialMedias
 {
     public class SocialMedia
     {
+        protected readonly DiscordSocketClient Client;
         protected readonly IConfiguration Config;
+        protected readonly bool IsDebug;
         protected Timer UpdateTimer;
         protected SocialMediaFileSystem FileSystem;
         protected string Hyperlink;
         protected string TypeOfSocialMedia;
         protected List<SocialMediaUserData> Users;
 
-        public SocialMedia(IConfiguration config)
+        public SocialMedia(IConfiguration config, DiscordSocketClient client)
         {
             Config = config;
+            Client = client;
+            IsDebug = bool.Parse(config["Debug"]);
             Users = new List<SocialMediaUserData>();
         }
 
-        protected virtual async Task LoadOrCreateFromFile()
+        protected virtual void LoadOrCreateFromFile()
         {
             FileSystem = new SocialMediaFileSystem();
-            Users = (List<SocialMediaUserData>)await FileSystem.LoadAsync();
+            Users = (List<SocialMediaUserData>)FileSystem.Load();
         }
         
-        protected virtual async Task CreateSocialMediaUser(string name, ulong guildId, ulong channelId, string id, string socialMedia)
+        protected virtual void CreateSocialMediaUser(string name, ulong guildId, ulong channelId, string id, string socialMedia)
         {
             SocialMediaUserData temp = new SocialMediaUserData()
             {
@@ -43,7 +50,7 @@ namespace ChronoBot.Utilities.SocialMedias
             };
             Users.Add(temp);
 
-            await FileSystem.SaveAsync(temp);
+            FileSystem.Save(temp);
 
             //LogToFile(LogSeverity.Info, $"Saved user: {temp.socialMedia} {temp.name} {temp.guildID} {temp.channelID} {temp.id}");
         }
@@ -51,7 +58,7 @@ namespace ChronoBot.Utilities.SocialMedias
         protected virtual void OnUpdateTimer(int seconds)
         {
             const int toSeconds = 1000;
-            int time = Statics.DEBUG ? 6 * toSeconds : seconds * toSeconds;
+            int time = IsDebug ? 6 * toSeconds : seconds * toSeconds;
             UpdateTimer = new Timer(time)
             {
                 Enabled = true,
@@ -75,17 +82,17 @@ namespace ChronoBot.Utilities.SocialMedias
             return await Task.FromResult(string.Empty);
         }
 
-        public virtual async Task<string> DeleteSocialMediaUser(ulong guildId, string user)
+        public virtual string DeleteSocialMediaUser(ulong guildId, string user)
         {
             int i = FindIndexByName(guildId, user);
             if (i > -1)
             {
                 SocialMediaUserData ud = Users[i];
-                await FileSystem.DeleteInFileAsync(ud);
+                FileSystem.DeleteInFile(ud);
                 Users.RemoveAt(i);
-                return await Task.FromResult($"Successfully deleted {ud.Name}");
+                return $"Successfully deleted {ud.Name}";
             }
-            return await Task.FromResult($"Failed to delete {user}");
+            return $"Failed to delete {user}";
         }
 
         public virtual async Task<string> GetSocialMediaUser(SocketCommandContext context, string user)
@@ -100,7 +107,7 @@ namespace ChronoBot.Utilities.SocialMedias
 
         //If more social media is inheriting from this class, add their clients as parameter if needed.
         //protected virtual string UpdateSocialMedia(List<UserData> users, TwitchAPI api = null)
-        protected virtual string UpdateSocialMedia(List<SocialMediaUserData> users)
+        protected virtual async Task UpdateSocialMedia(List<SocialMediaUserData> users)
         {
             //Save guild ID's and channel ID's to avoid repetition
             List<ulong> usedGuildIDs = new List<ulong>();
@@ -108,8 +115,9 @@ namespace ChronoBot.Utilities.SocialMedias
             //Loop through all updated social media.
             for (int i = 0; i < users.Count; i++)
             {
-                ulong guildId = Statics.DEBUG ? Statics.DEBUG_GUILD_ID : users[i].GuildId;
-                ulong channelId = Statics.DEBUG ? Statics.DEBUG_CHANNEL_ID : users[i].ChannelId;
+                ulong debugGuildId = ulong.Parse(Config["IDs:Guild"]);
+                ulong guildId = IsDebug ? debugGuildId : users[i].GuildId;
+                ulong channelId = Statics.Debug ? Statics.DebugChannelId : users[i].ChannelId;
                 //Checks if usedGuildIDs contains anything to see if the IDs has been posted already.
                 if (usedGuildIDs.Count > 0)
                 {
@@ -123,7 +131,7 @@ namespace ChronoBot.Utilities.SocialMedias
                 {
                     //Adds all updated social media within the same server and channel.
                     //Adds them into a string so the bot can post once.
-                    if ((guildId == users[j].GuildId && channelId == users[j].ChannelId) || Statics.DEBUG)
+                    if ((guildId == users[j].GuildId && channelId == users[j].ChannelId) || Statics.Debug)
                     {
                         //Add more cases here if more social media is added.
                         switch(TypeOfSocialMedia)
@@ -142,17 +150,18 @@ namespace ChronoBot.Utilities.SocialMedias
                         usedChannelIDs.Add(channelId);
                     }
                 }
+                if (string.IsNullOrEmpty(message)) 
+                    continue;
+
                 //Posts the updated social media.
-                if (!string.IsNullOrEmpty(message))
-                {
-                    return message;
+                if (Statics.Debug)
+                    await Statics.DebugSendMessageToChannelAsync(message); 
+                else
+                    await Client.GetGuild(guildId).GetTextChannel(channelId).SendMessageAsync(message);
 
-                    //UserData user = _users[i];
-                    //LogToFile($"Updating {user.name} {user.id} {user.channelID} {user.guildID} {user.socialMedia}");
-                }
+                //UserData user = _users[i];
+                //LogToFile($"Updating {user.name} {user.id} {user.channelID} {user.guildID} {user.socialMedia}");
             }
-
-            return string.Empty;
         }
 
         /// <summary>

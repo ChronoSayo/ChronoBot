@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using ChronoBot.Helpers;
 using Discord;
 using Discord.Addons.Hosting;
 using Discord.Commands;
@@ -18,17 +19,17 @@ namespace ChronoBot.Services
         private readonly IServiceProvider _provider;
         private readonly DiscordSocketClient _client;
         private readonly CommandService _service;
-        private readonly IConfiguration _configuration;
+        private readonly IConfiguration _config;
 
         public CommandHandler(DiscordSocketClient client, ILogger<DiscordClientService> logger, 
-            IServiceProvider provider, CommandService service, IConfiguration configuration) : base(client, logger)
+            IServiceProvider provider, CommandService service, IConfiguration config) : base(client, logger)
         {
             _client = client;
             _provider = provider;
             _service = service;
-            _configuration = configuration;
+            _config = config;
 
-            Statics.CLIENT = _client;
+            Statics.Init(_client, _config);
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -52,7 +53,7 @@ namespace ChronoBot.Services
                 return;
 
             var argPos = 0;
-            if(!message.HasStringPrefix(_configuration["Prefix"], ref argPos) && !message.HasMentionPrefix(_client.CurrentUser, ref argPos))
+            if(!message.HasStringPrefix(_config["Prefix"], ref argPos) && !message.HasMentionPrefix(_client.CurrentUser, ref argPos))
                 return;
 
             var context = new SocketCommandContext(_client, message);

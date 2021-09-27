@@ -1,7 +1,9 @@
 ﻿using System;
 using System.IO;
+using System.Runtime.InteropServices.ComTypes;
 using System.Threading.Tasks;
 using System.Xml.Schema;
+using ChronoBot.Helpers;
 using ChronoBot.Services;
 using ChronoBot.Utilities.SocialMedias;
 using ChronoBot.Utilities.Tools;
