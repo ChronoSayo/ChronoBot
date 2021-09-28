@@ -29,7 +29,7 @@ namespace ChronoBot.Modules.SocialMedias
         public override async Task DeleteAsync(string user)
         {
             ulong guildId = Context.Guild.Id;
-            string result = await SocialMedia.DeleteSocialMediaUser(guildId, user);
+            string result = SocialMedia.DeleteSocialMediaUser(guildId, user);
             await SendMessage(result);
         }
 

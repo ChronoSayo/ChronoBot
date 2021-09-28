@@ -33,13 +33,6 @@
     <None Update="Resources\Images\Selfie\frame.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Resources\Images\SocialMedia\twitter.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Resources\Memory Card\" />
   </ItemGroup>
 
 </Project>

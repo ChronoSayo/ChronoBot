@@ -15,6 +15,8 @@ namespace ChronoBot.Common.Systems
         public SocialMediaFileSystem()
         {
             PathToSaveFile = Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly()?.Location) ?? string.Empty, @"Resources\Memory Card");
+            if (!Directory.Exists(PathToSaveFile))
+                Directory.CreateDirectory(PathToSaveFile);
         }
 
         public string PathToSaveFile { get; }
@@ -145,13 +147,13 @@ namespace ChronoBot.Common.Systems
                 users.AddRange(collection);
                 foreach(SocialMediaUserData ud in users)
                 {
-                    if(ud.Name == userData.Name)
+                    if(ud.Name == socialMediaUserData.Name)
                     {
-                        XElement found = xml.Descendants("Service").Descendants(ud.SocialMedia).Descendants("User")
-                            .First(x => x.Attributes("Name").First().Value == ud.Name);
-                        found.Attributes("Name").First().Value = ud.Name;
-                        found.Attributes("ChannelID").First().Value = ud.ChannelId.ToString();
-                        found.Attributes("ID").First().Value = ud.Id;
+                        XElement found = xml.Descendants("Service").Descendants(socialMediaUserData.SocialMedia).Descendants("User")
+                            .First(x => x.Attributes("Name").First().Value == socialMediaUserData.Name);
+                        found.Attributes("Name").First().Value = socialMediaUserData.Name;
+                        found.Attributes("ChannelID").First().Value = socialMediaUserData.ChannelId.ToString();
+                        found.Attributes("ID").First().Value = socialMediaUserData.Id;
                         break;
                     }
                 }

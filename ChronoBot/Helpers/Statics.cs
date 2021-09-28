@@ -12,21 +12,16 @@ namespace ChronoBot.Helpers
         private static IConfiguration _config;
         private static readonly Random Random = new Random();
 
-        public static bool Debug;
-        public static readonly string Shrug = @"¯\_(ツ)_/¯";
+        public static bool Debug => bool.TryParse(_config["Debug"], out bool debug) && debug;
         public static string Prefix => _config["Prefix"];
         public static ulong DebugGuildId => ulong.TryParse(_config["IDs:Guild"], out ulong guildId) ? guildId : 0;
-        public static ulong DebugChannelId => ulong.TryParse(_config["IDs:Channel"], out ulong channelId) ? channelId : 0;
+        public static ulong DebugChannelId => ulong.TryParse(_config["IDs:TextChannel"], out ulong channelId) ? channelId : 0;
+        public static readonly string Shrug = @"¯\_(ツ)_/¯";
 
         public static void Init(DiscordSocketClient client, IConfiguration config)
         {
             _client = client;
             _config = config;
-        }
-
-        private static void CheckDebug()
-        {
-            Debug = bool.TryParse(_config["Debug"], out bool debug) && debug;
         }
 
         public static int GetRandom(int min, int max)

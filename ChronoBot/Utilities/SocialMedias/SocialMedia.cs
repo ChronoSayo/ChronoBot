@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Timers;
@@ -17,7 +18,6 @@ namespace ChronoBot.Utilities.SocialMedias
     {
         protected readonly DiscordSocketClient Client;
         protected readonly IConfiguration Config;
-        protected readonly bool IsDebug;
         protected Timer UpdateTimer;
         protected SocialMediaFileSystem FileSystem;
         protected string Hyperlink;
@@ -28,14 +28,13 @@ namespace ChronoBot.Utilities.SocialMedias
         {
             Config = config;
             Client = client;
-            IsDebug = bool.Parse(config["Debug"]);
             Users = new List<SocialMediaUserData>();
         }
 
         protected virtual void LoadOrCreateFromFile()
         {
             FileSystem = new SocialMediaFileSystem();
-            Users = (List<SocialMediaUserData>)FileSystem.Load();
+            Users = FileSystem.Load().Cast<SocialMediaUserData>().ToList();
         }
         
         protected virtual void CreateSocialMediaUser(string name, ulong guildId, ulong channelId, string id, string socialMedia)
@@ -55,21 +54,21 @@ namespace ChronoBot.Utilities.SocialMedias
             //LogToFile(LogSeverity.Info, $"Saved user: {temp.socialMedia} {temp.name} {temp.guildID} {temp.channelID} {temp.id}");
         }
 
-        protected virtual void OnUpdateTimer(int seconds)
+        protected virtual void OnUpdateTimerAsync(int seconds)
         {
             const int toSeconds = 1000;
-            int time = IsDebug ? 6 * toSeconds : seconds * toSeconds;
+            int time = seconds * toSeconds;
             UpdateTimer = new Timer(time)
             {
                 Enabled = true,
                 AutoReset = true
             };
-            UpdateTimer.Elapsed += _updateTimer_Elapsed;
+            UpdateTimer.Elapsed += async (s, e) => await UpdateTimerElapsed();
         }
 
-        protected virtual void _updateTimer_Elapsed(object sender, ElapsedEventArgs e)
+        protected virtual async Task UpdateTimerElapsed()
         {
-            PostUpdate().GetAwaiter().GetResult();
+            await PostUpdate();
         }
 
         protected virtual async Task PostUpdate()
@@ -107,16 +106,17 @@ namespace ChronoBot.Utilities.SocialMedias
 
         //If more social media is inheriting from this class, add their clients as parameter if needed.
         //protected virtual string UpdateSocialMedia(List<UserData> users, TwitchAPI api = null)
-        protected virtual async Task UpdateSocialMedia(List<SocialMediaUserData> users)
+        protected virtual async Task UpdateSocialMedia(IEnumerable<SocialMediaUserData> socialMediaUsers)
         {
             //Save guild ID's and channel ID's to avoid repetition
             List<ulong> usedGuildIDs = new List<ulong>();
             List<ulong> usedChannelIDs = new List<ulong>();
+            List<SocialMediaUserData> users = socialMediaUsers.ToList();
             //Loop through all updated social media.
             for (int i = 0; i < users.Count; i++)
             {
                 ulong debugGuildId = ulong.Parse(Config["IDs:Guild"]);
-                ulong guildId = IsDebug ? debugGuildId : users[i].GuildId;
+                ulong guildId = Statics.Debug ? debugGuildId : users[i].GuildId;
                 ulong channelId = Statics.Debug ? Statics.DebugChannelId : users[i].ChannelId;
                 //Checks if usedGuildIDs contains anything to see if the IDs has been posted already.
                 if (usedGuildIDs.Count > 0)
@@ -139,10 +139,10 @@ namespace ChronoBot.Utilities.SocialMedias
                             //case "!twitch":
                             //    message += GetStreamerUrlAndGame(users[j], api);
                             //    break;
-                            case "!twitter":
+                            case "twitter":
                                 message += GetTwitterUrl(users[j]);
                                 break;
-                            case "!youtube":
+                            case "youtube":
                                 message += GetYouTuber(users[j]);
                                 break;
                         }

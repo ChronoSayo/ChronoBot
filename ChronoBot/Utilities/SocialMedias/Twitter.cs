@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 using ChronoBot.Common.UserDatas;
 using ChronoBot.Helpers;
@@ -20,11 +21,13 @@ namespace ChronoBot.Utilities.SocialMedias
         {
             Authenticate();
 
-            OnUpdateTimer(10);
+            OnUpdateTimerAsync(10);
 
             Hyperlink = "https://twitter.com/@name/status/@id";
 
             LoadOrCreateFromFile();
+
+            TypeOfSocialMedia = "twitter";
         }
 
         //private void PostRestOfImages(SocketMessage socketMessage)
