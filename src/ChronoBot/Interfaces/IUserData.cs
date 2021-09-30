@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ChronoBot.Interfaces
 {
-    interface IUserData
+    public interface IUserData
     {
         string Name { get; set; }
         ulong GuildId { get; set; }
