@@ -12,9 +12,14 @@ namespace ChronoBot.Common.Systems
 {
     public class SocialMediaFileSystem : IFileSystem
     {
-        public SocialMediaFileSystem()
+        public SocialMediaFileSystem(string path = null)
         {
-            PathToSaveFile = Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly()?.Location) ?? string.Empty, @"Resources\Memory Card");
+            if (string.IsNullOrEmpty(path))
+                PathToSaveFile =
+                    Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly()?.Location) ?? string.Empty,
+                        @"Resources\Memory Card");
+            else
+                PathToSaveFile = path;
             if (!Directory.Exists(PathToSaveFile))
                 Directory.CreateDirectory(PathToSaveFile);
         }

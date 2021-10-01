@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Service>
+  <YouTube>
+    <User Name="sonic" ChannelID="357215906310520832" ID="JnEpi9CHS8k" />
+  </YouTube>
+  <Twitch>
+    <User Name="SonicOfficial" ChannelID="357215906310520832" ID="123049668" />
+  </Twitch>
+  <Twitter>
+    <User Name="sonic_hedgehog" ChannelID="357215906310520832" ID="1443667472264007680" />
+  </Twitter>
+  <RockPaperScissors>
+    <User UserID="171262429857185793" ChannelID="171304484096442368" Plays="10" TotalPlays="10" Wins="5" Losses="4" Draws="1" Ratio="50" Resets="0" Rocks="2" Papers="5" Scissors="3" CurrentStreak="0" BestStreak="2" Coins="1" UserIDOpponent="0" Actor="Max" Deadline="08/28/2021 19:34:39" />
+  </RockPaperScissors>
+  <Music>
+    <Music Title="Pumpkin Hill" ChannelID="795044947815694366" ID="" />
+  </Music>
+</Service>

@@ -25,15 +25,17 @@ namespace ChronoBot.Modules.Tools
         [Alias("calculate", "calc", "c", "calc", "math", "m")]
         public async Task CalculatorAsync([Remainder] string calc)
         {
-            try
+            bool ok;
+            string result = _calculator.Result(calc, out ok);
+
+            if (ok)
             {
-                var embed = await _calculator.Result(calc);
+                var embed = new ChronoBotEmbedBuilder(result).Build();
                 await ReplyAsync(embed: embed);
             }
-            catch
-            {
-                await ReplyAsync("Could not perform calculation.");
-            }
+            else
+                await ReplyAsync(result);
+
             _logger.LogInformation($"{Context.User.Username} used {System.Reflection.MethodBase.GetCurrentMethod()?.Name} in {GetType().Name}.");
         }
     }

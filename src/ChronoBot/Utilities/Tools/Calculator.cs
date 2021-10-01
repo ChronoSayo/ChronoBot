@@ -7,15 +7,22 @@ namespace ChronoBot.Utilities.Tools
 {
     public class Calculator
     {
-        public async Task<Discord.Embed> Result(string calc)
+        public string Result(string calc, out bool ok)
         {
-            var dt = new DataTable();
-            var result = dt.Compute(calc, null);
-            string showResult = calc + " = " + result;
+            object result;
+            try
+            {
 
-            var embed = new ChronoBotEmbedBuilder(showResult).Build();
-            
-            return await Task.FromResult(embed);
+                var dt = new DataTable();
+                result = dt.Compute(calc, null);
+                ok = true;
+            }
+            catch
+            {
+                ok = false;
+                return $"Unable to calculate {calc}";
+            }
+            return calc + " = " + result;
         }
     }
 }
