@@ -10,7 +10,7 @@ using ChronoBot.Interfaces;
 
 namespace ChronoBot.Common.Systems
 {
-    public class SocialMediaFileSystem : IFileSystem
+    public class SocialMediaFileSystem : FileSystem
     {
         public SocialMediaFileSystem(string path = null)
         {
@@ -20,21 +20,24 @@ namespace ChronoBot.Common.Systems
                         @"Resources\Memory Card");
             else
                 PathToSaveFile = path;
+
             if (!Directory.Exists(PathToSaveFile))
                 Directory.CreateDirectory(PathToSaveFile);
         }
 
-        public string PathToSaveFile { get; }
-        public string Category { get; set; }
+        public override string PathToSaveFile { get; }
 
-        public void Save(IUserData userData)
+        public override bool Save(IUserData userData)
         {
+            if (userData.GuildId == 0)
+                return false;
+
             var socialMediaUserData = (SocialMediaUserData) userData;
             string guildId = socialMediaUserData.GuildId.ToString();
-            string name = socialMediaUserData.Name;
+            string name = socialMediaUserData.Name ?? string.Empty;
             string channelId = socialMediaUserData.ChannelId.ToString();
-            string id = socialMediaUserData.Id;
-            string socialMedia = socialMediaUserData.SocialMedia;
+            string id = socialMediaUserData.Id ?? string.Empty;
+            string socialMedia = socialMediaUserData.SocialMedia ?? string.Empty;
 
             XElement user = new XElement("User");
             XAttribute newName = new XAttribute("Name", name);
@@ -79,9 +82,11 @@ namespace ChronoBot.Common.Systems
             StackTrace st = new StackTrace();
             MethodBase mb = st.GetFrame(1).GetMethod();
             //Program.Logger(new LogMessage(LogSeverity.Info, mb.ReflectedType + "." + mb, $"Saved {userData.name} in {userData.guildID}.xml"));
+
+            return true;
         }
 
-        public IEnumerable<IUserData> Load()
+        public override IEnumerable<IUserData> Load()
         {
             Dictionary<XDocument, ulong> xmls = new Dictionary<XDocument, ulong>();
             DirectoryInfo dirInfo = new DirectoryInfo(PathToSaveFile);
@@ -114,7 +119,7 @@ namespace ChronoBot.Common.Systems
             return ud;
         }
 
-        public IEnumerable<IUserData> CollectUserData(Dictionary<XDocument, ulong> xmls, string socialMedia)
+        protected override IEnumerable<IUserData> CollectUserData(Dictionary<XDocument, ulong> xmls, string socialMedia)
         {
             List<SocialMediaUserData> ud = new List<SocialMediaUserData>();
             foreach (KeyValuePair<XDocument, ulong> xml in xmls)
@@ -134,40 +139,46 @@ namespace ChronoBot.Common.Systems
             return ud;
         }
 
-        public void UpdateFile(IUserData userData)
+        public override bool UpdateFile(IUserData userData)
         {
             if (userData is SocialMediaUserData socialMediaUserData)
             {
                 string guildPath = Path.Combine(PathToSaveFile, socialMediaUserData.GuildId + ".xml");
                 if (!File.Exists(guildPath))
-                {
-                    Console.WriteLine("Unable to update {0}", socialMediaUserData.Name);
-                    return;
-                }
+                    return false;
 
                 var xml = XDocument.Load(guildPath);
                 List<SocialMediaUserData> users = new List<SocialMediaUserData>();
                 var collection = CollectUserData(new Dictionary<XDocument, ulong> {{xml, socialMediaUserData.GuildId}},
                     socialMediaUserData.SocialMedia).Cast<SocialMediaUserData>();
                 users.AddRange(collection);
-                foreach(SocialMediaUserData ud in users)
+                try
                 {
-                    if(ud.Name == socialMediaUserData.Name)
+                    foreach (SocialMediaUserData ud in users)
                     {
-                        XElement found = xml.Descendants("Service").Descendants(socialMediaUserData.SocialMedia).Descendants("User")
-                            .First(x => x.Attributes("Name").First().Value == socialMediaUserData.Name);
-                        found.Attributes("Name").First().Value = socialMediaUserData.Name;
-                        found.Attributes("ChannelID").First().Value = socialMediaUserData.ChannelId.ToString();
-                        found.Attributes("ID").First().Value = socialMediaUserData.Id;
-                        break;
+                        if (ud.Name == socialMediaUserData.Name)
+                        {
+                            XElement found = xml.Descendants("Service").Descendants(socialMediaUserData.SocialMedia).Descendants("User")
+                                .First(x => x.Attributes("Name").First().Value == socialMediaUserData.Name);
+                            found.Attributes("Name").First().Value = socialMediaUserData.Name;
+                            found.Attributes("ChannelID").First().Value = socialMediaUserData.ChannelId.ToString();
+                            found.Attributes("ID").First().Value = socialMediaUserData.Id;
+                            break;
+                        }
                     }
+                }
+                catch
+                {
+                    return false;
                 }
 
                 xml.Save(guildPath);
             }
+
+            return true;
         }
 
-        public void DeleteInFile(IUserData ud)
+        public override bool DeleteInFile(IUserData ud)
         {
             if (ud is SocialMediaUserData socialMediaUserData)
             {
@@ -177,7 +188,7 @@ namespace ChronoBot.Common.Systems
                     if (!File.Exists(guildPath))
                     {
                         Console.WriteLine("Unable to delete {0}", ud.Name);
-                        return;
+                        return false;
                     }
 
                     XDocument xml = XDocument.Load(guildPath);
@@ -200,6 +211,8 @@ namespace ChronoBot.Common.Systems
             StackTrace st = new StackTrace();
             MethodBase mb = st.GetFrame(1).GetMethod();
             //Program.Logger(new LogMessage(LogSeverity.Info, mb.ReflectedType + "." + mb, $"Deleted {ud.name} in {ud.guildID}.xml"));
+
+            return true;
         }
     }
 }

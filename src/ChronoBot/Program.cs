@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using System.Threading.Tasks;
+using ChronoBot.Helpers;
 using ChronoBot.Services;
 using ChronoBot.Utilities.SocialMedias;
 using ChronoBot.Utilities.Tools;
@@ -42,7 +43,7 @@ namespace ChronoBot
                         MessageCacheSize = 200
                     };
 
-                    config.Token = context.Configuration["Tokens:Discord"];
+                    config.Token = context.Configuration[Statics.DiscordToken];
                 })
                 .UseCommandService((context, config) =>
                 {

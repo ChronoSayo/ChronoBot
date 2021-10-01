@@ -24,13 +24,17 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Test Files\" />
+    <None Update="Test Files\Load Fail\fail.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Test Files\Load\123456789.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Test Files\886184686924218398.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    <Folder Include="Test Files\Load Fail\" />
+    <Folder Include="Test Files\Save\" />
   </ItemGroup>
 
 </Project>

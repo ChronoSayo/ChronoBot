@@ -179,7 +179,8 @@ namespace ChronoBot.Utilities.SocialMedias
                     if (channelId == 0)
                         channelId = Statics.Debug ? Statics.DebugChannelId : context.Channel.Id;
 
-                    CreateSocialMediaUser(legitUsername, context.Guild.Id, channelId, "0", "Twitter");
+                    if (!CreateSocialMediaUser(legitUsername, context.Guild.Id, channelId, "0", "Twitter"))
+                        return await Task.FromResult($"Failed to add {legitUsername}.");
 
                     return await Task.FromResult("Successfully added " + legitUsername + "\n" + "https://twitter.com/" + legitUsername);
                 }
@@ -271,10 +272,10 @@ namespace ChronoBot.Utilities.SocialMedias
 
         private void Authenticate()
         {
-            string consumerKey = Config["Tokens:Twitter:ConsumerKey"];
-            string consumerSecret = Config["Tokens:Twitter:ConsumerSecret"];
-            string token = Config["Tokens:Twitter:Token"];
-            string secret = Config["Tokens:Twitter:Secret"];
+            string consumerKey = Config[Statics.TwitterConsumerKey];
+            string consumerSecret = Config[Statics.TwitterConsumerSecret];
+            string token = Config[Statics.TwitterToken];
+            string secret = Config[Statics.TwitterSecret];
             _service = new TwitterService(consumerKey, consumerSecret, token, secret)
             {
                 TweetMode = "extended",

@@ -37,7 +37,7 @@ namespace ChronoBot.Utilities.SocialMedias
             Users = FileSystem.Load().Cast<SocialMediaUserData>().ToList();
         }
         
-        protected virtual void CreateSocialMediaUser(string name, ulong guildId, ulong channelId, string id, string socialMedia)
+        protected virtual bool CreateSocialMediaUser(string name, ulong guildId, ulong channelId, string id, string socialMedia)
         {
             SocialMediaUserData temp = new SocialMediaUserData()
             {
@@ -49,7 +49,11 @@ namespace ChronoBot.Utilities.SocialMedias
             };
             Users.Add(temp);
 
-            FileSystem.Save(temp);
+            bool ok = FileSystem.Save(temp);
+            if (!ok)
+                Users.Remove(temp);
+
+            return ok;
 
             //LogToFile(LogSeverity.Info, $"Saved user: {temp.socialMedia} {temp.name} {temp.guildID} {temp.channelID} {temp.id}");
         }

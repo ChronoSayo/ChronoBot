@@ -12,11 +12,23 @@ namespace ChronoBot.Interfaces
     interface IFileSystem
     {
         string PathToSaveFile { get; }
-        string Category { get; set; }
-        void Save(IUserData userData);
+        bool Save(IUserData userData);
         IEnumerable<IUserData> Load();
-        IEnumerable<IUserData> CollectUserData(Dictionary<XDocument, ulong> xmls, string category);
-        void UpdateFile(IUserData userData);
-        void DeleteInFile(IUserData userData);
+        bool UpdateFile(IUserData userData);
+        bool DeleteInFile(IUserData userData);
+    }
+
+    public abstract class FileSystem : IFileSystem
+    {
+        public abstract string PathToSaveFile { get; }
+        public abstract bool Save(IUserData userData);
+
+        public abstract IEnumerable<IUserData> Load();
+
+        protected abstract IEnumerable<IUserData> CollectUserData(Dictionary<XDocument, ulong> xmls, string category);
+
+        public abstract bool UpdateFile(IUserData userData);
+
+        public abstract bool DeleteInFile(IUserData userData);
     }
 }

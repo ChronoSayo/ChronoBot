@@ -18,6 +18,12 @@ namespace ChronoBot.Helpers
         public static ulong DebugChannelId => ulong.TryParse(_config["IDs:TextChannel"], out ulong channelId) ? channelId : 0;
         public static readonly string Shrug = @"¯\_(ツ)_/¯";
 
+        public static string DiscordToken => _config["Tokens:Discord"];
+        public static string TwitterConsumerKey => _config["Tokens:Twitter:ConsumerKey"];
+        public static string TwitterConsumerSecret => _config["Tokens:Twitter:ConsumerSecret"];
+        public static string TwitterToken => _config["Tokens:Twitter:Token"];
+        public static string TwitterSecret => _config["Tokens:Twitter:Secret"];
+
         public static void Init(DiscordSocketClient client, IConfiguration config)
         {
             _client = client;
