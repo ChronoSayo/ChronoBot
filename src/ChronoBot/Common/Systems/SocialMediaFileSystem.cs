@@ -154,6 +154,7 @@ namespace ChronoBot.Common.Systems
                 users.AddRange(collection);
                 try
                 {
+                    bool updated = false;
                     foreach (SocialMediaUserData ud in users)
                     {
                         if (ud.Name == socialMediaUserData.Name)
@@ -163,9 +164,13 @@ namespace ChronoBot.Common.Systems
                             found.Attributes("Name").First().Value = socialMediaUserData.Name;
                             found.Attributes("ChannelID").First().Value = socialMediaUserData.ChannelId.ToString();
                             found.Attributes("ID").First().Value = socialMediaUserData.Id;
+                            updated = true;
                             break;
                         }
                     }
+
+                    if (!updated)
+                        return false;
                 }
                 catch
                 {
@@ -196,15 +201,20 @@ namespace ChronoBot.Common.Systems
                     var collection = CollectUserData(new Dictionary<XDocument, ulong> {{xml, ud.GuildId}}, socialMedia)
                         .Cast<SocialMediaUserData>();
                     users.AddRange(collection);
+                    bool removed = false;
                     foreach (SocialMediaUserData userData in users)
                     {
                         if (ud.Name != userData.Name) 
                             continue;
                         xml.Descendants("Service").Descendants(socialMedia).Descendants("User").Where(x => x.Attribute("Name")?.Value == ud.Name).Remove();
+                        removed = true;
                         break;
                     }
 
-                    xml.Save(guildPath);
+                    if (removed)
+                        xml.Save(guildPath);
+                    else
+                        return false;
                 }
             }
 
