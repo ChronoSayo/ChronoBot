@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using ChronoBot.Common.Systems;
 using ChronoBot.Common.UserDatas;
+using ChronoBot.Enums;
 using Xunit;
 using Xunit.Extensions;
 
@@ -38,7 +39,7 @@ namespace ChronoBot.Tests
         }
 
         [Fact]
-        public void Load_Test_Success()
+        public void Load_Test_SingleFile_Success()
         {
             var fileSystem = new SocialMediaFileSystem(Path.Combine(_path, "Load"));
 
@@ -46,9 +47,54 @@ namespace ChronoBot.Tests
 
             Assert.True(File.Exists(Path.Combine(fileSystem.PathToSaveFile, "123456789.xml")));
             Assert.Equal(3, users.Count);
-            Equal("YouTube", "YouTuber", 123456789, 1, "wecylinder", users[0]);
-            Equal("Twitter", "Tweeter", 123456789, 3, "chirp", users[1]);
-            Equal("Twitch", "Streamer", 123456789, 2, "spasm", users[2]);
+            Equal(SocialMediaEnum.YouTube, "YouTuber", 123456789, 1, "wecylinder", users[0]);
+            Equal(SocialMediaEnum.Twitter, "Tweeter", 123456789, 3, "chirp", users[1]);
+            Equal(SocialMediaEnum.Twitch, "Streamer", 123456789, 2, "spasm", users[2]);
+        }
+        [Fact]
+        public void Load_Test_MultipleFiles_Success()
+        {
+            var fileSystem = new SocialMediaFileSystem(Path.Combine(_path, "Load"));
+            var file1 = Path.Combine(fileSystem.PathToSaveFile, "123456789.xml");
+            var file2 = Path.Combine(fileSystem.PathToSaveFile, "987654321.xml");
+            
+            if(File.Exists(file2))
+                File.Delete(file2);
+            File.Copy(file1, file2);
+            List<SocialMediaUserData> users = fileSystem.Load().Cast<SocialMediaUserData>().ToList();
+
+            Assert.True(File.Exists(file1));
+            Assert.True(File.Exists(file2));
+            Assert.Equal(6, users.Count);
+            Equal(SocialMediaEnum.YouTube, "YouTuber", 123456789, 1, "wecylinder", users[0]);
+            Equal(SocialMediaEnum.YouTube, "YouTuber", 987654321, 1, "wecylinder", users[1]);
+            Equal(SocialMediaEnum.Twitter, "Tweeter", 123456789, 3, "chirp", users[2]);
+            Equal(SocialMediaEnum.Twitter, "Tweeter", 987654321, 3, "chirp", users[3]);
+            Equal(SocialMediaEnum.Twitch, "Streamer", 123456789, 2, "spasm", users[4]);
+            Equal(SocialMediaEnum.Twitch, "Streamer", 987654321, 2, "spasm", users[5]);
+
+            File.Delete(file2);
+        }
+        [Fact]
+        public void Load_Test_MultipleFilesWithOneWorking_Success()
+        {
+            var fileSystem = new SocialMediaFileSystem(Path.Combine(_path, "Load"));
+            var file1 = Path.Combine(fileSystem.PathToSaveFile, "123456789.xml");
+            var file2 = Path.Combine(fileSystem.PathToSaveFile, "987654321.txt");
+
+            if (File.Exists(file2))
+                File.Delete(file2);
+            File.Copy(file1, file2);
+            List<SocialMediaUserData> users = fileSystem.Load().Cast<SocialMediaUserData>().ToList();
+
+            Assert.True(File.Exists(file1));
+            Assert.True(File.Exists(file2));
+            Assert.Equal(3, users.Count);
+            Equal(SocialMediaEnum.YouTube, "YouTuber", 123456789, 1, "wecylinder", users[0]);
+            Equal(SocialMediaEnum.Twitter, "Tweeter", 123456789, 3, "chirp", users[1]);
+            Equal(SocialMediaEnum.Twitch, "Streamer", 123456789, 2, "spasm", users[2]);
+
+            File.Delete(file2);
         }
         [Fact]
         public void Load_Test_Fail()
@@ -69,25 +115,28 @@ namespace ChronoBot.Tests
             var file = tuple.Item2;
             List<SocialMediaUserData> saveUsers = new List<SocialMediaUserData>()
             {
-                new SocialMediaUserData{
+                new()
+                {
                     Name = "Test",
-                    SocialMedia = "Twitter",
+                    SocialMedia = SocialMediaEnum.Twitter,
                     ChannelId = 123456789,
                     GuildId = 987654321,
                     Id = "134679258"
                 },
 
-                new SocialMediaUserData{
+                new()
+                {
                     Name = "Testing",
-                    SocialMedia = "Twitch",
+                    SocialMedia = SocialMediaEnum.Twitch,
                     ChannelId = 11111,
                     GuildId = 987654321,
                     Id = "33333"
                 },
 
-                new SocialMediaUserData{
+                new()
+                {
                     Name = "Testies",
-                    SocialMedia = "YouTube",
+                    SocialMedia = SocialMediaEnum.YouTube,
                     ChannelId = 112233,
                     GuildId = 987654321,
                     Id = "778899"
@@ -102,9 +151,57 @@ namespace ChronoBot.Tests
             Assert.True(File.Exists(file));
             Assert.True(ok);
             Assert.Equal(3, users.Count);
-            Equal("YouTube", "Testies", 987654321, 112233, "778899", users[0]);
-            Equal("Twitter", "Test", 987654321, 123456789, "134679258", users[1]);
-            Equal("Twitch", "Testing", 987654321, 11111, "33333", users[2]);
+            Equal(SocialMediaEnum.YouTube, "Testies", 987654321, 112233, "778899", users[0]);
+            Equal(SocialMediaEnum.Twitter, "Test", 987654321, 123456789, "134679258", users[1]);
+            Equal(SocialMediaEnum.Twitch, "Testing", 987654321, 11111, "33333", users[2]);
+        }
+        [Fact]
+        public void Save_Test_N_Success()
+        {
+            var tuple = SetUpSaveFileTests();
+            var fileSystem = tuple.Item1;
+            var file = tuple.Item2;
+            List<SocialMediaUserData> saveUsers = new List<SocialMediaUserData>()
+            {
+                new()
+                {
+                    Name = "Test",
+                    SocialMedia = SocialMediaEnum.Twitter,
+                    ChannelId = 123456789,
+                    GuildId = 987654321,
+                    Id = "134679258"
+                },
+
+                new() 
+                {
+                    Name = "Testing",
+                    SocialMedia = SocialMediaEnum.Twitch,
+                    ChannelId = 11111,
+                    GuildId = 987654321,
+                    Id = "33333"
+                },
+
+                new()
+                {
+                    Name = "Testies",
+                    SocialMedia = SocialMediaEnum.YouTube,
+                    ChannelId = 112233,
+                    GuildId = 987654321,
+                    Id = "778899"
+                }
+            };
+
+            bool ok = false;
+            foreach (SocialMediaUserData data in saveUsers)
+                ok |= fileSystem.Save(data);
+            List<SocialMediaUserData> users = fileSystem.Load().Cast<SocialMediaUserData>().ToList();
+
+            Assert.True(File.Exists(file));
+            Assert.True(ok);
+            Assert.Equal(3, users.Count);
+            Equal(SocialMediaEnum.YouTube, "Testies", 987654321, 112233, "778899", users[0]);
+            Equal(SocialMediaEnum.Twitter, "Test", 987654321, 123456789, "134679258", users[1]);
+            Equal(SocialMediaEnum.Twitch, "Testing", 987654321, 11111, "33333", users[2]);
         }
         [Fact]
         public void Save_Test_Fail()
@@ -128,13 +225,13 @@ namespace ChronoBot.Tests
             var file = tuple.Item2;
             List<SocialMediaUserData> users = fileSystem.Load().Cast<SocialMediaUserData>().ToList();
 
-            users[0].Id = "update";
-            bool ok = fileSystem.UpdateFile(users[0]);
+            users[1].Id = "update";
+            bool ok = fileSystem.UpdateFile(users[1]);
             users = fileSystem.Load().Cast<SocialMediaUserData>().ToList();
 
             Assert.True(File.Exists(file));
             Assert.True(ok);
-            Assert.Equal("update", users[0].Id);
+            Assert.Equal("update", users[1].Id);
 
             File.Delete(file);
         }
@@ -152,7 +249,7 @@ namespace ChronoBot.Tests
 
             Assert.True(File.Exists(file));
             Assert.False(ok);
-            Equal("YouTube", "YouTuber", 123456789, 1, "wecylinder", users[0]);
+            Equal(SocialMediaEnum.YouTube, "YouTuber", 123456789, 1, "wecylinder", users[0]);
 
             File.Delete(file);
         }
@@ -170,7 +267,7 @@ namespace ChronoBot.Tests
 
             Assert.True(File.Exists(file));
             Assert.False(ok);
-            Equal("YouTube", "YouTuber", 123456789, 1, "wecylinder", users[0]);
+            Equal(SocialMediaEnum.YouTube, "YouTuber", 123456789, 1, "wecylinder", users[0]);
 
             File.Delete(file);
         }
@@ -183,14 +280,14 @@ namespace ChronoBot.Tests
             var file = tuple.Item2;
             List<SocialMediaUserData> users = fileSystem.Load().Cast<SocialMediaUserData>().ToList();
 
-            bool ok = fileSystem.DeleteInFile(users[0]);
+            bool ok = fileSystem.DeleteInFile(users[1]);
             users = fileSystem.Load().Cast<SocialMediaUserData>().ToList();
 
             Assert.True(File.Exists(file));
             Assert.True(ok);
             Assert.Equal(2, users.Count);
-            Equal("Twitter", "Tweeter", 123456789, 3, "chirp", users[0]);
-            Equal("Twitch", "Streamer", 123456789, 2, "spasm", users[1]);
+            Equal(SocialMediaEnum.YouTube, "YouTuber", 123456789, 1, "wecylinder", users[0]);
+            Equal(SocialMediaEnum.Twitch, "Streamer", 123456789, 2, "spasm", users[1]);
         }
         [Fact]
         public void Delete_Test_UserDataNotFound_Fail()
@@ -206,9 +303,9 @@ namespace ChronoBot.Tests
             Assert.True(File.Exists(file));
             Assert.False(ok);
             Assert.Equal(3, users.Count);
-            Equal("YouTube", "YouTuber", 123456789, 1, "wecylinder", users[0]);
-            Equal("Twitter", "Tweeter", 123456789, 3, "chirp", users[1]);
-            Equal("Twitch", "Streamer", 123456789, 2, "spasm", users[2]);
+            Equal(SocialMediaEnum.YouTube, "YouTuber", 123456789, 1, "wecylinder", users[0]);
+            Equal(SocialMediaEnum.Twitter, "Tweeter", 123456789, 3, "chirp", users[1]);
+            Equal(SocialMediaEnum.Twitch, "Streamer", 123456789, 2, "spasm", users[2]);
         }
         [Fact]
         public void Delete_Test_FileNotFound_Fail()
@@ -225,9 +322,9 @@ namespace ChronoBot.Tests
             Assert.True(File.Exists(file));
             Assert.False(ok);
             Assert.Equal(3, users.Count);
-            Equal("YouTube", "YouTuber", 123456789, 1, "wecylinder", users[0]);
-            Equal("Twitter", "Tweeter", 123456789, 3, "chirp", users[1]);
-            Equal("Twitch", "Streamer", 123456789, 2, "spasm", users[2]);
+            Equal(SocialMediaEnum.YouTube, "YouTuber", 123456789, 1, "wecylinder", users[0]);
+            Equal(SocialMediaEnum.Twitter, "Tweeter", 123456789, 3, "chirp", users[1]);
+            Equal(SocialMediaEnum.Twitch, "Streamer", 123456789, 2, "spasm", users[2]);
         }
 
         private Tuple<SocialMediaFileSystem, string> SetUpSaveFileTests()
@@ -253,7 +350,7 @@ namespace ChronoBot.Tests
             return new Tuple<SocialMediaFileSystem, string>(fileSystem, file);
         }
 
-        private void Equal(string expectedSocialMedia, string expectedName, ulong expectedGuildId,
+        private void Equal(SocialMediaEnum expectedSocialMedia, string expectedName, ulong expectedGuildId,
             ulong expectedChannelId, string expectedId, SocialMediaUserData actualUserData)
         {
             Assert.Equal(expectedSocialMedia, actualUserData.SocialMedia);

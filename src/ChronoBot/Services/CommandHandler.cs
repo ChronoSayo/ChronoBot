@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Reflection;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using ChronoBot.Helpers;
@@ -29,7 +27,7 @@ namespace ChronoBot.Services
             _service = service;
             _config = config;
 
-            Statics.Init(_client, _config);
+            Statics.DiscordClient = client;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)

@@ -5,6 +5,7 @@ using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using ChronoBot.Common.UserDatas;
+using ChronoBot.Enums;
 using ChronoBot.Helpers;
 using Discord.Commands;
 using Discord.WebSocket;
@@ -27,7 +28,7 @@ namespace ChronoBot.Utilities.SocialMedias
 
             LoadOrCreateFromFile();
 
-            TypeOfSocialMedia = "twitter";
+            TypeOfSocialMedia = SocialMediaEnum.Twitter.ToString().ToLowerInvariant();
         }
 
         //private void PostRestOfImages(SocketMessage socketMessage)
@@ -104,7 +105,7 @@ namespace ChronoBot.Utilities.SocialMedias
             for (int i = 0; i < Users.Count; i++)
             {
                 SocialMediaUserData user = Users[i];
-                if(user.SocialMedia != "Twitter")
+                if(user.SocialMedia != SocialMediaEnum.Twitter)
                     continue;
 
                 var channel = Client.GetGuild(Users[i].GuildId).GetTextChannel(Users[i].ChannelId);
@@ -169,7 +170,7 @@ namespace ChronoBot.Utilities.SocialMedias
         public override async Task<string> AddSocialMediaUser(SocketCommandContext context, string username, ulong channelId = 0)
         {
             Tuple<string, bool> legit;
-            if (!Duplicate(context.Guild.Id, username, "Twitter"))
+            if (!Duplicate(context.Guild.Id, username, SocialMediaEnum.Twitter))
             {
                 legit = await IsLegitTwitterHandle(username);
                 var legitUsername = legit.Item1;
@@ -179,7 +180,7 @@ namespace ChronoBot.Utilities.SocialMedias
                     if (channelId == 0)
                         channelId = Statics.Debug ? Statics.DebugChannelId : context.Channel.Id;
 
-                    if (!CreateSocialMediaUser(legitUsername, context.Guild.Id, channelId, "0", "Twitter"))
+                    if (!CreateSocialMediaUser(legitUsername, context.Guild.Id, channelId, "0", SocialMediaEnum.Twitter))
                         return await Task.FromResult($"Failed to add {legitUsername}.");
 
                     return await Task.FromResult("Successfully added " + legitUsername + "\n" + "https://twitter.com/" + legitUsername);

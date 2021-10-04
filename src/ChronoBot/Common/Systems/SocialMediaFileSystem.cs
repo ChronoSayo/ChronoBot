@@ -6,6 +6,7 @@ using System.Linq;
 using System.Reflection;
 using System.Xml.Linq;
 using ChronoBot.Common.UserDatas;
+using ChronoBot.Enums;
 using ChronoBot.Interfaces;
 
 namespace ChronoBot.Common.Systems
@@ -25,7 +26,7 @@ namespace ChronoBot.Common.Systems
                 Directory.CreateDirectory(PathToSaveFile);
         }
 
-        public override string PathToSaveFile { get; }
+        public sealed override string PathToSaveFile { get; }
 
         public override bool Save(IUserData userData)
         {
@@ -37,7 +38,7 @@ namespace ChronoBot.Common.Systems
             string name = socialMediaUserData.Name ?? string.Empty;
             string channelId = socialMediaUserData.ChannelId.ToString();
             string id = socialMediaUserData.Id ?? string.Empty;
-            string socialMedia = socialMediaUserData.SocialMedia ?? string.Empty;
+            string socialMedia = socialMediaUserData.SocialMedia.ToString();
 
             XElement user = new XElement("User");
             XAttribute newName = new XAttribute("Name", name);
@@ -113,18 +114,18 @@ namespace ChronoBot.Common.Systems
                 return new List<IUserData>();
 
             List<SocialMediaUserData> ud = new List<SocialMediaUserData>();
-            ud.AddRange(CollectUserData(xmls, "YouTube").Cast<SocialMediaUserData>());
-            ud.AddRange(CollectUserData(xmls, "Twitter").Cast<SocialMediaUserData>());
-            ud.AddRange(CollectUserData(xmls, "Twitch").Cast<SocialMediaUserData>());
+            ud.AddRange(CollectUserData(xmls, SocialMediaEnum.YouTube).Cast<SocialMediaUserData>());
+            ud.AddRange(CollectUserData(xmls, SocialMediaEnum.Twitter).Cast<SocialMediaUserData>());
+            ud.AddRange(CollectUserData(xmls, SocialMediaEnum.Twitch).Cast<SocialMediaUserData>());
             return ud;
         }
 
-        protected override IEnumerable<IUserData> CollectUserData(Dictionary<XDocument, ulong> xmls, string socialMedia)
+        protected override IEnumerable<IUserData> CollectUserData(Dictionary<XDocument, ulong> xmls, SocialMediaEnum socialMedia)
         {
             List<SocialMediaUserData> ud = new List<SocialMediaUserData>();
             foreach (KeyValuePair<XDocument, ulong> xml in xmls)
             {
-                foreach (XElement e in xml.Key.Descendants("Service").Descendants(socialMedia).Descendants("User"))
+                foreach (XElement e in xml.Key.Descendants("Service").Descendants(socialMedia.ToString()).Descendants("User"))
                 {
                     SocialMediaUserData user = new SocialMediaUserData();
                     if (xml.Key.Document != null)
@@ -159,7 +160,7 @@ namespace ChronoBot.Common.Systems
                     {
                         if (ud.Name == socialMediaUserData.Name)
                         {
-                            XElement found = xml.Descendants("Service").Descendants(socialMediaUserData.SocialMedia).Descendants("User")
+                            XElement found = xml.Descendants("Service").Descendants(socialMediaUserData.SocialMedia.ToString()).Descendants("User")
                                 .First(x => x.Attributes("Name").First().Value == socialMediaUserData.Name);
                             found.Attributes("Name").First().Value = socialMediaUserData.Name;
                             found.Attributes("ChannelID").First().Value = socialMediaUserData.ChannelId.ToString();
@@ -189,7 +190,6 @@ namespace ChronoBot.Common.Systems
             {
                 string guildPath = Path.Combine(PathToSaveFile, socialMediaUserData.GuildId + ".xml");
                 {
-                    string socialMedia = socialMediaUserData.SocialMedia;
                     if (!File.Exists(guildPath))
                     {
                         Console.WriteLine("Unable to delete {0}", ud.Name);
@@ -198,7 +198,7 @@ namespace ChronoBot.Common.Systems
 
                     XDocument xml = XDocument.Load(guildPath);
                     List<SocialMediaUserData> users = new List<SocialMediaUserData>();
-                    var collection = CollectUserData(new Dictionary<XDocument, ulong> {{xml, ud.GuildId}}, socialMedia)
+                    var collection = CollectUserData(new Dictionary<XDocument, ulong> {{xml, ud.GuildId}}, socialMediaUserData.SocialMedia)
                         .Cast<SocialMediaUserData>();
                     users.AddRange(collection);
                     bool removed = false;
@@ -206,7 +206,7 @@ namespace ChronoBot.Common.Systems
                     {
                         if (ud.Name != userData.Name) 
                             continue;
-                        xml.Descendants("Service").Descendants(socialMedia).Descendants("User").Where(x => x.Attribute("Name")?.Value == ud.Name).Remove();
+                        xml.Descendants("Service").Descendants(socialMediaUserData.SocialMedia.ToString()).Descendants("User").Where(x => x.Attribute("Name")?.Value == ud.Name).Remove();
                         removed = true;
                         break;
                     }

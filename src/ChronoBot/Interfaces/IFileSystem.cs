@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using ChronoBot.Enums;
 
 namespace ChronoBot.Interfaces
 {
@@ -25,7 +26,7 @@ namespace ChronoBot.Interfaces
 
         public abstract IEnumerable<IUserData> Load();
 
-        protected abstract IEnumerable<IUserData> CollectUserData(Dictionary<XDocument, ulong> xmls, string category);
+        protected abstract IEnumerable<IUserData> CollectUserData(Dictionary<XDocument, ulong> xmls, SocialMediaEnum socialMedia);
 
         public abstract bool UpdateFile(IUserData userData);
 

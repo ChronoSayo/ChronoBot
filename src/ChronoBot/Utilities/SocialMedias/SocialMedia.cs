@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Timers;
 using ChronoBot.Common.Systems;
 using ChronoBot.Common.UserDatas;
+using ChronoBot.Enums;
 using ChronoBot.Helpers;
 using Discord;
 using Discord.Commands;
@@ -37,7 +38,7 @@ namespace ChronoBot.Utilities.SocialMedias
             Users = FileSystem.Load().Cast<SocialMediaUserData>().ToList();
         }
         
-        protected virtual bool CreateSocialMediaUser(string name, ulong guildId, ulong channelId, string id, string socialMedia)
+        protected virtual bool CreateSocialMediaUser(string name, ulong guildId, ulong channelId, string id, SocialMediaEnum socialMedia)
         {
             SocialMediaUserData temp = new SocialMediaUserData()
             {
@@ -239,7 +240,7 @@ namespace ChronoBot.Utilities.SocialMedias
             return formatName;
         }
 
-        protected virtual bool Duplicate(ulong guildId, string name, string socialMedia)
+        protected virtual bool Duplicate(ulong guildId, string name, SocialMediaEnum socialMedia)
         {
             bool duplicate = false;
 

@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using ChronoBot.Helpers;
 using ChronoBot.Services;
@@ -43,6 +44,8 @@ namespace ChronoBot
                         MessageCacheSize = 200
                     };
 
+                    var s = context.Properties;
+                    Statics.Config = context.Configuration;
                     config.Token = context.Configuration[Statics.DiscordToken];
                 })
                 .UseCommandService((context, config) =>
@@ -53,6 +56,9 @@ namespace ChronoBot
                 })
                 .ConfigureServices((context, services) =>
                 {
+                    var s = services.First(x => x.ServiceType.Name == "DiscordSocketClient");
+                    var g = s.ServiceType;
+                    //Statics.DiscordClient = 
                     services
                         .AddHostedService<CommandHandler>()
                         .AddSingleton<Calculator>()
