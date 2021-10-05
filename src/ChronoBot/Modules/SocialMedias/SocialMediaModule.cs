@@ -17,7 +17,6 @@ namespace ChronoBot.Modules.SocialMedias
 {
     public class SocialMediaModule : ModuleBase<SocketCommandContext>
     {
-
         private readonly ILogger<SocialMediaModule> _logger;
         protected SocialMedia SocialMedia;
 
@@ -54,7 +53,6 @@ namespace ChronoBot.Modules.SocialMedias
 
         protected virtual Embed HowToText(string socialMedia)
         {
-            string thumbnail = Path.Combine(Environment.CurrentDirectory, $@"Resources/Images/SocialMedia/{socialMedia}.png");
             return new EmbedBuilder()
                 .WithTitle($"How to use {socialMedia.ToUpper()}")
                 .WithThumbnailUrl("https://cdn.discordapp.com/attachments/891627208089698384/891627590023000074/Twitter_social_icons_-_circle_-_blue.png")

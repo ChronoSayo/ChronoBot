@@ -120,7 +120,7 @@ namespace ChronoBot.Common.Systems
             return ud;
         }
 
-        protected override IEnumerable<IUserData> CollectUserData(Dictionary<XDocument, ulong> xmls, SocialMediaEnum socialMedia)
+        private IEnumerable<SocialMediaUserData> CollectUserData(Dictionary<XDocument, ulong> xmls, SocialMediaEnum socialMedia)
         {
             List<SocialMediaUserData> ud = new List<SocialMediaUserData>();
             foreach (KeyValuePair<XDocument, ulong> xml in xmls)
@@ -142,67 +142,59 @@ namespace ChronoBot.Common.Systems
 
         public override bool UpdateFile(IUserData userData)
         {
-            if (userData is SocialMediaUserData socialMediaUserData)
+            if (!(userData is SocialMediaUserData socialMediaUserData)) 
+                return false;
+
+            string guildPath = Path.Combine(PathToSaveFile, socialMediaUserData.GuildId + ".xml");
+            if (!File.Exists(guildPath))
+                return false;
+
+            var xml = XDocument.Load(guildPath);
+            List<SocialMediaUserData> users = new List<SocialMediaUserData>();
+            var collection = CollectUserData(new Dictionary<XDocument, ulong> {{xml, socialMediaUserData.GuildId}}, socialMediaUserData.SocialMedia);
+            users.AddRange(collection);
+            bool updated = false;
+            foreach (SocialMediaUserData ud in users)
             {
-                string guildPath = Path.Combine(PathToSaveFile, socialMediaUserData.GuildId + ".xml");
-                if (!File.Exists(guildPath))
-                    return false;
-
-                var xml = XDocument.Load(guildPath);
-                List<SocialMediaUserData> users = new List<SocialMediaUserData>();
-                var collection = CollectUserData(new Dictionary<XDocument, ulong> {{xml, socialMediaUserData.GuildId}},
-                    socialMediaUserData.SocialMedia).Cast<SocialMediaUserData>();
-                users.AddRange(collection);
-                try
+                if (ud.Name == socialMediaUserData.Name)
                 {
-                    bool updated = false;
-                    foreach (SocialMediaUserData ud in users)
-                    {
-                        if (ud.Name == socialMediaUserData.Name)
-                        {
-                            XElement found = xml.Descendants("Service").Descendants(socialMediaUserData.SocialMedia.ToString()).Descendants("User")
-                                .First(x => x.Attributes("Name").First().Value == socialMediaUserData.Name);
-                            found.Attributes("Name").First().Value = socialMediaUserData.Name;
-                            found.Attributes("ChannelID").First().Value = socialMediaUserData.ChannelId.ToString();
-                            found.Attributes("ID").First().Value = socialMediaUserData.Id;
-                            updated = true;
-                            break;
-                        }
-                    }
-
-                    if (!updated)
-                        return false;
+                    XElement found = xml.Descendants("Service").Descendants(socialMediaUserData.SocialMedia.ToString()).Descendants("User")
+                        .First(x => x.Attributes("Name").First().Value == socialMediaUserData.Name);
+                    found.Attributes("Name").First().Value = socialMediaUserData.Name;
+                    found.Attributes("ChannelID").First().Value = socialMediaUserData.ChannelId.ToString();
+                    found.Attributes("ID").First().Value = socialMediaUserData.Id;
+                    updated = true;
+                    break;
                 }
-                catch
-                {
-                    return false;
-                }
-
-                xml.Save(guildPath);
             }
+
+            if (!updated)
+                return false;
+
+            xml.Save(guildPath);
 
             return true;
         }
 
-        public override bool DeleteInFile(IUserData ud)
+        public override bool DeleteInFile(IUserData userData)
         {
-            if (ud is SocialMediaUserData socialMediaUserData)
+            if (!(userData is SocialMediaUserData socialMediaUserData))
+                return false;
             {
                 string guildPath = Path.Combine(PathToSaveFile, socialMediaUserData.GuildId + ".xml");
                 {
                     if (!File.Exists(guildPath))
                     {
-                        Console.WriteLine("Unable to delete {0}", ud.Name);
+                        Console.WriteLine("Unable to delete {0}", userData.Name);
                         return false;
                     }
 
                     XDocument xml = XDocument.Load(guildPath);
                     List<SocialMediaUserData> users = new List<SocialMediaUserData>();
-                    var collection = CollectUserData(new Dictionary<XDocument, ulong> {{xml, ud.GuildId}}, socialMediaUserData.SocialMedia)
-                        .Cast<SocialMediaUserData>();
+                    var collection = CollectUserData(new Dictionary<XDocument, ulong> {{xml, userData.GuildId}}, socialMediaUserData.SocialMedia);
                     users.AddRange(collection);
                     bool removed = false;
-                    foreach (SocialMediaUserData userData in users)
+                    foreach (SocialMediaUserData ud in users)
                     {
                         if (ud.Name != userData.Name) 
                             continue;

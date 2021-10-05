@@ -43,8 +43,7 @@ namespace ChronoBot
                         AlwaysDownloadUsers = true,
                         MessageCacheSize = 200
                     };
-
-                    var s = context.Properties;
+                    
                     Statics.Config = context.Configuration;
                     config.Token = context.Configuration[Statics.DiscordToken];
                 })
@@ -56,9 +55,6 @@ namespace ChronoBot
                 })
                 .ConfigureServices((context, services) =>
                 {
-                    var s = services.First(x => x.ServiceType.Name == "DiscordSocketClient");
-                    var g = s.ServiceType;
-                    //Statics.DiscordClient = 
                     services
                         .AddHostedService<CommandHandler>()
                         .AddSingleton<Calculator>()

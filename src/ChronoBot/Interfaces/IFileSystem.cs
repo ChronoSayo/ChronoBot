@@ -26,8 +26,6 @@ namespace ChronoBot.Interfaces
 
         public abstract IEnumerable<IUserData> Load();
 
-        protected abstract IEnumerable<IUserData> CollectUserData(Dictionary<XDocument, ulong> xmls, SocialMediaEnum socialMedia);
-
         public abstract bool UpdateFile(IUserData userData);
 
         public abstract bool DeleteInFile(IUserData userData);

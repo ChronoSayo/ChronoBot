@@ -51,7 +51,8 @@ namespace ChronoBot.Services
                 return;
 
             var argPos = 0;
-            if(!message.HasStringPrefix(_config[Statics.Prefix], ref argPos) && !message.HasMentionPrefix(_client.CurrentUser, ref argPos))
+            string s = "Prefix";
+            if(!message.HasStringPrefix(_config[s], ref argPos) && !message.HasMentionPrefix(_client.CurrentUser, ref argPos))
                 return;
 
             var context = new SocketCommandContext(_client, message);

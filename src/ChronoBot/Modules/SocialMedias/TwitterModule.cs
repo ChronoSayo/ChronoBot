@@ -17,15 +17,14 @@ namespace ChronoBot.Modules.SocialMedias
             SocialMedia = socialMedia;
         }
 
-        [Command(SocialMediaCommand + "add")]
+        [Command(SocialMediaCommand + "add", RunMode = RunMode.Async)]
         public override async Task AddAsync(string user, ulong channel = 0)
         {
             string result = await SocialMedia.AddSocialMediaUser(Context, user, channel);
-            await ReplyAsync(result);
+            await SendMessage(result);
         }
 
-        [Command(SocialMediaCommand + "delete")]
-        [Alias(SocialMediaCommand + "del", SocialMediaCommand + "remove")]
+        [Command(SocialMediaCommand + "delete", RunMode = RunMode.Async), Alias(SocialMediaCommand + "del", SocialMediaCommand + "remove")]
         public override async Task DeleteAsync(string user)
         {
             ulong guildId = Context.Guild.Id;
@@ -33,24 +32,21 @@ namespace ChronoBot.Modules.SocialMedias
             await SendMessage(result);
         }
 
-        [Command(SocialMediaCommand + "get")]
-        [Alias(SocialMediaCommand)]
+        [Command(SocialMediaCommand + "get", RunMode = RunMode.Async), Alias(SocialMediaCommand)]
         public override async Task GetAsync(string user)
         {
             string result = await SocialMedia.GetSocialMediaUser(Context, user);
             await SendMessage(result);
         }
 
-        [Command(SocialMediaCommand + "list")]
-        [Alias(SocialMediaCommand + "all")]
+        [Command(SocialMediaCommand + "list", RunMode = RunMode.Async), Alias(SocialMediaCommand + "all")]
         public override async Task ListAsync()
         {
             string result = await SocialMedia.ListSavedSocialMediaUsers(Context);
             await SendMessage(result);
         }
 
-        [Command(SocialMediaCommand + "?")]
-        [Alias(SocialMediaCommand + "howto", SocialMediaCommand)]
+        [Command(SocialMediaCommand + "?", RunMode = RunMode.Async), Alias(SocialMediaCommand + "howto", SocialMediaCommand)]
         public override async Task HowToUseAsync()
         {
             var embed = HowToText(SocialMediaCommand);
