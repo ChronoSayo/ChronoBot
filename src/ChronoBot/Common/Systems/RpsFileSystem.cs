@@ -15,13 +15,23 @@ namespace ChronoBot.Common.Systems
 {
     class RpsFileSystem : FileSystem
     {
-        private readonly string _path;
         private const string ElementRoot = "RockPaperScissors";
         private readonly IEnumerable<string> _attributeNames;
 
-        public RpsFileSystem()
+        public sealed override string PathToSaveFile { get; }
+
+        public RpsFileSystem(string path = null)
         {
-            _path = Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly()?.Location) ?? string.Empty, "Memory Card");
+            if (string.IsNullOrEmpty(path))
+                PathToSaveFile =
+                    Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly()?.Location) ?? string.Empty,
+                        @"Resources\Memory Card");
+            else
+                PathToSaveFile = path;
+
+            if (!Directory.Exists(PathToSaveFile))
+                Directory.CreateDirectory(PathToSaveFile);
+
             _attributeNames = new[]
             {
                 "UserID", "UserIDOpponent", "ChannelID", "Plays", "TotalPlays", "Wins", "Losses", "Draws", "Ratio",
@@ -56,7 +66,7 @@ namespace ChronoBot.Common.Systems
             user.Add(attributes);
 
             XDocument xDoc;
-            string guildPath = Path.Combine(_path, guildId + ".xml");
+            string guildPath = Path.Combine(PathToSaveFile, guildId + ".xml");
             if (!File.Exists(guildPath))
             {
                 xDoc = new XDocument();
@@ -96,12 +106,10 @@ namespace ChronoBot.Common.Systems
             return true;
         }
 
-        public override string PathToSaveFile { get; }
-
         public override IEnumerable<IUserData> Load()
         {
             Dictionary<XDocument, ulong> xmls = new Dictionary<XDocument, ulong>();
-            DirectoryInfo dirInfo = new DirectoryInfo(_path);
+            DirectoryInfo dirInfo = new DirectoryInfo(PathToSaveFile);
             foreach (FileInfo fi in dirInfo.GetFiles())
             {
                 if (fi.FullName.EndsWith(".xml"))
@@ -189,7 +197,7 @@ namespace ChronoBot.Common.Systems
             if (!(userData is RpsUserData rpsUserData))
                 return true;
 
-            string guildPath = Path.Combine(_path, userData.GuildId + ".xml");
+            string guildPath = Path.Combine(PathToSaveFile, userData.GuildId + ".xml");
             if (!File.Exists(guildPath))
             {
                 Console.WriteLine("Unable to update {0}", rpsUserData.UserId);
@@ -245,7 +253,7 @@ namespace ChronoBot.Common.Systems
             if (!(userData is RpsUserData rpsUserData))
                 return false;
 
-            string guildPath = Path.Combine(_path, rpsUserData.GuildId + ".xml");
+            string guildPath = Path.Combine(PathToSaveFile, rpsUserData.GuildId + ".xml");
             if (!File.Exists(guildPath))
             {
                 Console.WriteLine("Unable to delete {0}", rpsUserData.UserId);

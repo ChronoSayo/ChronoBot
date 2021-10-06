@@ -25,21 +25,28 @@ namespace ChronoBot.Modules.Games
         [Command("rps"), Alias("rockpaperscissors")]
         public async Task PlayAsync([Remainder] string action)
         {
-            string result = await _rps.OtherCommands(action, Context.User.Id, Context.Channel.Id, Context.Guild.Id);
-            if (result.Contains("Wrong input"))
-                await SendMessage(result);
+            string[] splitAction = action.Split(' ');
+            //TODO check if rps class can detect actor from input.
+            //if (!Enum.TryParse<RpsActors>(splitAction[0], out var actor))
+            {
+                string result = await _rps.OtherCommands(action, Context.User.Id, Context.Channel.Id, Context.Guild.Id);
+                if (result.Contains("Wrong input"))
+                    await SendMessage(result);
+                else
+                {
+                    var embed = new EmbedBuilder()
+                        .WithDescription(result);
+                    await SendMessage(embed.Build());
+                }
+            }
             else
             {
-                var embed = new EmbedBuilder()
-                    .WithDescription(result);
-                await SendMessage(embed.Build());
+                //TODO send in mention id
+                await _rps.PlayAsync(actor, Context.User.Id, mention, Context.Channel.Id, Context.Guild.Id,
+                    Context.Message.Content.Contains("|"));
             }
         }
-        [Command("rps"), Alias("rockpaperscissors")]
-        public async Task PlayAsync(RpsActors actor, ulong user = 0)
-        {
-            await SendMessage(_rps.PlayAsync(actor, user, Context.Message.Content.Contains("|")));
-        }
+
         private async Task SendMessage(string result)
         {
             if (Statics.Debug)

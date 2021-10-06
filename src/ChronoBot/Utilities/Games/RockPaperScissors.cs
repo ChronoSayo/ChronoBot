@@ -63,13 +63,12 @@ namespace ChronoBot.Utilities.Games
             }
         }
 
-        public async Task<Embed> PlayAsync(RpsActors actor, ulong author, ulong mention, ulong channel, ulong guild, bool spoilerTag, out bool isChallenging)
+        public async Task<Embed> PlayAsync(RpsActors actor, ulong author, ulong mention, ulong channel, ulong guild, bool spoilerTag)
         {
-            isChallenging = false;
             if (mention != 0)
-                return await Task.FromResult(VsPlayer(actor, author, mention, channel, guild, out isChallenging));
-            else
-                return await Task.FromResult(VsBot(playerActor));
+                return await Task.FromResult(VsPlayer(actor, author, mention, channel, guild));
+
+            return await Task.FromResult(VsBot(actor, author, channel, guild));
         }
 
         public async Task<string> OtherCommands(string action, ulong user, ulong channel, ulong guild)
@@ -137,9 +136,8 @@ namespace ChronoBot.Utilities.Games
             return sb.ToString();
         }
 
-        private Embed VsPlayer(RpsActors playerActor, ulong author, ulong mention, ulong channel, ulong guild, out bool isChallenging)
+        private Embed VsPlayer(RpsActors playerActor, ulong author, ulong mention, ulong channel, ulong guild)
         {
-            isChallenging = false;
             if (author == mention)
             {
                 var embed = new EmbedBuilder()
@@ -157,15 +155,17 @@ namespace ChronoBot.Utilities.Games
             RpsUserData mentionUd = Find(mention);
             if (authorUd.UserIdVs != mention && mentionUd.UserIdVs == 0)
             {
-                isChallenging = true;
                 return Challenging(playerActor, authorUd, mentionUd);
             }
-            else if(authorUd.UserIdVs == mention && mentionUd.Actor != RpsActors.Max)
-                Responding(authorUd, mentionUd, playerActor);
+            else if (authorUd.UserIdVs == mention && mentionUd.Actor != RpsActors.Max)
+            {
+                return Responding(authorUd, mentionUd, playerActor);
+            }
             else
             {
-                var embed = new EmbedBuilder()
-                    .WithDescription($"{Statics.DiscordClient.GetUser(mention).Username} is already in battle.");
+                return new EmbedBuilder()
+                    .WithDescription($"{Statics.DiscordClient.GetUser(mention).Username} is already in battle.")
+                    .Build();
             }
         }
 
@@ -202,25 +202,26 @@ namespace ChronoBot.Utilities.Games
             return embed.Build();
         }
 
-        private void Responding(RpsUserData authorUd, RpsUserData mentionUd, RpsActors authorActor)
+        private Embed Responding(RpsUserData authorUd, RpsUserData mentionUd, RpsActors authorActor)
         {
             authorUd.Actor = authorActor;
             int mentionActor = (int)mentionUd.Actor;
-            string mention = socketMessage.MentionedUsers.ElementAt(0).Mention;
+            string mention = Statics.DiscordClient.GetUser(mentionUd.UserId).Mention;
+            string author = Statics.DiscordClient.GetUser(authorUd.UserId).Mention;
             string result =
                 $"{mention} chose {ConvertActorToEmoji(mentionUd.Actor)}\n" +
-                $"{socketMessage.Author.Mention} chose {ConvertActorToEmoji(authorUd.Actor)}\n\n";
+                $"{author} chose {ConvertActorToEmoji(authorUd.Actor)}\n\n";
 
             GameState mentionState, authorState;
             //Responding wins
-            if ((mentionActor + 1) % (int) Actor.Max == (int) authorActor)
+            if ((mentionActor + 1) % (int) RpsActors.Max == (int) authorActor)
             {
-                result += $"{socketMessage.Author.Mention} wins! {CoinsInKeyText}";
+                result += $"{author} wins! {CoinsInKeyText}";
                 authorState = GameState.Win;
                 mentionState = GameState.Lose;
             }
             //Instigator wins
-            else if (((int) authorActor + 1) % (int) Actor.Max == mentionActor)
+            else if (((int) authorActor + 1) % (int) RpsActors.Max == mentionActor)
             {
                 result += $"{mention} wins! {CoinsInKeyText}";
                 mentionState = GameState.Win;
@@ -234,57 +235,45 @@ namespace ChronoBot.Utilities.Games
             }
 
             ProcessResults(mentionUd, mentionState, result, mention, out result);
-            ProcessResults(authorUd, authorState, result, socketMessage.Author.Mention, out result);
-            Info.SendMessageToChannelSuccess(socketMessage, result);
+            ProcessResults(authorUd, authorState, result, mention, out result);
             
             _usersActiveVs.Remove(authorUd);
             _usersActiveVs.Remove(mentionUd);
             
             if(_usersActiveVs.Count == 0)
                 _timerVs.Stop();
+
+            return new EmbedBuilder().WithDescription(result).Build();
         }
 
-        private void VsBot(Actor playerActor, SocketMessage socketMessage)
+        private Embed VsBot(RpsActors playerActor, ulong user, ulong channel, ulong guild)
         {
-            string userMention = "You";
-            if (socketMessage.Author.Mention != null)
-                userMention = socketMessage.Author.Mention;
+            string userMention = Statics.DiscordClient.GetUser(user).Mention;
 
             Random random = new Random();
-            int bot = random.Next(0, (int)Actor.Max);
+            int bot = random.Next(0, (int)RpsActors.Max);
             int player = (int)playerActor;
             string competition =
-                $"{userMention} threw {ConvertActorToEmoji(playerActor)}\nBot threw {ConvertActorToEmoji((Actor)bot)}\n\n";
-
-            string imagePath = ImagePath;
-            ulong userId = socketMessage.Author.Id;
-            if (!Exists(userId))
-            {
-                CreateUser(socketMessage);
-            }
+                $"{userMention} threw {ConvertActorToEmoji(playerActor)}\nBot threw {ConvertActorToEmoji((RpsActors)bot)}\n\n";
+            
+            if (!Exists(user))
+                CreateUser(user, channel, guild);
 
             GameState state;
             string processed = string.Empty;
-            if ((bot + 1) % (int)Actor.Max == player)
+            if ((bot + 1) % (int)RpsActors.Max == player)
             {
                 state = GameState.Win;
-                imagePath += "Lost.png";
                 processed = CoinsInKeyText;
             }
-            else if ((player + 1) % (int)Actor.Max == bot)
-            {
+            else if ((player + 1) % (int)RpsActors.Max == bot)
                 state = GameState.Lose;
-                imagePath += "Win.png";
-            }
             else
-            {
                 state = GameState.Draw;
-                imagePath += "Draw.png";
-            }
 
-            UserData ud = Find(socketMessage.Author.Id);
+            RpsUserData ud = Find(user);
             ud.Actor = playerActor;
-            ProcessResults(ud, state, processed, socketMessage.Author.Mention, out processed);
+            ProcessResults(ud, state, processed, userMention, out processed);
 
             EmbedBuilder embed = new EmbedBuilder();
             embed.WithDescription(competition);
@@ -292,39 +281,46 @@ namespace ChronoBot.Utilities.Games
             {
                 case GameState.Win:
                     embed.WithColor(Color.Green);
-                    processed = processed.Replace(socketMessage.Author.Mention ?? string.Empty, "");
+                    processed = processed.Replace(userMention ?? string.Empty, "");
                     embed.WithFields(new EmbedFieldBuilder { IsInline = true, Name = "You won", Value = processed });
+                    embed.WithThumbnailUrl(
+                        "https://cdn.discordapp.com/attachments/891627208089698384/891628032207495178/Lost.png");
                     break;
                 case GameState.Lose:
                     embed.WithColor(Color.Red);
-                    processed = processed.Replace(socketMessage.Author.Mention ?? string.Empty, "");
+                    processed = processed.Replace(userMention ?? string.Empty, "");
                     embed.WithFields(new EmbedFieldBuilder { IsInline = true, Name = "You lost", Value = processed });
+                    embed.WithThumbnailUrl(
+                        "https://cdn.discordapp.com/attachments/891627208089698384/891628034296279070/Win.png");
                     break;
                 case GameState.Draw:
                     embed.WithColor(Color.Gold);
                     embed.WithFields(new EmbedFieldBuilder { IsInline = true, Name = "Draw game", Value = "+0 Rings" });
+                    embed.WithThumbnailUrl(
+                        "https://cdn.discordapp.com/attachments/891627208089698384/891628029741252648/Draw.png");
                     break;
             }
-            Info.SendFileToChannel(socketMessage, imagePath, embed.Build());
+
+            return embed.Build();
         }
 
-        private void ProcessResults(UserData ud, GameState state, string result, string mentionUser, out string resultText)
+        private void ProcessResults(RpsUserData ud, GameState state, string result, string mentionUser, out string resultText)
         {
             resultText = result;
             ud.Plays++;
             ud.TotalPlays++;
             switch (ud.Actor)
             {
-                case Actor.Rock:
+                case RpsActors.Rock:
                     ud.RockChosen++;
                     break;
-                case Actor.Paper:
+                case RpsActors.Paper:
                     ud.PaperChosen++;
                     break;
-                case Actor.Scissors:
+                case RpsActors.Scissors:
                     ud.ScissorsChosen++;
                     break;
-                case Actor.Max:
+                case RpsActors.Max:
                     LogToFile(LogSeverity.Error, "Wrong actor was given.");
                     break;
                 default:
@@ -372,7 +368,7 @@ namespace ChronoBot.Utilities.Games
                     break;
             }
 
-            ud.Actor = Actor.Max;
+            ud.Actor = RpsActors.Max;
             ud.UserIdVs = 0;
             float ratio = (float)ud.Wins / ud.Plays;
             ud.Ratio = (int)(ratio * 100);

@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using ChronoBot.Helpers;
 using ChronoBot.Services;
+using ChronoBot.Utilities.Games;
 using ChronoBot.Utilities.SocialMedias;
 using ChronoBot.Utilities.Tools;
 using Discord;
@@ -59,7 +60,8 @@ namespace ChronoBot
                         .AddHostedService<CommandHandler>()
                         .AddSingleton<Calculator>()
                         .AddSingleton<SocialMedia>()
-                        .AddSingleton<Twitter>();
+                        .AddSingleton<Twitter>()
+                        .AddSingleton<RockPaperScissors>();
                 })
                 .UseConsoleLifetime();
 
