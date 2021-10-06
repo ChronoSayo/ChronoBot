@@ -23,9 +23,22 @@ namespace ChronoBot.Modules.Games
         }
 
         [Command("rps"), Alias("rockpaperscissors")]
-        public async Task PlayAsync(RpsActors actor, string otherAction = "", ulong user = 0)
+        public async Task PlayAsync([Remainder] string action)
         {
-            string result = await _rps.ProcessCommand(actor, user, Context.Message.Content.Contains("|"))
+            string result = await _rps.OtherCommands(action, Context.User.Id, Context.Channel.Id, Context.Guild.Id);
+            if (result.Contains("Wrong input"))
+                await SendMessage(result);
+            else
+            {
+                var embed = new EmbedBuilder()
+                    .WithDescription(result);
+                await SendMessage(embed.Build());
+            }
+        }
+        [Command("rps"), Alias("rockpaperscissors")]
+        public async Task PlayAsync(RpsActors actor, ulong user = 0)
+        {
+            await SendMessage(_rps.PlayAsync(actor, user, Context.Message.Content.Contains("|")));
         }
         private async Task SendMessage(string result)
         {
