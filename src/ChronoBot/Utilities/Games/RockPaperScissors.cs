@@ -13,8 +13,6 @@ using ChronoBot.Common.UserDatas;
 using ChronoBot.Enums;
 using ChronoBot.Helpers;
 using Discord;
-using Discord.Commands;
-using Discord.WebSocket;
 using Color = Discord.Color;
 
 namespace ChronoBot.Utilities.Games
