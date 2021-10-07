@@ -11,17 +11,20 @@ using ChronoBot.Utilities.SocialMedias;
 using Discord;
 using Discord.Commands;
 using Discord.Rest;
+using Discord.WebSocket;
 using Microsoft.Extensions.Logging;
 
 namespace ChronoBot.Modules.SocialMedias
 {
     public class SocialMediaModule : ModuleBase<SocketCommandContext>
     {
+        protected readonly DiscordSocketClient Client;
         private readonly ILogger<SocialMediaModule> _logger;
         protected SocialMedia SocialMedia;
 
-        public SocialMediaModule(ILogger<SocialMediaModule> logger, SocialMedia socialMedia)
+        public SocialMediaModule(DiscordSocketClient client, ILogger<SocialMediaModule> logger, SocialMedia socialMedia)
         {
+            Client = client;
             _logger = logger;
             SocialMedia = socialMedia;
         }
@@ -66,14 +69,14 @@ namespace ChronoBot.Modules.SocialMedias
         protected virtual async Task SendMessage(string result)
         {
             if (Statics.Debug)
-                await Statics.DebugSendMessageToChannelAsync(result);
+                await Statics.DebugSendMessageToChannelAsync(Client, result);
             else
                 await ReplyAsync(result);
         }
         protected virtual async Task SendMessage(Embed result)
         {
             if (Statics.Debug)
-                await Statics.DebugSendMessageToChannelAsync(result);
+                await Statics.DebugSendMessageToChannelAsync(Client, result);
             else
                 await ReplyAsync(embed: result);
         }
@@ -81,7 +84,7 @@ namespace ChronoBot.Modules.SocialMedias
         {
             string thumbnail = Path.Combine(Environment.CurrentDirectory, $@"Resources\Images\SocialMedia\{socialMedia}.png");
             if (Statics.Debug)
-                await Statics.DebugSendFileToChannelAsync(result, thumbnail);
+                await Statics.DebugSendFileToChannelAsync(Client, result, thumbnail);
             else
                 await Context.Channel.SendFileAsync(thumbnail, embed: result);
         }

@@ -9,8 +9,7 @@ namespace ChronoBot.Helpers
     public static class Statics
     {
         private static readonly Random Random = new Random();
-
-        public static DiscordSocketClient DiscordClient { get; set; }
+        
         public static IConfiguration Config { get; set; }
         public static bool Debug => bool.TryParse(Config["Debug"], out bool debug) && debug;
         public static string Prefix => Config["Prefix"];
@@ -30,18 +29,18 @@ namespace ChronoBot.Helpers
         }
 
         //Send message to my test channel.
-        public static async Task DebugSendMessageToChannelAsync(string message)
+        public static async Task DebugSendMessageToChannelAsync(DiscordSocketClient client, string message)
         {
-            await DiscordClient.GetGuild(DebugGuildId).GetTextChannel(DebugChannelId).SendMessageAsync(message);
+            await client.GetGuild(DebugGuildId).GetTextChannel(DebugChannelId).SendMessageAsync(message);
         }
         //Send message to my test channel.
-        public static async Task DebugSendMessageToChannelAsync(Embed message)
+        public static async Task DebugSendMessageToChannelAsync(DiscordSocketClient client, Embed message)
         {
-            await DiscordClient.GetGuild(DebugGuildId).GetTextChannel(DebugChannelId).SendMessageAsync(embed: message);
+            await client.GetGuild(DebugGuildId).GetTextChannel(DebugChannelId).SendMessageAsync(embed: message);
         }
-        public static async Task DebugSendFileToChannelAsync(Embed message, string file)
+        public static async Task DebugSendFileToChannelAsync(DiscordSocketClient client, Embed message, string file)
         {
-            await DiscordClient.GetGuild(DebugGuildId).GetTextChannel(DebugChannelId).SendFileAsync(file, null, embed: message);
+            await client.GetGuild(DebugGuildId).GetTextChannel(DebugChannelId).SendFileAsync(file, null, embed: message);
         }
     }
 }

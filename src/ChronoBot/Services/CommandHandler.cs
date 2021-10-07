@@ -26,8 +26,6 @@ namespace ChronoBot.Services
             _provider = provider;
             _service = service;
             _config = config;
-
-            Statics.DiscordClient = client;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)

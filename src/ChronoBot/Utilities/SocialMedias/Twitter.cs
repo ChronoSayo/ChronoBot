@@ -18,7 +18,7 @@ namespace ChronoBot.Utilities.SocialMedias
     {
         private TwitterService _service;
 
-        public Twitter(IConfiguration config, DiscordSocketClient client) : base(config, client)
+        public Twitter(DiscordSocketClient client, IConfiguration config) : base(client, config)
         {
             Authenticate();
 

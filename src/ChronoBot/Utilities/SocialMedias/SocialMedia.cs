@@ -25,10 +25,10 @@ namespace ChronoBot.Utilities.SocialMedias
         protected string TypeOfSocialMedia;
         protected List<SocialMediaUserData> Users;
 
-        public SocialMedia(IConfiguration config, DiscordSocketClient client)
+        public SocialMedia(DiscordSocketClient client, IConfiguration config)
         {
-            Config = config;
             Client = client;
+            Config = config;
             Users = new List<SocialMediaUserData>();
         }
 
@@ -160,7 +160,7 @@ namespace ChronoBot.Utilities.SocialMedias
 
                 //Posts the updated social media.
                 if (Statics.Debug)
-                    await Statics.DebugSendMessageToChannelAsync(message); 
+                    await Statics.DebugSendMessageToChannelAsync(Client, message); 
                 else
                     await Client.GetGuild(guildId).GetTextChannel(channelId).SendMessageAsync(message);
 

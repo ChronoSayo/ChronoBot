@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Net.NetworkInformation;
+using System.Reflection.Metadata;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
@@ -19,6 +21,7 @@ namespace ChronoBot.Utilities.Games
 {
     public class RockPaperScissors
     {
+        private readonly DiscordSocketClient _client;
         private readonly RpsFileSystem _fileSystem;
         private Timer _timerVs;
         private readonly List<RpsUserData> _users;
@@ -31,8 +34,9 @@ namespace ChronoBot.Utilities.Games
             Win, Lose, Draw, None
         }
 
-        public RockPaperScissors()
+        public RockPaperScissors(DiscordSocketClient client)
         {
+            _client = client;
             _fileSystem = new RpsFileSystem();
             _users = (List<RpsUserData>)_fileSystem.Load();
             _usersActiveVs = new List<RpsUserData>();
@@ -63,32 +67,38 @@ namespace ChronoBot.Utilities.Games
             }
         }
 
-        public async Task<Embed> PlayAsync(RpsActors actor, ulong author, ulong mention, ulong channel, ulong guild, bool spoilerTag)
+        public Embed Play(string actor, ulong author, ulong mention, ulong channel, ulong guild)
         {
-            if (mention != 0)
-                return await Task.FromResult(VsPlayer(actor, author, mention, channel, guild));
+            RpsActors rpsActor = ConvertActionIntoActor(actor);
+            if (rpsActor == RpsActors.Max)
+                return new EmbedBuilder()
+                    .WithDescription("Wrong input. \nType either rock(r), paper(p), or scissors(s) to play.").Build();
 
-            return await Task.FromResult(VsBot(actor, author, channel, guild));
+            if (mention != 0)
+                return VsPlayer(rpsActor, author, mention, channel, guild);
+
+            return VsBot(rpsActor, author, channel, guild);
         }
 
-        public async Task<string> OtherCommands(string action, ulong user, ulong channel, ulong guild)
+        public string Options(string action, ulong user, ulong channel, ulong guild)
         {
             string result;
             switch (action)
             {
+                case "s":
                 case "stats":
                 case "statistics":
                     result = ShowStats(user, channel, guild);
                     break;
+                case "r":
                 case "reset":
                     result = ResetStats(user, channel, guild);
                     break;
                 default:
-                    result = "Wrong input. \nType either rock(r), paper(p), or scissors(s) to play." +
-                             "\nType statistics(stats) to show stats.\nType reset to reset the statistics.";
+                    result = "Wrong input. \nType stats/s to show your statistics.\nType reset/r to reset the statistics.";
                     break;
             }
-            return await Task.FromResult(result);
+            return result;
         }
 
         private string ResetStats(ulong user, ulong channel, ulong guild)
@@ -106,7 +116,7 @@ namespace ChronoBot.Utilities.Games
             _users[i] = ud;
             _fileSystem.UpdateFile(ud);
 
-            return $"Stats for {Statics.DiscordClient.GetUser(user).Mention} has been reset.";
+            return $"Stats for {GetMentionId(guild, channel, user)} has been reset.";
         }
 
         private string ShowStats(ulong user, ulong channel, ulong guild)
@@ -117,7 +127,7 @@ namespace ChronoBot.Utilities.Games
             RpsUserData ud = Find(user);
 
             StringBuilder sb = new StringBuilder();
-            sb.AppendLine($"Stats for {Statics.DiscordClient.GetUser(user).Mention}");
+            sb.AppendLine($"Stats for {GetMentionId(guild, channel, user)}");
             sb.AppendLine($"**Plays:** {ud.Plays}");
             sb.AppendLine($"**Total Plays:** {ud.TotalPlays}");
             sb.AppendLine($"**Wins:** {ud.Wins}");
@@ -141,7 +151,7 @@ namespace ChronoBot.Utilities.Games
             if (author == mention)
             {
                 var embed = new EmbedBuilder()
-                    .WithDescription($"{Statics.DiscordClient.GetUser(author).Mention} " +
+                    .WithDescription($"{GetMentionId(guild, channel, author)} " +
                                      "If you have two hands, you can play against yourself that way.");
                 return embed.Build();
             }
@@ -154,19 +164,14 @@ namespace ChronoBot.Utilities.Games
             RpsUserData authorUd = Find(author);
             RpsUserData mentionUd = Find(mention);
             if (authorUd.UserIdVs != mention && mentionUd.UserIdVs == 0)
-            {
                 return Challenging(playerActor, authorUd, mentionUd);
-            }
-            else if (authorUd.UserIdVs == mention && mentionUd.Actor != RpsActors.Max)
-            {
+
+            if (authorUd.UserIdVs == mention && mentionUd.Actor != RpsActors.Max)
                 return Responding(authorUd, mentionUd, playerActor);
-            }
-            else
-            {
-                return new EmbedBuilder()
-                    .WithDescription($"{Statics.DiscordClient.GetUser(mention).Username} is already in battle.")
-                    .Build();
-            }
+
+            return new EmbedBuilder()
+                .WithDescription($"{_client.GetGuild(guild).GetTextChannel(channel).GetUser(mention).Username} is already in battle.")
+                .Build();
         }
 
         private Embed Challenging(RpsActors playerActor, RpsUserData authorUd, RpsUserData mentionUd)
@@ -185,10 +190,10 @@ namespace ChronoBot.Utilities.Games
             _users[i] = mentionUd;
             _fileSystem.UpdateFile(mentionUd);
 
-            string authorMention = Statics.DiscordClient.GetUser(authorUd.UserId).Mention;
+            string authorMention = GetMentionId(authorUd.GuildId, authorUd.ChannelId, authorUd.UserId);
             EmbedBuilder embed = new EmbedBuilder();
             embed.WithDescription($"{authorMention} is challenging " +
-                                  $"{Statics.DiscordClient.GetUser(mentionUd.UserId).Mention} in Rock-Paper-Scissors!\n" +
+                                  $"{GetMentionId(authorUd.GuildId, authorUd.ChannelId, authorUd.UserIdVs)} in Rock-Paper-Scissors!\n" +
                                   $"{authorMention} has already made a move.");
             embed.WithFields(new EmbedFieldBuilder { IsInline = true, Name = "Ends", Value = authorUd.DateVs });
             embed.WithColor(Color.Green);
@@ -206,8 +211,8 @@ namespace ChronoBot.Utilities.Games
         {
             authorUd.Actor = authorActor;
             int mentionActor = (int)mentionUd.Actor;
-            string mention = Statics.DiscordClient.GetUser(mentionUd.UserId).Mention;
-            string author = Statics.DiscordClient.GetUser(authorUd.UserId).Mention;
+            string mention = GetMentionId(mentionUd.GuildId, mentionUd.ChannelId, mentionUd.UserId);
+            string author = GetMentionId(authorUd.GuildId, authorUd.ChannelId, authorUd.UserId);
             string result =
                 $"{mention} chose {ConvertActorToEmoji(mentionUd.Actor)}\n" +
                 $"{author} chose {ConvertActorToEmoji(authorUd.Actor)}\n\n";
@@ -248,7 +253,7 @@ namespace ChronoBot.Utilities.Games
 
         private Embed VsBot(RpsActors playerActor, ulong user, ulong channel, ulong guild)
         {
-            string userMention = Statics.DiscordClient.GetUser(user).Mention;
+            string userMention = GetMentionId(guild, channel, user);
 
             Random random = new Random();
             int bot = random.Next(0, (int)RpsActors.Max);
@@ -392,13 +397,21 @@ namespace ChronoBot.Utilities.Games
             {
                 UserId = user,
                 GuildId = guild,
-                ChannelId = channel
+                ChannelId = channel,
+                Actor = RpsActors.Max,
+                DateVs = DateTime.Now
+
             };
             _users.Add(temp);
 
             _fileSystem.Save(temp);
 
             //LogToFile(LogSeverity.Info, $"Saved user: RockPaperScissors {temp.UserId} [{socketMessage.Author.Username}] {temp.GuildId} {temp.ChannelId}");
+        }
+
+        private string GetMentionId(ulong guildId, ulong channelId, ulong userId)
+        {
+            return _client.GetGuild(guildId).GetTextChannel(channelId).GetUser(userId).Mention;
         }
 
         private string ConvertActorToEmoji(RpsActors a)
@@ -414,6 +427,24 @@ namespace ChronoBot.Utilities.Games
                     return ":scissors:";
             }
             return s;
+        }
+
+        private RpsActors ConvertActionIntoActor(string action)
+        {
+            switch (action.ToLowerInvariant())
+            {
+                case "rock":
+                case "r":
+                    return RpsActors.Rock;
+                case "paper":
+                case "p":
+                    return RpsActors.Paper;
+                case "scissors":
+                case "s":
+                    return RpsActors.Scissors;
+                default:
+                    return RpsActors.Max;
+            }
         }
 
         private RpsUserData Find(ulong id)

@@ -2,6 +2,7 @@
 using ChronoBot.Utilities.SocialMedias;
 using Discord;
 using Discord.Commands;
+using Discord.WebSocket;
 using Microsoft.Extensions.Logging;
 
 namespace ChronoBot.Modules.SocialMedias
@@ -11,7 +12,7 @@ namespace ChronoBot.Modules.SocialMedias
         private readonly ILogger<SocialMediaModule> _logger;
         private const string SocialMediaCommand = "twitter";
 
-        public TwitterModule(ILogger<SocialMediaModule> logger, Twitter socialMedia) : base(logger, socialMedia)
+        public TwitterModule(DiscordSocketClient client, ILogger<SocialMediaModule> logger, Twitter socialMedia) : base(client, logger, socialMedia)
         {
             _logger = logger;
             SocialMedia = socialMedia;

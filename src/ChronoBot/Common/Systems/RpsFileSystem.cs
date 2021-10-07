@@ -49,6 +49,8 @@ namespace ChronoBot.Common.Systems
             string userIdVs = rpsUserData.UserIdVs.ToString();
             string guildId = rpsUserData.GuildId.ToString();
             string channelId = rpsUserData.ChannelId.ToString();
+            string actor = rpsUserData.Actor.ToString();
+            string dateVs = rpsUserData.DateVs.ToString(CultureInfo.InvariantCulture);
 
             XElement user = new XElement("User");
             List<XAttribute> attributes = new List<XAttribute>();
@@ -61,6 +63,10 @@ namespace ChronoBot.Common.Systems
                     value = userIdVs;
                 else if (name == _attributeNames.ElementAt(2))
                     value = channelId;
+                else if (name == "Actor")
+                    value = actor;
+                else if(name == "Deadline")
+                    value = dateVs;
                 attributes.Add(new XAttribute(name, value));
             }
             user.Add(attributes);
@@ -165,7 +171,7 @@ namespace ChronoBot.Common.Systems
                     user.ScissorsChosen = GetAttributeValueInt(_attributeNames.ElementAt(i++), e);
                     user.Coins = GetAttributeValueInt(_attributeNames.ElementAt(i++), e);
                     user.Actor = GetAttributeValueActor(_attributeNames.ElementAt(i++), e);
-                    user.DateVs = GetAttributeValueDateTime(_attributeNames.ElementAt(i), e);
+                    user.DateVs = GetAttributeValueDateTime(_attributeNames.ElementAt(i) ?? DateTime.Now.ToString(CultureInfo.InvariantCulture), e);
                     ud.Add(user);
                 }
             }
