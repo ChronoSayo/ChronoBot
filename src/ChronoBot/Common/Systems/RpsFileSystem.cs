@@ -34,7 +34,7 @@ namespace ChronoBot.Common.Systems
 
             _attributeNames = new[]
             {
-                "UserID", "UserIDOpponent", "ChannelID", "Plays", "TotalPlays", "Wins", "Losses", "Draws", "Ratio",
+                "UserID", "UserIDOpponent", "ChannelID", "Name", "Plays", "TotalPlays", "Wins", "Losses", "Draws", "Ratio",
                 "CurrentStreak", "BestStreak", "Resets", "Rocks", "Papers", "Scissors", "Coins", "Actor", "Deadline"
             };
         }
@@ -157,6 +157,7 @@ namespace ChronoBot.Common.Systems
                     user.UserId = GetAttributeValueLong(_attributeNames.ElementAt(i++), e);
                     user.UserIdVs = GetAttributeValueLong(_attributeNames.ElementAt(i++), e);
                     user.ChannelId = GetAttributeValueLong(_attributeNames.ElementAt(i++), e);
+                    user.Name = GetAttributeValueString(_attributeNames.ElementAt(i++), e);
                     user.Plays = GetAttributeValueInt(_attributeNames.ElementAt(i++), e);
                     user.TotalPlays = GetAttributeValueInt(_attributeNames.ElementAt(i++), e);
                     user.Wins = GetAttributeValueInt(_attributeNames.ElementAt(i++), e);
@@ -198,6 +199,11 @@ namespace ChronoBot.Common.Systems
             return DateTime.Parse(e.Attribute(name)?.Value ?? DateTime.Now.ToString(CultureInfo.InvariantCulture));
         }
 
+        private string GetAttributeValueString(string name, XElement e)
+        {
+            return e.Attribute(name)?.Value ?? string.Empty;
+        }
+
         public override bool UpdateFile(IUserData userData)
         {
             if (!(userData is RpsUserData rpsUserData))
@@ -219,12 +225,12 @@ namespace ChronoBot.Common.Systems
                 {
                     XElement found = xml.Descendants("Service").Descendants(ElementRoot).Descendants("User")
                         .First(x => x.Attributes(_attributeNames.ElementAt(0)).First().Value == ud.UserId.ToString());
-
-
+                    
                     int i = 0;
                     GetAttribute(_attributeNames.ElementAt(i++), found).Value = rpsUserData.UserId.ToString();
                     GetAttribute(_attributeNames.ElementAt(i++), found).Value = rpsUserData.UserIdVs.ToString();
                     GetAttribute(_attributeNames.ElementAt(i++), found).Value = rpsUserData.ChannelId.ToString();
+                    GetAttribute(_attributeNames.ElementAt(i++), found).Value = rpsUserData.Name;
                     GetAttribute(_attributeNames.ElementAt(i++), found).Value = rpsUserData.Plays.ToString();
                     GetAttribute(_attributeNames.ElementAt(i++), found).Value = rpsUserData.TotalPlays.ToString();
                     GetAttribute(_attributeNames.ElementAt(i++), found).Value = rpsUserData.Wins.ToString();

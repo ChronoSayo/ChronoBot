@@ -13,18 +13,17 @@ using ChronoBot.Common.UserDatas;
 using ChronoBot.Enums;
 using ChronoBot.Helpers;
 using Discord;
+using Discord.WebSocket;
 using Color = Discord.Color;
 
 namespace ChronoBot.Utilities.Games
 {
     public class RockPaperScissors
     {
-        private readonly DiscordSocketClient _client;
         private readonly RpsFileSystem _fileSystem;
         private Timer _timerVs;
         private readonly List<RpsUserData> _users;
         private readonly List<RpsUserData> _usersActiveVs;
-        private const string ImagePath = "Images/RPS/";
         private const string CoinsInKeyText = "&c";
 
         public enum GameState
@@ -32,9 +31,8 @@ namespace ChronoBot.Utilities.Games
             Win, Lose, Draw, None
         }
 
-        public RockPaperScissors(DiscordSocketClient client)
+        public RockPaperScissors()
         {
-            _client = client;
             _fileSystem = new RpsFileSystem();
             _users = (List<RpsUserData>)_fileSystem.Load();
             _usersActiveVs = new List<RpsUserData>();
@@ -65,32 +63,30 @@ namespace ChronoBot.Utilities.Games
             }
         }
 
-        public Embed Play(string actor, ulong author, ulong mention, ulong channel, ulong guild)
+        public Embed Play(RpsPlayData authorData, RpsPlayData? mentionData)
         {
-            RpsActors rpsActor = ConvertActionIntoActor(actor);
+            RpsActors rpsActor = ConvertInputIntoActor(authorData.Input);
             if (rpsActor == RpsActors.Max)
-                return new EmbedBuilder()
-                    .WithDescription("Wrong input. \nType either rock(r), paper(p), or scissors(s) to play.").Build();
+                return new EmbedBuilder().WithDescription("Wrong input. \nType either rock(r), paper(p), or scissors(s) to play.").Build();
 
-            if (mention != 0)
-                return VsPlayer(rpsActor, author, mention, channel, guild);
+            if (mentionData.HasValue)
+                return VsPlayer(authorData, mentionData.Value);
 
-            return VsBot(rpsActor, author, channel, guild);
+            return VsBot(authorData);
         }
 
-        public string Options(string action, ulong user, ulong channel, ulong guild)
+        public string Options(RpsPlayData playData)
         {
             string result;
-            switch (action)
+            switch (playData.Input)
             {
                 case "s":
                 case "stats":
-                case "statistics":
-                    result = ShowStats(user, channel, guild);
+                    result = ShowStats(playData);
                     break;
                 case "r":
                 case "reset":
-                    result = ResetStats(user, channel, guild);
+                    result = ResetStats(playData);
                     break;
                 default:
                     result = "Wrong input. \nType stats/s to show your statistics.\nType reset/r to reset the statistics.";
@@ -99,33 +95,28 @@ namespace ChronoBot.Utilities.Games
             return result;
         }
 
-        private string ResetStats(ulong user, ulong channel, ulong guild)
+        private string ResetStats(RpsPlayData playData)
         {
-            if (!Exists(user))
-                CreateUser(user, channel, guild);
-
-            int i = FindIndex(user);
-            RpsUserData ud = _users[i];
-
+            if (!Exists(playData.UserId, out RpsUserData ud))
+                ud = CreateUser(playData);
+            
             ud.Plays = ud.Wins = ud.Losses = ud.Draws = ud.Ratio = ud.CurrentStreak =
                 ud.BestStreak = ud.RockChosen = ud.PaperChosen = ud.ScissorsChosen = ud.Coins = 0;
             ud.Resets++;
 
-            _users[i] = ud;
+            UpdateUsers(ud);
             _fileSystem.UpdateFile(ud);
 
-            return $"Stats for {GetMentionId(guild, channel, user)} has been reset.";
+            return $"Stats for {playData.Username} has been reset.";
         }
 
-        private string ShowStats(ulong user, ulong channel, ulong guild)
+        private string ShowStats(RpsPlayData playData)
         {
-            if (!Exists(user))
-                CreateUser(user, channel, guild);
-
-            RpsUserData ud = Find(user);
+            if (!Exists(playData.UserId, out RpsUserData ud))
+                ud = CreateUser(playData);
 
             StringBuilder sb = new StringBuilder();
-            sb.AppendLine($"Stats for {GetMentionId(guild, channel, user)}");
+            sb.AppendLine($"Stats for {ud.Name}");
             sb.AppendLine($"**Plays:** {ud.Plays}");
             sb.AppendLine($"**Total Plays:** {ud.TotalPlays}");
             sb.AppendLine($"**Wins:** {ud.Wins}");
@@ -144,35 +135,36 @@ namespace ChronoBot.Utilities.Games
             return sb.ToString();
         }
 
-        private Embed VsPlayer(RpsActors playerActor, ulong author, ulong mention, ulong channel, ulong guild)
+        private Embed VsPlayer(RpsPlayData authorPlayData, RpsPlayData mentionPlayData)
         {
+            ulong author = authorPlayData.UserId;
+            ulong mention = mentionPlayData.UserId;
+
             if (author == mention)
             {
                 var embed = new EmbedBuilder()
-                    .WithDescription($"{GetMentionId(guild, channel, author)} " +
+                    .WithDescription($"{authorPlayData.Username} " +
                                      "If you have two hands, you can play against yourself that way.");
                 return embed.Build();
             }
 
-            if(!Exists(author))
-                CreateUser(author, channel, guild);
-            if (!Exists(mention))
-                CreateUser(mention, channel, guild);
+            if(!Exists(author, out RpsUserData authorUd))
+                authorUd = CreateUser(authorPlayData);
+            if (!Exists(mention, out RpsUserData mentionUd))
+                mentionUd = CreateUser(mentionPlayData);
 
-            RpsUserData authorUd = Find(author);
-            RpsUserData mentionUd = Find(mention);
             if (authorUd.UserIdVs != mention && mentionUd.UserIdVs == 0)
-                return Challenging(playerActor, authorUd, mentionUd);
+                return Challenging(ConvertInputIntoActor(authorPlayData.Input), authorUd, mentionUd, authorPlayData.Mention, mentionPlayData.Mention);
 
             if (authorUd.UserIdVs == mention && mentionUd.Actor != RpsActors.Max)
-                return Responding(authorUd, mentionUd, playerActor);
+                return Responding(ConvertInputIntoActor(authorPlayData.Input), authorUd, mentionUd, authorPlayData.Mention, mentionPlayData.Mention);
 
             return new EmbedBuilder()
-                .WithDescription($"{_client.GetGuild(guild).GetTextChannel(channel).GetUser(mention).Username} is already in battle.")
+                .WithDescription($"{mentionUd.Name} is already in battle.")
                 .Build();
         }
 
-        private Embed Challenging(RpsActors playerActor, RpsUserData authorUd, RpsUserData mentionUd)
+        private Embed Challenging(RpsActors playerActor, RpsUserData authorUd, RpsUserData mentionUd, string authorMention, string mentionedMention)
         {
             authorUd.UserIdVs = mentionUd.UserId;
             authorUd.Actor = playerActor;
@@ -187,11 +179,10 @@ namespace ChronoBot.Utilities.Games
             i = FindIndex(mentionUd.UserId);
             _users[i] = mentionUd;
             _fileSystem.UpdateFile(mentionUd);
-
-            string authorMention = GetMentionId(authorUd.GuildId, authorUd.ChannelId, authorUd.UserId);
+            
             EmbedBuilder embed = new EmbedBuilder();
             embed.WithDescription($"{authorMention} is challenging " +
-                                  $"{GetMentionId(authorUd.GuildId, authorUd.ChannelId, authorUd.UserIdVs)} in Rock-Paper-Scissors!\n" +
+                                  $"{mentionedMention} in Rock-Paper-Scissors!\n" +
                                   $"{authorMention} has already made a move.");
             embed.WithFields(new EmbedFieldBuilder { IsInline = true, Name = "Ends", Value = authorUd.DateVs });
             embed.WithColor(Color.Green);
@@ -205,28 +196,26 @@ namespace ChronoBot.Utilities.Games
             return embed.Build();
         }
 
-        private Embed Responding(RpsUserData authorUd, RpsUserData mentionUd, RpsActors authorActor)
+        private Embed Responding(RpsActors authorActor, RpsUserData authorUd, RpsUserData mentionUd, string authorMention, string mentionedMention)
         {
             authorUd.Actor = authorActor;
             int mentionActor = (int)mentionUd.Actor;
-            string mention = GetMentionId(mentionUd.GuildId, mentionUd.ChannelId, mentionUd.UserId);
-            string author = GetMentionId(authorUd.GuildId, authorUd.ChannelId, authorUd.UserId);
             string result =
-                $"{mention} chose {ConvertActorToEmoji(mentionUd.Actor)}\n" +
-                $"{author} chose {ConvertActorToEmoji(authorUd.Actor)}\n\n";
+                $"{mentionedMention} chose {ConvertActorToEmoji(mentionUd.Actor)}\n" +
+                $"{authorMention} chose {ConvertActorToEmoji(authorUd.Actor)}\n\n";
 
             GameState mentionState, authorState;
             //Responding wins
             if ((mentionActor + 1) % (int) RpsActors.Max == (int) authorActor)
             {
-                result += $"{author} wins! {CoinsInKeyText}";
+                result += $"{authorMention} wins! {CoinsInKeyText}";
                 authorState = GameState.Win;
                 mentionState = GameState.Lose;
             }
             //Instigator wins
             else if (((int) authorActor + 1) % (int) RpsActors.Max == mentionActor)
             {
-                result += $"{mention} wins! {CoinsInKeyText}";
+                result += $"{mentionedMention} wins! {CoinsInKeyText}";
                 mentionState = GameState.Win;
                 authorState = GameState.Lose;
             }
@@ -237,8 +226,8 @@ namespace ChronoBot.Utilities.Games
                 mentionState = authorState = GameState.Draw;
             }
 
-            ProcessResults(mentionUd, mentionState, result, mention, out result);
-            ProcessResults(authorUd, authorState, result, mention, out result);
+            ProcessResults(mentionUd, mentionState, result, mentionedMention, out result);
+            ProcessResults(authorUd, authorState, result, mentionedMention, out result);
             
             _usersActiveVs.Remove(authorUd);
             _usersActiveVs.Remove(mentionUd);
@@ -249,18 +238,18 @@ namespace ChronoBot.Utilities.Games
             return new EmbedBuilder().WithDescription(result).Build();
         }
 
-        private Embed VsBot(RpsActors playerActor, ulong user, ulong channel, ulong guild)
+        private Embed VsBot(RpsPlayData playData)
         {
-            string userMention = GetMentionId(guild, channel, user);
+            string userMention = playData.Mention;
 
             Random random = new Random();
             int bot = random.Next(0, (int)RpsActors.Max);
-            int player = (int)playerActor;
+            int player = (int)ConvertInputIntoActor(playData.Input);
             string competition =
-                $"{userMention} threw {ConvertActorToEmoji(playerActor)}\nBot threw {ConvertActorToEmoji((RpsActors)bot)}\n\n";
-            
-            if (!Exists(user))
-                CreateUser(user, channel, guild);
+                $"{userMention} threw {ConvertActorToEmoji(ConvertInputIntoActor(playData.Input))}\nBot threw {ConvertActorToEmoji((RpsActors)bot)}\n\n";
+
+            if (!Exists(playData.UserId, out RpsUserData ud))
+                ud = CreateUser(playData);
 
             GameState state;
             string processed = string.Empty;
@@ -273,9 +262,8 @@ namespace ChronoBot.Utilities.Games
                 state = GameState.Lose;
             else
                 state = GameState.Draw;
-
-            RpsUserData ud = Find(user);
-            ud.Actor = playerActor;
+            
+            ud.Actor = ConvertInputIntoActor(playData.Input);
             ProcessResults(ud, state, processed, userMention, out processed);
 
             EmbedBuilder embed = new EmbedBuilder();
@@ -389,27 +377,25 @@ namespace ChronoBot.Utilities.Games
             return (int)Math.Ceiling(bonus * 0.5f);
         }
 
-        private void CreateUser(ulong user, ulong channel, ulong guild)
+        private RpsUserData CreateUser(RpsPlayData playData)
         {
-            RpsUserData temp = new RpsUserData
+            RpsUserData newData = new RpsUserData
             {
-                UserId = user,
-                GuildId = guild,
-                ChannelId = channel,
-                Actor = RpsActors.Max,
+                Name = playData.Username,
+                UserId = playData.UserId,
+                GuildId = playData.GuildId,
+                ChannelId = playData.ChannelId,
+                Actor = ConvertInputIntoActor(playData.Input),
                 DateVs = DateTime.Now
 
             };
-            _users.Add(temp);
+            _users.Add(newData);
 
-            _fileSystem.Save(temp);
+            _fileSystem.Save(newData);
+
+            return newData;
 
             //LogToFile(LogSeverity.Info, $"Saved user: RockPaperScissors {temp.UserId} [{socketMessage.Author.Username}] {temp.GuildId} {temp.ChannelId}");
-        }
-
-        private string GetMentionId(ulong guildId, ulong channelId, ulong userId)
-        {
-            return _client.GetGuild(guildId).GetTextChannel(channelId).GetUser(userId).Mention;
         }
 
         private string ConvertActorToEmoji(RpsActors a)
@@ -427,7 +413,7 @@ namespace ChronoBot.Utilities.Games
             return s;
         }
 
-        private RpsActors ConvertActionIntoActor(string action)
+        private RpsActors ConvertInputIntoActor(string action)
         {
             switch (action.ToLowerInvariant())
             {
@@ -457,9 +443,32 @@ namespace ChronoBot.Utilities.Games
         {
             return _users.FindIndex(x => x.UserId == id);
         }
-        private bool Exists(ulong id)
+        private bool Exists(ulong id, out RpsUserData userData)
         {
-            return _users.Exists(x => x.UserId == id);
+            int i = FindIndex(id);
+            bool exists = i > -1;
+            if (exists)
+            {
+                userData = _users[i];
+                return true;
+            }
+
+            userData = null;
+            return false;
+        }
+        private bool Exists(ulong id, out int i)
+        {
+            i = FindIndex(id);
+            bool exists = i > -1;
+            if (exists)
+                return true;
+            
+            return false;
+        }
+        private void UpdateUsers(RpsUserData ud)
+        {
+            Exists(ud.UserId, out int i);
+            _users[i] = ud;
         }
 
         private void LogToFile(LogSeverity severity, string message, Exception e = null, [CallerMemberName] string caller = null)

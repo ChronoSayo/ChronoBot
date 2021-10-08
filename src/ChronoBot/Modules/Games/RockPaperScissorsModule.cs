@@ -31,11 +31,17 @@ namespace ChronoBot.Modules.Games
             if (Context.Message.Content.Contains("|"))
                 actor = actor.Replace("|", "");
 
-            ulong mentionId = 0;
-            if (mention != null && Context.Message.MentionedUsers.Count > 0)
-                mentionId = Context.Message.MentionedUsers.ElementAt(0).Id;
+            RpsPlayData playData = CreatePlayData(Context.Message.Author.Id, actor, Context.Message.Author.Mention,
+                Context.Message.Author.Username);
 
-            var result = _rps.Play(actor, Context.User.Id, mentionId, Context.Channel.Id, Context.Guild.Id);
+            RpsPlayData? mentionData = null;
+            if (mention != null && Context.Message.MentionedUsers.Count > 0)
+            {
+                var mentionUser = Context.Message.MentionedUsers.ElementAt(0);
+                mentionData = CreatePlayData(mentionUser.Id, actor, mentionUser.Mention, mentionUser.Username);
+            }
+
+            var result = _rps.Play(playData, mentionData);
             if (result.Description.Contains("Wrong input"))
                 await SendMessage(result.Description);
             else
@@ -49,7 +55,9 @@ namespace ChronoBot.Modules.Games
         [Command("rpso")]
         public async Task OptionsAsync([Remainder] string action)
         {
-            string result = _rps.Options(action, Context.User.Id, Context.Channel.Id, Context.Guild.Id);
+            string result = _rps.Options(CreatePlayData(Context.Message.Author.Id, action,
+                Context.Message.Author.Mention, Context.Message.Author.Username));
+
             if (result.Contains("Wrong input"))
                 await SendMessage(result);
             else
@@ -81,6 +89,19 @@ namespace ChronoBot.Modules.Games
                 await Statics.DebugSendFileToChannelAsync(_client, result, thumbnail);
             else
                 await Context.Channel.SendFileAsync(thumbnail, embed: result);
+        }
+
+        private RpsPlayData CreatePlayData(ulong userId, string input, string mention, string username)
+        {
+            return new RpsPlayData()
+            {
+                UserId = userId,
+                ChannelId = Context.Channel.Id,
+                GuildId = Context.Guild.Id,
+                Input = input,
+                Mention = mention,
+                Username = username
+            };
         }
     }
 }
