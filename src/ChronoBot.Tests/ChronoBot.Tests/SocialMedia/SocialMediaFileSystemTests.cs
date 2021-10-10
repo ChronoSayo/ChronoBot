@@ -6,9 +6,8 @@ using ChronoBot.Common.Systems;
 using ChronoBot.Common.UserDatas;
 using ChronoBot.Enums;
 using Xunit;
-using Xunit.Extensions;
 
-namespace ChronoBot.Tests
+namespace ChronoBot.Tests.SocialMedia
 {
     public class SocialMediaFileSystemTests
     {

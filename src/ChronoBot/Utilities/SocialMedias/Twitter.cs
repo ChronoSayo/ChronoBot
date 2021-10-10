@@ -31,49 +31,6 @@ namespace ChronoBot.Utilities.SocialMedias
             TypeOfSocialMedia = SocialMediaEnum.Twitter.ToString().ToLowerInvariant();
         }
 
-        //private void PostRestOfImages(SocketMessage socketMessage)
-        //{
-        //    string userMessage = socketMessage.ToString();
-        //    List<string> tweetsToPost = new List<string>();
-
-        //    while (userMessage.Contains("https://twitter.com/") &&
-        //           userMessage.Contains("/status/"))
-        //    {
-        //        string[] split = userMessage.Split('/');
-        //        string url = GetTweetFromPost(split, out string id);
-
-        //        GetTweetOptions options = new GetTweetOptions()
-        //        {
-        //            Id = long.Parse(id),
-        //            IncludeEntities = true
-        //        };
-        //        TwitterStatus tweet = _service.GetTweet(options);
-
-        //        if (tweet != null && tweet.ExtendedEntities != null && tweet.ExtendedEntities.Media.Count() > 1)
-        //        {
-        //            for (int i = 1; i < tweet.ExtendedEntities.Media.Count; i++)
-        //            {
-        //                TwitterExtendedEntity tee = tweet.ExtendedEntities.Media[i];
-        //                if (tee.ExtendedEntityType == TwitterMediaType.Photo)
-        //                    tweetsToPost.Add(tee.MediaUrlHttps + "\n");
-        //            }
-
-        //        }
-
-        //        userMessage = userMessage.Replace(url, "X");
-        //    }
-
-        //    if (tweetsToPost.Count == 0)
-        //        return;
-
-        //    string message = string.Empty;
-        //    foreach (string s in tweetsToPost)
-        //    {
-        //        message += s;
-        //    }
-        //    Info.SendMessageToChannel(socketMessage, message);
-        //}
-
         private string GetTweetFromPost(string[] split, out string id)
         {
             string nameKey = "&";
@@ -281,81 +238,6 @@ namespace ChronoBot.Utilities.SocialMedias
             {
                 TweetMode = "extended",
             };
-        }
-
-        //protected override void OtherCommands(SocketMessage socketMessage)
-        //{
-        //    if (!socketMessage.Embeds.Any(x => x.Url.ToLowerInvariant().Contains("https://twitter.com/")))
-        //    {
-        //        if (!socketMessage.Content.Contains("https://twitter.com/") && !socketMessage.Content.Contains("/status/"))
-        //            return;
-        //    }
-
-        //    Embed embed =
-        //        socketMessage.Embeds.FirstOrDefault(x => x.Url.ToLowerInvariant().Contains("https://twitter.com/"));
-        //    string id;
-        //    if (embed == null)
-        //        GetTweetFromPost(socketMessage.Content.Split('/'), out id);
-        //    else
-        //        GetTweetFromPost(embed.Url.Split('/'), out id);
-
-        //    if(id == string.Empty)
-        //        return;
-
-        //    GetTweetOptions options = new GetTweetOptions
-        //    {
-        //        Id = long.Parse(id),
-        //        IncludeEntities = true
-        //    };
-        //    var tweet = _service.GetTweet(options);
-        //    if (tweet == null || tweet.ExtendedEntities == null || tweet.ExtendedEntities.Media.Count != 1)
-        //        return;
-
-        //    TwitterExtendedEntity tee = tweet.ExtendedEntities.Media.ElementAt(0);
-        //    if (tee.ExtendedEntityType != TwitterMediaType.Video)
-        //        return;
-
-        //    int highest = 0;
-        //    int j = -1;
-        //    for(int i = 0; i < tee.VideoInfo.Variants.Count; i++)
-        //    {
-        //        TwitterMediaVariant variant = tee.VideoInfo.Variants[i];
-        //        string res = string.Empty;
-        //        string[] segments = tee.VideoInfo.Variants[i].Url.Segments;
-        //        foreach (var s in segments)
-        //        {
-        //            if(!int.TryParse(s[0].ToString(), out _))
-        //                continue;
-        //            if(s.Length <= 5)
-        //                continue;
-        //            if(s[2] != 'x' && s[3] != 'x' && s[4] != 'x')
-        //                continue;
-
-        //            res = s.TrimEnd('/');
-        //            break;
-        //        }
-
-        //        string[] split = res.Split('x');
-        //        if(!int.TryParse(split[0], out int x))
-        //            continue;
-        //        if (!int.TryParse(split[0], out int y))
-        //            continue;
-
-        //        int multiplyRes = x * y;
-        //        if (multiplyRes <= highest) 
-        //            continue;
-
-        //        highest = multiplyRes;
-        //        j = i;
-        //    }
-        //    Info.SendMessageToChannel(socketMessage, tee.VideoInfo.Variants[j].Url.ToString());
-        //}
-
-        public override void MessageReceivedSelf(SocketMessage socketMessage)
-        {
-            base.MessageReceivedSelf(socketMessage);
-
-            //PostRestOfImages(socketMessage);
         }
     }
 }

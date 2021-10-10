@@ -14,25 +14,29 @@ using ChronoBot.Enums;
 using ChronoBot.Helpers;
 using Discord;
 using Discord.WebSocket;
+using Microsoft.Extensions.Configuration;
 using Color = Discord.Color;
 
 namespace ChronoBot.Utilities.Games
 {
     public class RockPaperScissors
     {
+        private readonly IConfiguration _config;
         private readonly RpsFileSystem _fileSystem;
         private Timer _timerVs;
         private readonly List<RpsUserData> _users;
         private readonly List<RpsUserData> _usersActiveVs;
         private const string CoinsInKeyText = "&c";
+        private const string Title = "ROCK-PAPER-SCISSORS";
 
         public enum GameState
         {
             Win, Lose, Draw, None
         }
 
-        public RockPaperScissors()
+        public RockPaperScissors(IConfiguration config)
         {
+            _config = config;
             _fileSystem = new RpsFileSystem();
             _users = (List<RpsUserData>)_fileSystem.Load();
             _usersActiveVs = new List<RpsUserData>();
@@ -143,7 +147,8 @@ namespace ChronoBot.Utilities.Games
             if (author == mention)
             {
                 var embed = new EmbedBuilder()
-                    .WithDescription($"{authorPlayData.Username} " +
+                    .WithColor(Color.Red)
+                    .WithDescription($"{authorPlayData.Mention} " +
                                      "If you have two hands, you can play against yourself that way.");
                 return embed.Build();
             }
@@ -154,17 +159,18 @@ namespace ChronoBot.Utilities.Games
                 mentionUd = CreateUser(mentionPlayData);
 
             if (authorUd.UserIdVs != mention && mentionUd.UserIdVs == 0)
-                return Challenging(ConvertInputIntoActor(authorPlayData.Input), authorUd, mentionUd, authorPlayData.Mention, mentionPlayData.Mention);
+                return Challenging(ConvertInputIntoActor(authorPlayData.Input), authorUd, mentionUd, authorPlayData, mentionPlayData);
 
             if (authorUd.UserIdVs == mention && mentionUd.Actor != RpsActors.Max)
-                return Responding(ConvertInputIntoActor(authorPlayData.Input), authorUd, mentionUd, authorPlayData.Mention, mentionPlayData.Mention);
+                return Responding(ConvertInputIntoActor(authorPlayData.Input), authorUd, mentionUd, authorPlayData, mentionPlayData);
 
             return new EmbedBuilder()
-                .WithDescription($"{mentionUd.Name} is already in battle.")
+                .WithColor(Color.Red)
+                .WithDescription($"{mentionPlayData.Username} is already in battle.")
                 .Build();
         }
 
-        private Embed Challenging(RpsActors playerActor, RpsUserData authorUd, RpsUserData mentionUd, string authorMention, string mentionedMention)
+        private Embed Challenging(RpsActors playerActor, RpsUserData authorUd, RpsUserData mentionUd, RpsPlayData authorPlayData, RpsPlayData mentionPlayData)
         {
             authorUd.UserIdVs = mentionUd.UserId;
             authorUd.Actor = playerActor;
@@ -179,13 +185,6 @@ namespace ChronoBot.Utilities.Games
             i = FindIndex(mentionUd.UserId);
             _users[i] = mentionUd;
             _fileSystem.UpdateFile(mentionUd);
-            
-            EmbedBuilder embed = new EmbedBuilder();
-            embed.WithDescription($"{authorMention} is challenging " +
-                                  $"{mentionedMention} in Rock-Paper-Scissors!\n" +
-                                  $"{authorMention} has already made a move.");
-            embed.WithFields(new EmbedFieldBuilder { IsInline = true, Name = "Ends", Value = authorUd.DateVs });
-            embed.WithColor(Color.Green);
 
             _usersActiveVs.Add(authorUd);
             _usersActiveVs.Add(mentionUd);
@@ -193,24 +192,41 @@ namespace ChronoBot.Utilities.Games
             if(!_timerVs.Enabled)
                 _timerVs.Start();
 
-            return embed.Build();
+            string rps =
+                $"{ConvertActorToEmoji(RpsActors.Rock)}{ConvertActorToEmoji(RpsActors.Paper)}{ConvertActorToEmoji(RpsActors.Scissors)}";
+
+            return new EmbedBuilder()
+                .WithTitle($"{rps}*GET READY FOR THE NEXT BATTLE*{rps}")
+                .WithAuthor(x =>
+                    x.WithName(Title).WithIconUrl(authorPlayData.ThumbnailIconUrl))
+                .WithDescription($"{authorPlayData.Mention} " +
+                                 "**VS** " +
+                                 $"{mentionPlayData.Mention}\n\n" +
+                                 $"{authorPlayData.Username} has already made a move.")
+                .WithFields(new EmbedFieldBuilder { IsInline = true, Name = "Ends", Value = authorUd.DateVs })
+                .WithColor(Color.DarkOrange).Build();
         }
 
-        private Embed Responding(RpsActors authorActor, RpsUserData authorUd, RpsUserData mentionUd, string authorMention, string mentionedMention)
+        private Embed Responding(RpsActors authorActor, RpsUserData authorUd, RpsUserData mentionUd, RpsPlayData authorPlayData, RpsPlayData mentionPlayData)
         {
             authorUd.Actor = authorActor;
             int mentionActor = (int)mentionUd.Actor;
+            string authorMention = authorPlayData.Mention;
+            string mentionedMention = mentionPlayData.Mention;
             string result =
                 $"{mentionedMention} chose {ConvertActorToEmoji(mentionUd.Actor)}\n" +
                 $"{authorMention} chose {ConvertActorToEmoji(authorUd.Actor)}\n\n";
 
             GameState mentionState, authorState;
+            string thumbnailWinner = string.Empty;
             //Responding wins
             if ((mentionActor + 1) % (int) RpsActors.Max == (int) authorActor)
             {
                 result += $"{authorMention} wins! {CoinsInKeyText}";
                 authorState = GameState.Win;
                 mentionState = GameState.Lose;
+                
+                thumbnailWinner = authorPlayData.ThumbnailIconUrl;
             }
             //Instigator wins
             else if (((int) authorActor + 1) % (int) RpsActors.Max == mentionActor)
@@ -218,6 +234,7 @@ namespace ChronoBot.Utilities.Games
                 result += $"{mentionedMention} wins! {CoinsInKeyText}";
                 mentionState = GameState.Win;
                 authorState = GameState.Lose;
+                thumbnailWinner = mentionPlayData.ThumbnailIconUrl;
             }
             //Draw
             else
@@ -225,17 +242,22 @@ namespace ChronoBot.Utilities.Games
                 result += "Draw game.";
                 mentionState = authorState = GameState.Draw;
             }
-
-            ProcessResults(mentionUd, mentionState, result, mentionedMention, out result);
-            ProcessResults(authorUd, authorState, result, mentionedMention, out result);
             
+            ProcessResults(mentionUd, mentionState, result, mentionedMention, out result);
+            ProcessResults(authorUd, authorState, result, authorMention, out result);
+
             _usersActiveVs.Remove(authorUd);
             _usersActiveVs.Remove(mentionUd);
             
             if(_usersActiveVs.Count == 0)
                 _timerVs.Stop();
 
-            return new EmbedBuilder().WithDescription(result).Build();
+            return new EmbedBuilder()
+                .WithAuthor(x => x.WithIconUrl(authorPlayData.ThumbnailIconUrl).WithName(Title))
+                .WithTitle("*GAME*")
+                .WithThumbnailUrl(thumbnailWinner)
+                .WithColor(Color.DarkOrange)
+                .WithDescription(result).Build();
         }
 
         private Embed VsBot(RpsPlayData playData)
@@ -266,29 +288,28 @@ namespace ChronoBot.Utilities.Games
             ud.Actor = ConvertInputIntoActor(playData.Input);
             ProcessResults(ud, state, processed, userMention, out processed);
 
-            EmbedBuilder embed = new EmbedBuilder();
-            embed.WithDescription(competition);
+            EmbedBuilder embed = new EmbedBuilder()
+                .WithDescription(competition)
+                .WithAuthor(x => x.WithName(Title).WithIconUrl(playData.ThumbnailIconUrl))
+                .WithTitle("ARCADE MODE");
             switch (state)
             {
                 case GameState.Win:
                     embed.WithColor(Color.Green);
                     processed = processed.Replace(userMention ?? string.Empty, "");
                     embed.WithFields(new EmbedFieldBuilder { IsInline = true, Name = "You won", Value = processed });
-                    embed.WithThumbnailUrl(
-                        "https://cdn.discordapp.com/attachments/891627208089698384/891628032207495178/Lost.png");
+                    embed.WithThumbnailUrl(_config[Statics.RpsLoseImage]);
                     break;
                 case GameState.Lose:
                     embed.WithColor(Color.Red);
                     processed = processed.Replace(userMention ?? string.Empty, "");
                     embed.WithFields(new EmbedFieldBuilder { IsInline = true, Name = "You lost", Value = processed });
-                    embed.WithThumbnailUrl(
-                        "https://cdn.discordapp.com/attachments/891627208089698384/891628034296279070/Win.png");
+                    embed.WithThumbnailUrl(_config[Statics.RpsWinImage]);
                     break;
                 case GameState.Draw:
                     embed.WithColor(Color.Gold);
                     embed.WithFields(new EmbedFieldBuilder { IsInline = true, Name = "Draw game", Value = "+0 Rings" });
-                    embed.WithThumbnailUrl(
-                        "https://cdn.discordapp.com/attachments/891627208089698384/891628029741252648/Draw.png");
+                    embed.WithThumbnailUrl(_config[Statics.RpsDrawImage]);
                     break;
             }
 

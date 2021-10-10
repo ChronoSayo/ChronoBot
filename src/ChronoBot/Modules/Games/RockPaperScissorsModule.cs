@@ -32,13 +32,14 @@ namespace ChronoBot.Modules.Games
                 actor = actor.Replace("|", "");
 
             RpsPlayData playData = CreatePlayData(Context.Message.Author.Id, actor, Context.Message.Author.Mention,
-                Context.Message.Author.Username);
+                Context.Message.Author.Username, Context.User.GetAvatarUrl() ?? Context.User.GetDefaultAvatarUrl());
 
             RpsPlayData? mentionData = null;
             if (mention != null && Context.Message.MentionedUsers.Count > 0)
             {
                 var mentionUser = Context.Message.MentionedUsers.ElementAt(0);
-                mentionData = CreatePlayData(mentionUser.Id, actor, mentionUser.Mention, mentionUser.Username);
+                mentionData = CreatePlayData(mentionUser.Id, actor, mentionUser.Mention, mentionUser.Username,
+                    mentionUser.GetAvatarUrl() ?? mentionUser.GetDefaultAvatarUrl());
             }
 
             var result = _rps.Play(playData, mentionData);
@@ -56,7 +57,7 @@ namespace ChronoBot.Modules.Games
         public async Task OptionsAsync([Remainder] string action)
         {
             string result = _rps.Options(CreatePlayData(Context.Message.Author.Id, action,
-                Context.Message.Author.Mention, Context.Message.Author.Username));
+                Context.Message.Author.Mention, Context.Message.Author.Username, Context.User.GetAvatarUrl() ?? Context.User.GetDefaultAvatarUrl()));
 
             if (result.Contains("Wrong input"))
                 await SendMessage(result);
@@ -91,7 +92,7 @@ namespace ChronoBot.Modules.Games
                 await Context.Channel.SendFileAsync(thumbnail, embed: result);
         }
 
-        private RpsPlayData CreatePlayData(ulong userId, string input, string mention, string username)
+        private RpsPlayData CreatePlayData(ulong userId, string input, string mention, string username, string thumbnailIcon)
         {
             return new RpsPlayData()
             {
@@ -100,7 +101,8 @@ namespace ChronoBot.Modules.Games
                 GuildId = Context.Guild.Id,
                 Input = input,
                 Mention = mention,
-                Username = username
+                Username = username,
+                ThumbnailIconUrl = thumbnailIcon
             };
         }
     }

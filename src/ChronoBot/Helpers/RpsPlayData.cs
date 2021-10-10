@@ -8,5 +8,6 @@
         public ulong ChannelId;
         public ulong GuildId;
         public string Input;
+        public string ThumbnailIconUrl;
     }
 }

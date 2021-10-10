@@ -1,8 +1,7 @@
 ﻿using ChronoBot.Utilities.Tools;
-using System;
 using Xunit;
 
-namespace ChronoBot.Tests
+namespace ChronoBot.Tests.Tools
 {
     public class CalculatorTests
     {
