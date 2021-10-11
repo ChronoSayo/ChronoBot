@@ -19,7 +19,7 @@ namespace ChronoBot.Tests.SocialMedias
         }
 
         [Fact]
-        public void SetPath_Test_NoPath()
+        public void SetPath_Test_NoPath_Success()
         {
             var fileSystem = new SocialMediaFileSystem();
 
@@ -28,7 +28,7 @@ namespace ChronoBot.Tests.SocialMedias
             Directory.Delete(fileSystem.PathToSaveFile, true);
         }
         [Fact]
-        public void SetPath_Test_WithPath()
+        public void SetPath_Test_WithPath_Success()
         {
             var fileSystem = new SocialMediaFileSystem(Path.Combine(_path, "Set Path"));
 

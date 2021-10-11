@@ -56,17 +56,13 @@ namespace ChronoBot.Modules.Games
         [Command("rpso")]
         public async Task OptionsAsync([Remainder] string action)
         {
-            string result = _rps.Options(CreatePlayData(Context.Message.Author.Id, action,
+            var result = _rps.Options(CreatePlayData(Context.Message.Author.Id, action,
                 Context.Message.Author.Mention, Context.Message.Author.Username, Context.User.GetAvatarUrl() ?? Context.User.GetDefaultAvatarUrl()));
 
-            if (result.Contains("Wrong input"))
+            if (result.Description != null && result.Description.Contains("Wrong input"))
                 await SendMessage(result);
             else
-            {
-                var embed = new EmbedBuilder()
-                    .WithDescription(result);
-                await SendMessage(embed.Build());
-            }
+                await SendMessage(result);
         }
 
         private async Task SendMessage(string result)

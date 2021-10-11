@@ -13,7 +13,7 @@ using ChronoBot.Utilities.Games;
 
 namespace ChronoBot.Common.Systems
 {
-    class RpsFileSystem : FileSystem
+    public class RpsFileSystem : FileSystem
     {
         private const string ElementRoot = "RockPaperScissors";
         private readonly IEnumerable<string> _attributeNames;
