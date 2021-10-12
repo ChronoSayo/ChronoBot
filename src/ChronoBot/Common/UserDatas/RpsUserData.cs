@@ -11,24 +11,28 @@ namespace ChronoBot.Common.UserDatas
         public string Name { get; set; }
         public ulong GuildId { get; set; }
         public ulong ChannelId { get; set; }
+        /// <summary>
+        /// User input, in this case.
+        /// </summary>
         public string Id { get; set; }
-
-        public ulong UserId;
-        public ulong UserIdVs;
-        public int Plays;
-        public int TotalPlays;
-        public int Wins;
-        public int Losses;
-        public int Draws;
-        public int Ratio;
-        public int CurrentStreak;
-        public int BestStreak;
-        public int Resets;
-        public int RockChosen;
-        public int PaperChosen;
-        public int ScissorsChosen;
-        public int Coins;
-        public DateTime DateVs;
-        public RpsActors Actor;
+        public ulong UserId { get; set; }
+        public ulong UserIdVs { get; set; }
+        public int Plays { get; set; }
+        public int TotalPlays { get; set; }
+        public int Wins { get; set; }
+        public int Losses { get; set; }
+        public int Draws { get; set; }
+        public int Ratio { get; set; }
+        public int CurrentStreak { get; set; }
+        public int BestStreak { get; set; }
+        public int Resets { get; set; }
+        public int RockChosen { get; set; }
+        public int PaperChosen { get; set; }
+        public int ScissorsChosen { get; set; }
+        public int Coins { get; set; }
+        public DateTime DateVs { get; set; }
+        public RpsActors Actor { get; set; }
+        public string Mention { get; set; }
+        public string ThumbnailIconUrl { get; set; }
     }
 }

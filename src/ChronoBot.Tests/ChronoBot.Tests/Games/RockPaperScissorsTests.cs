@@ -19,9 +19,8 @@ namespace ChronoBot.Tests.Games
     public class RockPaperScissorsTests
     {
         private readonly RockPaperScissors _rps;
-        private const string Rock = ":rock:";
-        private const string Paper = ":roll_of_paper:";
-        private const string Scissors = ":scissors:";
+        private readonly RpsFileSystem _fileSystem;
+        private const ulong DefaultGuildId = 234567891;
 
         public RockPaperScissorsTests()
         {
@@ -29,21 +28,35 @@ namespace ChronoBot.Tests.Games
             config.SetupGet(x => x[It.Is<string>(y => y == "Images:RPS:Win")]).Returns("win.png");
             config.SetupGet(x => x[It.Is<string>(y => y == "Images:RPS:Lose")]).Returns("lose.png");
             config.SetupGet(x => x[It.Is<string>(y => y == "Images:RPS:Draw")]).Returns("draw.png");
-            _rps = new RockPaperScissors(config.Object);
+
+            _fileSystem = new RpsFileSystem();
+            _rps = new RockPaperScissors(config.Object, _fileSystem);
+            if(File.Exists(Path.Join(_fileSystem.PathToSaveFile, $"{DefaultGuildId}.xml")))
+                File.Delete(Path.Join(_fileSystem.PathToSaveFile, $"{DefaultGuildId}.xml"));
         }
 
         [Fact]
         public void PlayVsBot_Test_Win_Success()
         {
-            RpsPlayData player = CreatePlayer("r");
-            var fileSystem = new RpsFileSystem();
+            RpsUserData player = CreatePlayer("r");
 
             _rps.Play(player, null, RpsActors.Scissors);
-            var user = ((List<RpsUserData>)fileSystem.Load())[0];
 
-            Equal(user, 345678912, plays:1, totalPlays:1, wins:1, ratio:100, currentStreak:1, rockChosen:1, coins:1);
+            Equal(player, 345678912, plays:1, totalPlays:1, wins:1, ratio:100, currentStreak:1, rockChosen:1, coins:1);
 
-            fileSystem.DeleteInFile(user);
+            File.Delete(Path.Join(_fileSystem.PathToSaveFile, $"{player.GuildId}.xml"));
+        }
+
+        [Fact]
+        public void PlayVsBot_Test_Lose_Success()
+        {
+            RpsUserData player = CreatePlayer("r");
+
+            _rps.Play(player, null, RpsActors.Paper);
+
+            Equal(player, 345678912, plays: 1, totalPlays: 1, losses: 1, rockChosen: 1);
+
+            File.Delete(Path.Join(_fileSystem.PathToSaveFile, $"{player.GuildId}.xml"));
         }
 
         private void Equal(RpsUserData ud, ulong userId = 0, ulong userIdVs = 0, int plays = 0, int totalPlays = 0,
@@ -71,17 +84,17 @@ namespace ChronoBot.Tests.Games
             Assert.Equal(dateVs.Day, ud.DateVs.Day);
         }
 
-        private RpsPlayData CreatePlayer(string input)
+        private RpsUserData CreatePlayer(string input)
         {
             return new()
             {
                 ChannelId = 123456789,
-                GuildId = 234567891,
+                GuildId = DefaultGuildId,
                 UserId = 345678912,
-                Input = "r",
+                Id = "r",
                 Mention = "Test123",
                 ThumbnailIconUrl = "icon.png",
-                Username = "Tester"
+                Name = "Tester"
             };
         }
     }

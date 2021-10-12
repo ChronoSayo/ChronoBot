@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using ChronoBot.Common.UserDatas;
 using ChronoBot.Enums;
 using ChronoBot.Helpers;
 using ChronoBot.Utilities.Games;
@@ -31,7 +32,7 @@ namespace ChronoBot.Modules.Games
             if (Context.Message.Content.Contains("|"))
                 actor = actor.Replace("|", "");
 
-            RpsPlayData playData = CreatePlayData(Context.Message.Author.Id, actor, Context.Message.Author.Mention,
+            RpsUserData playData = CreatePlayData(Context.Message.Author.Id, actor, Context.Message.Author.Mention,
                 Context.Message.Author.Username, Context.User.GetAvatarUrl() ?? Context.User.GetDefaultAvatarUrl());
 
             RpsPlayData? mentionData = null;
