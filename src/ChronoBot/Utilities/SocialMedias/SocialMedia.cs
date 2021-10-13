@@ -25,16 +25,16 @@ namespace ChronoBot.Utilities.SocialMedias
         protected string TypeOfSocialMedia;
         protected List<SocialMediaUserData> Users;
 
-        public SocialMedia(DiscordSocketClient client, IConfiguration config)
+        public SocialMedia(DiscordSocketClient client, IConfiguration config, IEnumerable<SocialMediaUserData> users, SocialMediaFileSystem fileSystem)
         {
             Client = client;
             Config = config;
-            Users = new List<SocialMediaUserData>();
+            Users = users.ToList();
+            FileSystem = fileSystem;
         }
 
         protected virtual void LoadOrCreateFromFile()
         {
-            FileSystem = new SocialMediaFileSystem();
             Users = FileSystem.Load().Cast<SocialMediaUserData>().ToList();
         }
         

@@ -18,7 +18,7 @@ namespace ChronoBot.Common.Systems
         private const string ElementRoot = "RockPaperScissors";
         private readonly IEnumerable<string> _attributeNames;
 
-        public sealed override string PathToSaveFile { get; }
+        public sealed override string PathToSaveFile { get; set; }
 
         public RpsFileSystem(string path = null)
         {

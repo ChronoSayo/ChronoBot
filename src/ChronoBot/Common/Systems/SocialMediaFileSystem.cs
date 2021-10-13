@@ -13,6 +13,8 @@ namespace ChronoBot.Common.Systems
 {
     public class SocialMediaFileSystem : FileSystem
     {
+        public sealed override string PathToSaveFile { get; set; }
+
         public SocialMediaFileSystem(string path = null)
         {
             if (string.IsNullOrEmpty(path))
@@ -25,8 +27,6 @@ namespace ChronoBot.Common.Systems
             if (!Directory.Exists(PathToSaveFile))
                 Directory.CreateDirectory(PathToSaveFile);
         }
-
-        public sealed override string PathToSaveFile { get; }
 
         public override bool Save(IUserData userData)
         {

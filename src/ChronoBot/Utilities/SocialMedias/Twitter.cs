@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Threading;
 using System.Threading.Tasks;
+using ChronoBot.Common.Systems;
 using ChronoBot.Common.UserDatas;
 using ChronoBot.Enums;
 using ChronoBot.Helpers;
@@ -18,7 +18,8 @@ namespace ChronoBot.Utilities.SocialMedias
     {
         private TwitterService _service;
 
-        public Twitter(DiscordSocketClient client, IConfiguration config) : base(client, config)
+        public Twitter(DiscordSocketClient client, IConfiguration config, IEnumerable<SocialMediaUserData> users, SocialMediaFileSystem fileSystem) : 
+            base(client, config, users, fileSystem)
         {
             Authenticate();
 

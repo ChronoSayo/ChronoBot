@@ -21,7 +21,7 @@ namespace ChronoBot.Interfaces
 
     public abstract class FileSystem : IFileSystem
     {
-        public abstract string PathToSaveFile { get; }
+        public abstract string PathToSaveFile { get; set; }
         public abstract bool Save(IUserData userData);
 
         public abstract IEnumerable<IUserData> Load();

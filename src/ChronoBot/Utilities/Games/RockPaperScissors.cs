@@ -90,22 +90,22 @@ namespace ChronoBot.Utilities.Games
                 case "reset":
                     return ResetStats(user);
                 default:
-                    return new EmbedBuilder().WithAuthor(TitleBuilder(user))
+                    return new EmbedBuilder().WithAuthor(TitleBuilder(user.ThumbnailIconUrl))
                         .WithDescription("Wrong input. \nType stats/s to show your statistics.\nType reset/r to reset the statistics.").Build();
             }
         }
 
         private Embed ResetStats(RpsUserData user)
         {
-            if (!Exists(user.UserId, out RpsUserData ud))
-                ud = RegisterNewUser(user);
+            if (!Exists(user.UserId, ref user))
+                RegisterNewUser(user);
             
-            ud.Plays = ud.Wins = ud.Losses = ud.Draws = ud.Ratio = ud.CurrentStreak =
-                ud.BestStreak = ud.RockChosen = ud.PaperChosen = ud.ScissorsChosen = ud.Coins = 0;
-            ud.Resets++;
+            user.Plays = user.Wins = user.Losses = user.Draws = user.Ratio = user.CurrentStreak =
+                user.BestStreak = user.RockChosen = user.PaperChosen = user.ScissorsChosen = user.Coins = 0;
+            user.Resets++;
 
-            UpdateUsers(ud);
-            _fileSystem.UpdateFile(ud);
+            UpdateUsers(user);
+            _fileSystem.UpdateFile(user);
 
             var embed = new EmbedBuilder()
                 .WithAuthor(TitleBuilder(user.ThumbnailIconUrl))
@@ -115,80 +115,76 @@ namespace ChronoBot.Utilities.Games
 
         private Embed ShowStats(RpsUserData user)
         {
-            if (!Exists(user.UserId, out RpsUserData ud))
-                ud = RegisterNewUser(user);
+            if (!Exists(user.UserId, ref user))
+                RegisterNewUser(user);
             
-            string plural = ud.Coins == 1 ? string.Empty : "s";
+            string plural = user.Coins == 1 ? string.Empty : "s";
             var embed = new EmbedBuilder()
                 .WithAuthor(TitleBuilder(user.ThumbnailIconUrl))
                 .WithTitle($"Statistics for {user.Name}")
-                .WithFields(new EmbedFieldBuilder {Name = "Plays", Value = ud.Plays, IsInline = true},
-                    new EmbedFieldBuilder {Name = "Total Plays", Value = ud.TotalPlays, IsInline = true},
-                    new EmbedFieldBuilder {Name = "Wins", Value = ud.Wins, IsInline = true},
-                    new EmbedFieldBuilder {Name = "Losses", Value = ud.Losses, IsInline = true},
-                    new EmbedFieldBuilder {Name = "Draws", Value = ud.Draws, IsInline = true},
-                    new EmbedFieldBuilder {Name = "Win Ratio", Value = ud.Ratio, IsInline = true},
-                    new EmbedFieldBuilder {Name = "Current Streak", Value = ud.CurrentStreak, IsInline = true},
-                    new EmbedFieldBuilder {Name = "Best Streak", Value = ud.BestStreak, IsInline = true},
-                    new EmbedFieldBuilder {Name = "Resets", Value = ud.Resets, IsInline = true},
+                .WithFields(new EmbedFieldBuilder {Name = "Plays", Value = user.Plays, IsInline = true},
+                    new EmbedFieldBuilder {Name = "Total Plays", Value = user.TotalPlays, IsInline = true},
+                    new EmbedFieldBuilder {Name = "Wins", Value = user.Wins, IsInline = true},
+                    new EmbedFieldBuilder {Name = "Losses", Value = user.Losses, IsInline = true},
+                    new EmbedFieldBuilder {Name = "Draws", Value = user.Draws, IsInline = true},
+                    new EmbedFieldBuilder {Name = "Win Ratio", Value = user.Ratio, IsInline = true},
+                    new EmbedFieldBuilder {Name = "Current Streak", Value = user.CurrentStreak, IsInline = true},
+                    new EmbedFieldBuilder {Name = "Best Streak", Value = user.BestStreak, IsInline = true},
+                    new EmbedFieldBuilder {Name = "Resets", Value = user.Resets, IsInline = true},
                     new EmbedFieldBuilder
-                        {Name = ConvertActorToEmoji(RpsActors.Rock), Value = ud.RockChosen, IsInline = true},
+                        {Name = ConvertActorToEmoji(RpsActors.Rock), Value = user.RockChosen, IsInline = true},
                     new EmbedFieldBuilder
-                        {Name = ConvertActorToEmoji(RpsActors.Paper), Value = ud.PaperChosen, IsInline = true},
+                        {Name = ConvertActorToEmoji(RpsActors.Paper), Value = user.PaperChosen, IsInline = true},
                     new EmbedFieldBuilder
-                        {Name = ConvertActorToEmoji(RpsActors.Scissors), Value = ud.ScissorsChosen, IsInline = true},
-                    new EmbedFieldBuilder {Name = $"Ring{plural}", Value = ud.Coins});
+                        {Name = ConvertActorToEmoji(RpsActors.Scissors), Value = user.ScissorsChosen, IsInline = true},
+                    new EmbedFieldBuilder {Name = $"Ring{plural}", Value = user.Coins});
             
             return embed.Build();
         }
 
-        private Embed VsPlayer(RpsUserData authorPlayData, RpsUserData mentionPlayData)
+        private Embed VsPlayer(RpsUserData authorUd, RpsUserData mentionUd)
         {
-            ulong author = authorPlayData.UserId;
-            ulong mention = mentionPlayData.UserId;
+            ulong author = authorUd.UserId;
+            ulong mention = mentionUd.UserId;
 
             if (author == mention)
             {
                 var embed = new EmbedBuilder()
                     .WithColor(Color.Red)
-                    .WithDescription($"{authorPlayData.Mention} " +
-                                     "If you have two hands, you can play against yourself that way.");
+                    .WithDescription($"{authorUd.Mention} " +
+                                     "If you have two hands, you can play against yourself.");
                 return embed.Build();
             }
 
-            if(!Exists(author, out RpsUserData authorUd))
-                authorUd = RegisterNewUser(authorPlayData);
-            if (!Exists(mention, out RpsUserData mentionUd))
-                mentionUd = RegisterNewUser(mentionPlayData);
+            if(!Exists(author, ref authorUd))
+                RegisterNewUser(authorUd);
+            if (!Exists(mention, ref mentionUd))
+                RegisterNewUser(mentionUd);
 
             if (authorUd.UserIdVs != mention && mentionUd.UserIdVs == 0)
-                return Challenging(ConvertInputIntoActor(authorPlayData.Id), authorUd, mentionUd);
+                return Challenging(authorUd, mentionUd);
 
             if (authorUd.UserIdVs == mention && mentionUd.Actor != RpsActors.Max)
-                return Responding(ConvertInputIntoActor(authorPlayData.Id), authorUd, mentionUd);
+                return Responding(authorUd, mentionUd);
 
             return new EmbedBuilder()
                 .WithAuthor(TitleBuilder(authorUd.ThumbnailIconUrl))
                 .WithColor(Color.Red)
-                .WithTitle($"{mentionPlayData.Name} is already in battle.")
+                .WithTitle($"{mentionUd.Name} is already in battle.")
                 .Build();
         }
 
-        private Embed Challenging(RpsActors playerActor, RpsUserData authorUd, RpsUserData mentionUd)
+        private Embed Challenging(RpsUserData authorUd, RpsUserData mentionUd)
         {
             authorUd.UserIdVs = mentionUd.UserId;
-            authorUd.Actor = playerActor;
+            authorUd.Actor = ConvertInputIntoActor(authorUd.Id);
             authorUd.DateVs = DateTime.Now.AddDays(1);
-            int i = FindIndex(authorUd.UserId);
-            _users[i] = authorUd;
-            _fileSystem.UpdateFile(authorUd);
+            UpdateUsers(authorUd);
 
             mentionUd.UserIdVs = authorUd.UserId;
             mentionUd.Actor = RpsActors.Max;
             mentionUd.DateVs = authorUd.DateVs;
-            i = FindIndex(mentionUd.UserId);
-            _users[i] = mentionUd;
-            _fileSystem.UpdateFile(mentionUd);
+            UpdateUsers(mentionUd);
 
             _usersActiveVs.Add(authorUd);
             _usersActiveVs.Add(mentionUd);
@@ -201,18 +197,18 @@ namespace ChronoBot.Utilities.Games
 
             return new EmbedBuilder()
                 .WithTitle($"{rps}*GET READY FOR THE NEXT BATTLE*{rps}")
-                .WithAuthor(TitleBuilder(authorPlayData))
-                .WithDescription($"{authorPlayData.Mention} " +
+                .WithAuthor(TitleBuilder(authorUd.ThumbnailIconUrl))
+                .WithDescription($"{authorUd.Mention} " +
                                  "**VS** " +
-                                 $"{mentionPlayData.Mention}\n\n" +
-                                 $"{authorPlayData.Username} has already made a move.")
+                                 $"{mentionUd.Mention}\n\n" +
+                                 $"{authorUd.Name} has already made a move.")
                 .WithFields(new EmbedFieldBuilder { IsInline = true, Name = "Ends", Value = authorUd.DateVs })
                 .WithColor(Color.DarkOrange).Build();
         }
 
-        private Embed Responding(RpsActors authorActor, RpsUserData authorUd, RpsUserData mentionUd)
+        private Embed Responding(RpsUserData authorUd, RpsUserData mentionUd)
         {
-            authorUd.Actor = authorActor;
+            authorUd.Actor = ConvertInputIntoActor(authorUd.Id);
             int mentionActor = (int)mentionUd.Actor;
             string authorMention = authorUd.Mention;
             string mentionedMention = mentionUd.Mention;
@@ -223,7 +219,7 @@ namespace ChronoBot.Utilities.Games
             GameState mentionState, authorState;
             string thumbnailWinner = string.Empty;
             //Responding wins
-            if ((mentionActor + 1) % (int) RpsActors.Max == (int) authorActor)
+            if ((mentionActor + 1) % (int) RpsActors.Max == (int) authorUd.Actor)
             {
                 result += $"{authorMention} wins! {CoinsInKeyText}";
                 authorState = GameState.Win;
@@ -232,7 +228,7 @@ namespace ChronoBot.Utilities.Games
                 thumbnailWinner = authorUd.ThumbnailIconUrl;
             }
             //Instigator wins
-            else if (((int) authorActor + 1) % (int) RpsActors.Max == mentionActor)
+            else if (((int)authorUd.Actor + 1) % (int) RpsActors.Max == mentionActor)
             {
                 result += $"{mentionedMention} wins! {CoinsInKeyText}";
                 mentionState = GameState.Win;
@@ -251,12 +247,14 @@ namespace ChronoBot.Utilities.Games
 
             _usersActiveVs.Remove(authorUd);
             _usersActiveVs.Remove(mentionUd);
-            
-            if(_usersActiveVs.Count == 0)
+            UpdateUsers(authorUd);
+            UpdateUsers(mentionUd);
+
+            if (_usersActiveVs.Count == 0)
                 _timerVs.Stop();
 
             return new EmbedBuilder()
-                .WithAuthor(TitleBuilder(authorUd))
+                .WithAuthor(TitleBuilder(authorUd.ThumbnailIconUrl))
                 .WithTitle("*GAME*")
                 .WithThumbnailUrl(thumbnailWinner)
                 .WithColor(Color.DarkOrange)
@@ -274,8 +272,8 @@ namespace ChronoBot.Utilities.Games
             string competition =
                 $"{userMention} threw {ConvertActorToEmoji(playerActor)}\nBot threw {ConvertActorToEmoji((RpsActors)bot)}\n\n";
 
-            if (!Exists(user.UserId, out RpsUserData ud))
-                ud = RegisterNewUser(user);
+            if (!Exists(user.UserId, ref user))
+                RegisterNewUser(user);
 
             GameState state;
             string processed = string.Empty;
@@ -289,8 +287,8 @@ namespace ChronoBot.Utilities.Games
             else
                 state = GameState.Draw;
             
-            ud.Actor = playerActor;
-            ProcessResults(ud, state, processed, userMention, out processed);
+            user.Actor = playerActor;
+            ProcessResults(user, state, processed, userMention, out processed);
             
             Color color = new Color(0, 0, 0);
             EmbedFieldBuilder field = null;
@@ -318,7 +316,7 @@ namespace ChronoBot.Utilities.Games
 
             return new EmbedBuilder()
                 .WithDescription(competition)
-                .WithAuthor(TitleBuilder(user))
+                .WithAuthor(TitleBuilder(user.ThumbnailIconUrl))
                 .WithTitle("ARCADE MODE")
                 .WithColor(color)
                 .WithFields(field)
@@ -411,23 +409,10 @@ namespace ChronoBot.Utilities.Games
             return (int)Math.Ceiling(bonus * 0.5f);
         }
 
-        public RpsUserData RegisterNewUser(RpsUserData user)
+        public void RegisterNewUser(RpsUserData user)
         {
-            RpsUserData newData = new RpsUserData
-            {
-                Name = user.Name,
-                UserId = user.UserId,
-                GuildId = user.GuildId,
-                ChannelId = user.ChannelId,
-                Actor = ConvertInputIntoActor(user.Id),
-                DateVs = DateTime.Now
-
-            };
-            _users.Add(newData);
-
-            _fileSystem.Save(newData);
-
-            return newData;
+            _users.Add(user);
+            _fileSystem.Save(user);
 
             //LogToFile(LogSeverity.Info, $"Saved user: RockPaperScissors {temp.UserId} [{socketMessage.Author.Username}] {temp.GuildId} {temp.ChannelId}");
         }
@@ -477,7 +462,7 @@ namespace ChronoBot.Utilities.Games
         {
             return _users.FindIndex(x => x.UserId == id);
         }
-        private bool Exists(ulong id, out RpsUserData userData)
+        private bool Exists(ulong id, ref RpsUserData userData)
         {
             int i = FindIndex(id);
             bool exists = i > -1;
@@ -486,8 +471,7 @@ namespace ChronoBot.Utilities.Games
                 userData = _users[i];
                 return true;
             }
-
-            userData = null;
+            
             return false;
         }
         private bool Exists(ulong id, out int i)
@@ -496,10 +480,11 @@ namespace ChronoBot.Utilities.Games
             bool exists = i > -1;
             return exists;
         }
+
         private void UpdateUsers(RpsUserData ud)
         {
-            Exists(ud.UserId, out int i);
-            _users[i] = ud;
+            if(Exists(ud.UserId, out int i))
+                _users[i] = ud;
         }
 
         private EmbedAuthorBuilder TitleBuilder(string thumbnailIconUrl)

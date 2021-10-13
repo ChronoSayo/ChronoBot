@@ -1,6 +1,7 @@
 ﻿using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using ChronoBot.Common.Systems;
 using ChronoBot.Helpers;
 using ChronoBot.Services;
 using ChronoBot.Utilities.Games;
@@ -56,12 +57,7 @@ namespace ChronoBot
                 })
                 .ConfigureServices((context, services) =>
                 {
-                    services
-                        .AddHostedService<CommandHandler>()
-                        .AddSingleton<Calculator>()
-                        .AddSingleton<SocialMedia>()
-                        .AddSingleton<Twitter>()
-                        .AddSingleton<RockPaperScissors>();
+                    ConfigureServices.RegisterServices(services);
                 })
                 .UseConsoleLifetime();
 
