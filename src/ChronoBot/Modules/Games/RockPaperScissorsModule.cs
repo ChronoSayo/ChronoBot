@@ -2,7 +2,6 @@
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using ChronoBot.Common.UserDatas;
 using ChronoBot.Enums;
 using ChronoBot.Helpers;
 using ChronoBot.Utilities.Games;
@@ -32,18 +31,18 @@ namespace ChronoBot.Modules.Games
             if (Context.Message.Content.Contains("|"))
                 actor = actor.Replace("|", "");
 
-            RpsUserData authorUd = CreateUserData(Context.Message.Author.Id, actor, Context.Message.Author.Mention,
+            RpsPlayData playData = CreatePlayData(Context.Message.Author.Id, actor, Context.Message.Author.Mention,
                 Context.Message.Author.Username, Context.User.GetAvatarUrl() ?? Context.User.GetDefaultAvatarUrl());
 
-            RpsUserData mentionUd = null;
+            RpsPlayData? mentionData = null;
             if (mention != null && Context.Message.MentionedUsers.Count > 0)
             {
                 var mentionUser = Context.Message.MentionedUsers.ElementAt(0);
-                mentionUd = CreateUserData(mentionUser.Id, "", mentionUser.Mention, mentionUser.Username,
+                mentionData = CreatePlayData(mentionUser.Id, actor, mentionUser.Mention, mentionUser.Username,
                     mentionUser.GetAvatarUrl() ?? mentionUser.GetDefaultAvatarUrl());
             }
 
-            var result = _rps.Play(authorUd, mentionUd);
+            var result = _rps.Play(playData, mentionData);
             if (result.Description.Contains("Wrong input"))
                 await SendMessage(result.Description);
             else
@@ -57,7 +56,7 @@ namespace ChronoBot.Modules.Games
         [Command("rpso")]
         public async Task OptionsAsync([Remainder] string action)
         {
-            var result = _rps.Options(CreateUserData(Context.Message.Author.Id, action,
+            var result = _rps.Options(CreatePlayData(Context.Message.Author.Id, action,
                 Context.Message.Author.Mention, Context.Message.Author.Username, Context.User.GetAvatarUrl() ?? Context.User.GetDefaultAvatarUrl()));
 
             if (result.Description != null && result.Description.Contains("Wrong input"))
@@ -89,16 +88,16 @@ namespace ChronoBot.Modules.Games
                 await Context.Channel.SendFileAsync(thumbnail, embed: result);
         }
 
-        private RpsUserData CreateUserData(ulong userId, string input, string mention, string username, string thumbnailIcon)
+        private RpsPlayData CreatePlayData(ulong userId, string input, string mention, string username, string thumbnailIcon)
         {
-            return new RpsUserData()
+            return new RpsPlayData()
             {
                 UserId = userId,
                 ChannelId = Context.Channel.Id,
                 GuildId = Context.Guild.Id,
-                Id = input,
+                Input = input,
                 Mention = mention,
-                Name = username,
+                Username = username,
                 ThumbnailIconUrl = thumbnailIcon
             };
         }
