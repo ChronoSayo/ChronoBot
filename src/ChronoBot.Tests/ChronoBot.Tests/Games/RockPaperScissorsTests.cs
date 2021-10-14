@@ -83,37 +83,37 @@ namespace ChronoBot.Tests.Games
             RpsUserData user;
             int plays = 0, rocks = 0, papers = 0, scissors = 0;
 
-            while (true)
+            rocks++;
+            do
             {
-                _rps.Play(player, null, RpsActors.Scissors);
-                user = (RpsUserData) _fileSystem.Load().ElementAt(0);
+                _rps.Play(player, null);
+                user = (RpsUserData)_fileSystem.Load().ElementAt(0);
                 plays++;
-                if (user.Wins > 0)
-                {
-                    string s;
-                    int i = rand.Next(0, 3);
-                    switch (i)
-                    {
-                        case 0:
-                            rocks++;
-                            s = "r";
-                            break;
-                        case 1:
-                            papers++;
-                            s = "p";
-                            break;
-                        default:
-                            scissors++;
-                            s = "s";
-                            break;
-                    }
-
-                    player = CreatePlayer(s);
+                if(user.Wins > 0)
                     break;
+                string s;
+                int i = rand.Next(0, 3);
+                switch (i)
+                {
+                    case 0:
+                        rocks++;
+                        s = "r";
+                        break;
+                    case 1:
+                        papers++;
+                        s = "p";
+                        break;
+                    default:
+                        scissors++;
+                        s = "s";
+                        break;
                 }
-            }
+                
+                player = CreatePlayer(s);
 
-            Equal(user, 345678912, plays: plays, totalPlays: plays, wins: 1, ratio: user.Ratio, currentStreak: 1,
+            } while (user.Wins <= 0);
+
+            Equal(user, 345678912, plays: plays, totalPlays: plays, wins: 1, losses: user.Losses, draws: user.Draws, ratio: user.Ratio, currentStreak: 1,
                 rockChosen: rocks, paperChosen: papers, scissorsChosen: scissors, coins: user.Coins);
 
             File.Delete(Path.Join(_fileSystem.PathToSaveFile, $"{player.GuildId}.xml"));
@@ -177,7 +177,7 @@ namespace ChronoBot.Tests.Games
         }
 
         [Fact]
-        public void PlayVsBot_Test_ResetsAndTotalPlays_Success()
+        public void Options_Test_ResetAndTotalPlays_Success()
         {
             RpsPlayData player = CreatePlayer("p");
             int totalPlays = 3;
@@ -195,21 +195,94 @@ namespace ChronoBot.Tests.Games
         }
 
         [Fact]
-        public void PlayVsBot_Test_ShowStatistics_Success()
+        public void Options_Test_NewUserReset_Success()
         {
-            RpsPlayData player = CreatePlayer("p");
-            
+            RpsPlayData player = CreatePlayer("r");
+
+            Embed e = _rps.Options(player);
+
+            Assert.Equal($"Stats for {player.Username} has been reset.", e.Title);
+
+            File.Delete(Path.Join(_fileSystem.PathToSaveFile, $"{player.GuildId}.xml"));
+        }
+
+        [Fact]
+        public void Options_Test_ShowStatistics_Success()
+        {
+            RpsPlayData player = CreatePlayer("r");
+
             _rps.Play(player, null, RpsActors.Rock);
             Embed e = _rps.Options(CreatePlayer("s"));
             var fields = e.Fields;
-            RpsUserData user = new RpsUserData()
+            RpsUserData actualUser = (RpsUserData)_fileSystem.Load().ElementAt(0);
+            RpsUserData expectedUser = new RpsUserData
             {
                 Plays = int.Parse(fields.First(x => x.Name == "Plays").Value),
-                TotalPlays = int.Parse(fields.First(x => x.Name == "Plays").Value),
+                TotalPlays = int.Parse(fields.First(x => x.Name == "Total Plays").Value),
+                Wins = int.Parse(fields.First(x => x.Name == "Wins").Value),
+                Losses = int.Parse(fields.First(x => x.Name == "Losses").Value),
+                Draws = int.Parse(fields.First(x => x.Name == "Draws").Value),
+                Ratio = int.Parse(fields.First(x => x.Name == "Win Ratio").Value),
+                CurrentStreak = int.Parse(fields.First(x => x.Name == "Current Streak").Value),
+                BestStreak = int.Parse(fields.First(x => x.Name == "Best Streak").Value),
+                Resets = int.Parse(fields.First(x => x.Name == "Resets").Value),
+                RockChosen = int.Parse(fields.First(x => x.Name == ":rock:").Value),
+                PaperChosen = int.Parse(fields.First(x => x.Name == ":roll_of_paper:").Value),
+                ScissorsChosen = int.Parse(fields.First(x => x.Name == ":scissors:").Value),
+                Coins = int.Parse(fields.First(x => x.Name == "Rings").Value)
             };
 
-            Equal(user, 345678912, plays: 1, totalPlays: totalPlays + 1, wins: user.Wins,
-                ratio: user.Ratio, resets: 1, currentStreak: user.CurrentStreak, bestStreak: user.BestStreak, paperChosen: user.PaperChosen, coins: user.Coins);
+            Equal(actualUser, 345678912, plays: expectedUser.Plays, totalPlays: expectedUser.TotalPlays, wins: expectedUser.Wins,
+                losses: expectedUser.Losses, draws: expectedUser.Draws, ratio: expectedUser.Ratio,
+                currentStreak: expectedUser.CurrentStreak, bestStreak: expectedUser.BestStreak,
+                resets: expectedUser.Resets, rockChosen: expectedUser.RockChosen, paperChosen: expectedUser.PaperChosen,
+                scissorsChosen: expectedUser.ScissorsChosen, coins: expectedUser.Coins);
+
+            File.Delete(Path.Join(_fileSystem.PathToSaveFile, $"{player.GuildId}.xml"));
+        }
+
+        [Fact]
+        public void Options_Test_NewUserShowStatistics_Success()
+        {
+            RpsPlayData player = CreatePlayer("r");
+            
+            Embed e = _rps.Options(CreatePlayer("s"));
+            var fields = e.Fields;
+            RpsUserData actualUser = (RpsUserData)_fileSystem.Load().ElementAt(0);
+            RpsUserData expectedUser = new RpsUserData
+            {
+                Plays = int.Parse(fields.First(x => x.Name == "Plays").Value),
+                TotalPlays = int.Parse(fields.First(x => x.Name == "Total Plays").Value),
+                Wins = int.Parse(fields.First(x => x.Name == "Wins").Value),
+                Losses = int.Parse(fields.First(x => x.Name == "Losses").Value),
+                Draws = int.Parse(fields.First(x => x.Name == "Draws").Value),
+                Ratio = int.Parse(fields.First(x => x.Name == "Win Ratio").Value),
+                CurrentStreak = int.Parse(fields.First(x => x.Name == "Current Streak").Value),
+                BestStreak = int.Parse(fields.First(x => x.Name == "Best Streak").Value),
+                Resets = int.Parse(fields.First(x => x.Name == "Resets").Value),
+                RockChosen = int.Parse(fields.First(x => x.Name == ":rock:").Value),
+                PaperChosen = int.Parse(fields.First(x => x.Name == ":roll_of_paper:").Value),
+                ScissorsChosen = int.Parse(fields.First(x => x.Name == ":scissors:").Value),
+                Coins = int.Parse(fields.First(x => x.Name == "Rings").Value)
+            };
+
+            Equal(actualUser, 345678912, plays: expectedUser.Plays, totalPlays: expectedUser.TotalPlays, wins: expectedUser.Wins,
+                losses: expectedUser.Losses, draws: expectedUser.Draws, ratio: expectedUser.Ratio,
+                currentStreak: expectedUser.CurrentStreak, bestStreak: expectedUser.BestStreak,
+                resets: expectedUser.Resets, rockChosen: expectedUser.RockChosen, paperChosen: expectedUser.PaperChosen,
+                scissorsChosen: expectedUser.ScissorsChosen, coins: expectedUser.Coins);
+
+            File.Delete(Path.Join(_fileSystem.PathToSaveFile, $"{player.GuildId}.xml"));
+        }
+
+        [Fact]
+        public void Options_Test_WrongInput_Success()
+        {
+            RpsPlayData player = CreatePlayer("f");
+
+            Embed e = _rps.Options(player);
+
+            Assert.Equal("Wrong input. \nType stats/s to show your statistics.\nType reset/r to reset the statistics.", e.Description);
 
             File.Delete(Path.Join(_fileSystem.PathToSaveFile, $"{player.GuildId}.xml"));
         }

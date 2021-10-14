@@ -431,10 +431,9 @@ namespace ChronoBot.Utilities.Games
             //LogToFile(LogSeverity.Info, $"Saved user: RockPaperScissors {temp.UserId} [{socketMessage.Author.Username}] {temp.GuildId} {temp.ChannelId}");
         }
 
-        private string ConvertActorToEmoji(RpsActors a)
+        private string ConvertActorToEmoji(RpsActors actor)
         {
-            string s = string.Empty;
-            switch (a)
+            switch (actor)
             {
                 case RpsActors.Rock:
                     return ":rock:";
@@ -443,7 +442,8 @@ namespace ChronoBot.Utilities.Games
                 case RpsActors.Scissors:
                     return ":scissors:";
             }
-            return s;
+
+            return string.Empty;
         }
 
         private RpsActors ConvertInputIntoActor(string action)
