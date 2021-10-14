@@ -5,6 +5,8 @@ using System.Threading.Tasks;
 using System;
 using System.Diagnostics;
 using System.Reflection;
+using System.Runtime.Remoting.Messaging;
+using System.Threading;
 using ChronoBot.Games;
 using ChronoBot.SocialMedias;
 using ChronoBot.Tests;
@@ -56,7 +58,7 @@ namespace ChronoBot
             //_remind = new Remind(_client);
             _selfie = new Selfie(_client);
             _calculator = new Calculator(_client);
-            _music = new Music(_client, _lavalinkManager);
+            //_music = new Music(_client, _lavalinkManager);
 
             //Games
             _rps = new RockPaperScissors();
@@ -114,7 +116,7 @@ namespace ChronoBot
             //_remind.MessageReceived(socketMessage);
             _selfie.MessageReceived(socketMessage);
             _calculator.MessageReceived(socketMessage);
-            _music.MessageReceived(socketMessage);
+            //_music.MessageReceived(socketMessage);
 
             _rps.MessageReceived(socketMessage);
         }
