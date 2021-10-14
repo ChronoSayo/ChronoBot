@@ -85,14 +85,14 @@ namespace ChronoBot
 
             _client.Log += Logger;
 
-            _lavalinkManager = new LavalinkManager(_client, new LavalinkManagerConfig()
-            {
-                RESTHost = "localhost",
-                RESTPort = 2333,
-                WebSocketHost = "localhost",
-                WebSocketPort = 2333,
-                TotalShards = 1
-            });
+            //_lavalinkManager = new LavalinkManager(_client, new LavalinkManagerConfig()
+            //{
+            //    RESTHost = "localhost",
+            //    RESTPort = 2333,
+            //    WebSocketHost = "localhost",
+            //    WebSocketPort = 2333,
+            //    TotalShards = 1
+            //});
             _client.Ready += async () => { await _lavalinkManager.StartAsync(); };
             
             await _client.LoginAsync(TokenType.Bot, File.ReadAllText("Memory Card/DiscordToken.txt"));
