@@ -5,8 +5,6 @@ using System.Threading.Tasks;
 using System;
 using System.Diagnostics;
 using System.Reflection;
-using System.Runtime.Remoting.Messaging;
-using System.Threading;
 using ChronoBot.Games;
 using ChronoBot.SocialMedias;
 using ChronoBot.Tests;
