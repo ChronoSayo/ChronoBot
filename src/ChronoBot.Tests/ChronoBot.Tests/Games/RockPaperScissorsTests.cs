@@ -1,15 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Channels;
-using System.Threading.Tasks;
 using ChronoBot.Common.Systems;
 using ChronoBot.Common.UserDatas;
 using ChronoBot.Enums;
 using ChronoBot.Helpers;
 using ChronoBot.Utilities.Games;
+using Discord;
 using Microsoft.Extensions.Configuration;
 using Moq;
 using Xunit;
@@ -31,8 +28,12 @@ namespace ChronoBot.Tests.Games
 
             _fileSystem = new RpsFileSystem();
             _rps = new RockPaperScissors(config.Object, _fileSystem);
-            if(File.Exists(Path.Join(_fileSystem.PathToSaveFile, $"{DefaultGuildId}.xml")))
-                File.Delete(Path.Join(_fileSystem.PathToSaveFile, $"{DefaultGuildId}.xml"));
+            if (!File.Exists(Path.Join(_fileSystem.PathToSaveFile, $"{DefaultGuildId}.xml"))) 
+                return;
+
+            File.Delete(Path.Join(_fileSystem.PathToSaveFile, $"{DefaultGuildId}.xml"));
+            _fileSystem = new RpsFileSystem();
+            _rps = new RockPaperScissors(config.Object, _fileSystem);
         }
 
         [Fact]
@@ -57,6 +58,158 @@ namespace ChronoBot.Tests.Games
             RpsUserData user = (RpsUserData)_fileSystem.Load().ElementAt(0);
 
             Equal(user, 345678912, plays: 1, totalPlays: 1, losses: 1, rockChosen: 1);
+
+            File.Delete(Path.Join(_fileSystem.PathToSaveFile, $"{player.GuildId}.xml"));
+        }
+
+        [Fact]
+        public void PlayVsBot_Test_Draw_Success()
+        {
+            RpsPlayData player = CreatePlayer("r");
+
+            _rps.Play(player, null, RpsActors.Rock);
+            RpsUserData user = (RpsUserData)_fileSystem.Load().ElementAt(0);
+
+            Equal(user, 345678912, plays: 1, totalPlays: 1, draws: 1, rockChosen: 1);
+
+            File.Delete(Path.Join(_fileSystem.PathToSaveFile, $"{player.GuildId}.xml"));
+        }
+
+        [Fact]
+        public void PlayVsBot_Test_WinWithRandom_Success()
+        {
+            Random rand = new Random();
+            RpsPlayData player = CreatePlayer("r");
+            RpsUserData user;
+            int plays = 0, rocks = 0, papers = 0, scissors = 0;
+
+            while (true)
+            {
+                _rps.Play(player, null, RpsActors.Scissors);
+                user = (RpsUserData) _fileSystem.Load().ElementAt(0);
+                plays++;
+                if (user.Wins > 0)
+                {
+                    string s;
+                    int i = rand.Next(0, 3);
+                    switch (i)
+                    {
+                        case 0:
+                            rocks++;
+                            s = "r";
+                            break;
+                        case 1:
+                            papers++;
+                            s = "p";
+                            break;
+                        default:
+                            scissors++;
+                            s = "s";
+                            break;
+                    }
+
+                    player = CreatePlayer(s);
+                    break;
+                }
+            }
+
+            Equal(user, 345678912, plays: plays, totalPlays: plays, wins: 1, ratio: user.Ratio, currentStreak: 1,
+                rockChosen: rocks, paperChosen: papers, scissorsChosen: scissors, coins: user.Coins);
+
+            File.Delete(Path.Join(_fileSystem.PathToSaveFile, $"{player.GuildId}.xml"));
+        }
+
+        [Fact]
+        public void PlayVsBot_Test_BonusStreak_Success()
+        {
+            RpsPlayData player = CreatePlayer("p");
+            const int playsTimes = 11;
+            int coins = 0;
+
+            for (int i = 0; i < playsTimes; i++)
+                _rps.Play(player, null, RpsActors.Rock);
+            RpsUserData user = (RpsUserData)_fileSystem.Load().ElementAt(0);
+            for (int i = 1; i < playsTimes + 1; i++)
+            {
+                int bonus = 1;
+                if (i % 10 == 0)
+                    bonus = i * 2;
+                coins += (int)Math.Ceiling(bonus * 0.5f);
+            }
+
+            Equal(user, 345678912, plays: playsTimes, totalPlays: playsTimes, wins: playsTimes, ratio: 100,
+                currentStreak: playsTimes, paperChosen: playsTimes, coins: coins);
+
+            File.Delete(Path.Join(_fileSystem.PathToSaveFile, $"{player.GuildId}.xml"));
+        }
+
+        [Fact]
+        public void PlayVsBot_Test_BestStreak_Success()
+        {
+            RpsPlayData player = CreatePlayer("p");
+            const int playsTimes = 11;
+
+            for (int i = 0; i < playsTimes; i++)
+                _rps.Play(player, null, RpsActors.Rock);
+            _rps.Play(player, null, RpsActors.Scissors);
+            int totalPlayTimes = playsTimes + 1;
+            RpsUserData user = (RpsUserData)_fileSystem.Load().ElementAt(0);
+
+            Equal(user, 345678912, plays: totalPlayTimes, totalPlays: totalPlayTimes, wins: playsTimes, losses: 1,
+                ratio: user.Ratio, bestStreak: playsTimes, paperChosen: totalPlayTimes, coins: user.Coins);
+
+            File.Delete(Path.Join(_fileSystem.PathToSaveFile, $"{player.GuildId}.xml"));
+        }
+
+        [Fact]
+        public void PlayVsBot_Test_WinRatio_Success()
+        {
+            RpsPlayData player = CreatePlayer("p");
+            
+            _rps.Play(player, null, RpsActors.Rock);
+            _rps.Play(player, null, RpsActors.Scissors);
+            RpsUserData user = (RpsUserData)_fileSystem.Load().ElementAt(0);
+
+            Equal(user, 345678912, plays: user.Plays, totalPlays: user.TotalPlays, wins: user.Wins, losses: user.Losses,
+                ratio: 50, bestStreak: user.BestStreak, paperChosen: user.PaperChosen, coins: user.Coins);
+
+            File.Delete(Path.Join(_fileSystem.PathToSaveFile, $"{player.GuildId}.xml"));
+        }
+
+        [Fact]
+        public void PlayVsBot_Test_ResetsAndTotalPlays_Success()
+        {
+            RpsPlayData player = CreatePlayer("p");
+            int totalPlays = 3;
+
+            for (int i = 0; i < totalPlays; i++)
+                _rps.Play(player, null, RpsActors.Rock);
+            _rps.Options(CreatePlayer("r"));
+            _rps.Play(CreatePlayer("p"), null, RpsActors.Rock);
+            RpsUserData user = (RpsUserData)_fileSystem.Load().ElementAt(0);
+
+            Equal(user, 345678912, plays: 1, totalPlays: totalPlays + 1, wins: user.Wins,
+                ratio: user.Ratio, resets: 1, currentStreak: user.CurrentStreak, bestStreak: user.BestStreak, paperChosen: user.PaperChosen, coins: user.Coins);
+
+            File.Delete(Path.Join(_fileSystem.PathToSaveFile, $"{player.GuildId}.xml"));
+        }
+
+        [Fact]
+        public void PlayVsBot_Test_ShowStatistics_Success()
+        {
+            RpsPlayData player = CreatePlayer("p");
+            
+            _rps.Play(player, null, RpsActors.Rock);
+            Embed e = _rps.Options(CreatePlayer("s"));
+            var fields = e.Fields;
+            RpsUserData user = new RpsUserData()
+            {
+                Plays = int.Parse(fields.First(x => x.Name == "Plays").Value),
+                TotalPlays = int.Parse(fields.First(x => x.Name == "Plays").Value),
+            };
+
+            Equal(user, 345678912, plays: 1, totalPlays: totalPlays + 1, wins: user.Wins,
+                ratio: user.Ratio, resets: 1, currentStreak: user.CurrentStreak, bestStreak: user.BestStreak, paperChosen: user.PaperChosen, coins: user.Coins);
 
             File.Delete(Path.Join(_fileSystem.PathToSaveFile, $"{player.GuildId}.xml"));
         }
@@ -93,7 +246,7 @@ namespace ChronoBot.Tests.Games
                 ChannelId = 123456789,
                 GuildId = 234567891,
                 UserId = 345678912,
-                Input = "r",
+                Input = input,
                 Mention = "Test123",
                 ThumbnailIconUrl = "icon.png",
                 Username = "Tester"
