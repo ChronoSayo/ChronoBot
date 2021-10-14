@@ -16,7 +16,6 @@ namespace ChronoBot
     class ChronoBot
     {
         private readonly DiscordSocketClient _client;
-        private readonly LavalinkManager _lavalinkManager;
         private Timer _delayInitiation;
         private SocialMedia _twitter, _twitch, _youtube, _instagram;
         private Remind _remind;
@@ -27,10 +26,9 @@ namespace ChronoBot
 
         private const float _DELAY_INITIATION = 3;
 
-        public ChronoBot(DiscordSocketClient client, LavalinkManager lavalinkManager)
+        public ChronoBot(DiscordSocketClient client)
         {
             _client = client;
-            _lavalinkManager = lavalinkManager;
 
             Info.CLIENT = _client;
 
@@ -59,7 +57,7 @@ namespace ChronoBot
             //_music = new Music(_client, _lavalinkManager);
 
             //Games
-            _rps = new RockPaperScissors();
+            //_rps = new RockPaperScissors();
 
             _delayInitiation.Stop();
 
@@ -116,7 +114,7 @@ namespace ChronoBot
             _calculator.MessageReceived(socketMessage);
             //_music.MessageReceived(socketMessage);
 
-            _rps.MessageReceived(socketMessage);
+            //_rps.MessageReceived(socketMessage);
         }
     }
 }
