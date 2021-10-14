@@ -38,11 +38,12 @@ namespace ChronoBot.Tests.Games
         [Fact]
         public void PlayVsBot_Test_Win_Success()
         {
-            RpsUserData player = CreatePlayer("r");
+            RpsPlayData player = CreatePlayer("r");
 
             _rps.Play(player, null, RpsActors.Scissors);
+            RpsUserData user = (RpsUserData)_fileSystem.Load().ElementAt(0);
 
-            Equal(player, 345678912, plays:1, totalPlays:1, wins:1, ratio:100, currentStreak:1, rockChosen:1, coins:1);
+            Equal(user, 345678912, plays:1, totalPlays:1, wins:1, ratio:100, currentStreak:1, rockChosen:1, coins:1);
 
             File.Delete(Path.Join(_fileSystem.PathToSaveFile, $"{player.GuildId}.xml"));
         }
@@ -50,11 +51,12 @@ namespace ChronoBot.Tests.Games
         [Fact]
         public void PlayVsBot_Test_Lose_Success()
         {
-            RpsUserData player = CreatePlayer("r");
+            RpsPlayData player = CreatePlayer("r");
 
             _rps.Play(player, null, RpsActors.Paper);
+            RpsUserData user = (RpsUserData)_fileSystem.Load().ElementAt(0);
 
-            Equal(player, 345678912, plays: 1, totalPlays: 1, losses: 1, rockChosen: 1);
+            Equal(user, 345678912, plays: 1, totalPlays: 1, losses: 1, rockChosen: 1);
 
             File.Delete(Path.Join(_fileSystem.PathToSaveFile, $"{player.GuildId}.xml"));
         }
@@ -84,17 +86,17 @@ namespace ChronoBot.Tests.Games
             Assert.Equal(dateVs.Day, ud.DateVs.Day);
         }
 
-        private RpsUserData CreatePlayer(string input)
+        private RpsPlayData CreatePlayer(string input)
         {
             return new()
             {
                 ChannelId = 123456789,
-                GuildId = DefaultGuildId,
+                GuildId = 234567891,
                 UserId = 345678912,
-                Id = "r",
+                Input = "r",
                 Mention = "Test123",
                 ThumbnailIconUrl = "icon.png",
-                Name = "Tester"
+                Username = "Tester"
             };
         }
     }

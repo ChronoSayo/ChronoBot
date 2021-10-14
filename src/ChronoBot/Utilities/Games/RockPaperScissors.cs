@@ -38,7 +38,7 @@ namespace ChronoBot.Utilities.Games
         {
             _config = config;
             _fileSystem = fileSystem;
-            _users = (List<RpsUserData>)_fileSystem.Load();
+            _users = (List<RpsUserData>) _fileSystem.Load();
             _usersActiveVs = new List<RpsUserData>();
             VersusTimer();
         }
@@ -369,7 +369,10 @@ namespace ChronoBot.Utilities.Games
                     ud.Coins--;
                     bool emptyWallet = ud.Coins <= 0;
                     if (emptyWallet)
+                    {
                         ud.Coins = 0;
+                        resultText += $"{mentionUser} -0 Rings (empty wallet)";
+                    }
                     else
                         resultText += $"{mentionUser} -1 Ring";
 
