@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Timers;
 using ChronoBot.Common.Systems;
 using ChronoBot.Common.UserDatas;
 using ChronoBot.Enums;
@@ -28,13 +27,13 @@ namespace ChronoBot.Tests.Games
             config.SetupGet(x => x[It.Is<string>(y => y == "Images:RPS:Lose")]).Returns("lose.png");
             config.SetupGet(x => x[It.Is<string>(y => y == "Images:RPS:Draw")]).Returns("draw.png");
 
-            _fileSystem = new RpsFileSystem();
+            _fileSystem = new RpsFileSystem(Path.Combine(Directory.GetCurrentDirectory(), "Test Files", GetType().Name));
             _rps = new RockPaperScissors(config.Object, _fileSystem);
-            if (!File.Exists(Path.Join(_fileSystem.PathToSaveFile, $"{DefaultGuildId}.xml"))) 
+            if (!File.Exists(Path.Join(_fileSystem.PathToSaveFile, GetType().Name + DefaultGuildId + ".xml"))) 
                 return;
 
-            File.Delete(Path.Join(_fileSystem.PathToSaveFile, $"{DefaultGuildId}.xml"));
-            _fileSystem = new RpsFileSystem();
+            File.Delete(Path.Join(_fileSystem.PathToSaveFile, GetType().Name + DefaultGuildId + ".xml"));
+            _fileSystem = new RpsFileSystem(Path.Combine(Directory.GetCurrentDirectory(), "Test Files", GetType().Name));
             _rps = new RockPaperScissors(config.Object, _fileSystem);
         }
 
@@ -48,7 +47,7 @@ namespace ChronoBot.Tests.Games
 
             Equal(user, 345678912, 1, 1, 1, ratio:100, currentStreak:1, rockChosen:1, coins:1);
 
-            File.Delete(Path.Join(_fileSystem.PathToSaveFile, $"{player.GuildId}.xml"));
+            DeleteFile(player.GuildId + ".xml");
         }
 
         [Fact]
@@ -61,7 +60,7 @@ namespace ChronoBot.Tests.Games
 
             Equal(user, 345678912, 1, 1, losses: 1, rockChosen: 1);
 
-            File.Delete(Path.Join(_fileSystem.PathToSaveFile, $"{player.GuildId}.xml"));
+            DeleteFile(player.GuildId + ".xml");
         }
 
         [Fact]
@@ -74,7 +73,7 @@ namespace ChronoBot.Tests.Games
 
             Equal(user, 345678912, 1, 1, draws: 1, rockChosen: 1);
 
-            File.Delete(Path.Join(_fileSystem.PathToSaveFile, $"{player.GuildId}.xml"));
+            DeleteFile(player.GuildId + ".xml");
         }
 
         [Fact]
@@ -118,7 +117,7 @@ namespace ChronoBot.Tests.Games
             Equal(user, 345678912, plays, plays, 1, user.Losses, user.Draws, user.Ratio, 1, rockChosen: rocks,
                 paperChosen: papers, scissorsChosen: scissors, coins: user.Coins);
 
-            File.Delete(Path.Join(_fileSystem.PathToSaveFile, $"{player.GuildId}.xml"));
+            DeleteFile(player.GuildId + ".xml");
         }
 
         [Fact]
@@ -134,7 +133,7 @@ namespace ChronoBot.Tests.Games
             Equal(user, 345678912, 3, 3, user.Wins, user.Losses, user.Draws, user.Ratio, user.CurrentStreak, rockChosen: 1,
                 paperChosen: 1, scissorsChosen: 1, coins: user.Coins);
 
-            File.Delete(Path.Join(_fileSystem.PathToSaveFile, $"{player.GuildId}.xml"));
+            DeleteFile(player.GuildId + ".xml");
         }
 
         [Fact]
@@ -158,7 +157,7 @@ namespace ChronoBot.Tests.Games
             Equal(user, 345678912, playsTimes, playsTimes, playsTimes, ratio: 100, currentStreak: playsTimes,
                 paperChosen: playsTimes, coins: coins);
 
-            File.Delete(Path.Join(_fileSystem.PathToSaveFile, $"{player.GuildId}.xml"));
+            DeleteFile(player.GuildId + ".xml");
         }
 
         [Fact]
@@ -176,7 +175,7 @@ namespace ChronoBot.Tests.Games
             Equal(user, 345678912, totalPlayTimes, totalPlayTimes, playsTimes, 1, ratio: user.Ratio,
                 bestStreak: playsTimes, paperChosen: totalPlayTimes, coins: user.Coins);
 
-            File.Delete(Path.Join(_fileSystem.PathToSaveFile, $"{player.GuildId}.xml"));
+            DeleteFile(player.GuildId + ".xml");
         }
 
         [Fact]
@@ -191,7 +190,7 @@ namespace ChronoBot.Tests.Games
             Equal(user, 345678912, user.Plays, user.TotalPlays, user.Wins, user.Losses,
                 ratio: 50, bestStreak: user.BestStreak, paperChosen: user.PaperChosen, coins: user.Coins);
 
-            File.Delete(Path.Join(_fileSystem.PathToSaveFile, $"{player.GuildId}.xml"));
+            DeleteFile(player.GuildId + ".xml");
         }
 
         [Fact]
@@ -209,7 +208,7 @@ namespace ChronoBot.Tests.Games
             Equal(user1, 345678912, 1, 1, losses: 1, paperChosen: 1);
             Equal(user2, 147258369, 1, 1, 1, ratio: 100, currentStreak: 1, scissorsChosen: 1, coins: 1);
 
-            File.Delete(Path.Join(_fileSystem.PathToSaveFile, $"{player1.GuildId}.xml"));
+            DeleteFile(player1.GuildId + ".xml");
         }
 
         [Fact]
@@ -227,7 +226,7 @@ namespace ChronoBot.Tests.Games
             Equal(user2, 147258369, 1, 1, losses: 1, paperChosen: 1);
             Equal(user1, 345678912, 1, 1, 1, ratio: 100, currentStreak: 1, scissorsChosen: 1, coins: 1);
 
-            File.Delete(Path.Join(_fileSystem.PathToSaveFile, $"{player1.GuildId}.xml"));
+            DeleteFile(player1.GuildId + ".xml");
         }
 
         [Fact]
@@ -245,7 +244,7 @@ namespace ChronoBot.Tests.Games
             Equal(user1, 345678912, 1, 1, draws: 1, rockChosen: 1);
             Equal(user2, 147258369, 1, 1, draws: 1, rockChosen: 1);
 
-            File.Delete(Path.Join(_fileSystem.PathToSaveFile, $"{player1.GuildId}.xml"));
+            DeleteFile(player1.GuildId + ".xml");
         }
 
         [Fact]
@@ -259,7 +258,7 @@ namespace ChronoBot.Tests.Games
 
             Assert.Equal($"{player2.Username} is already in battle.", e.Title);
 
-            File.Delete(Path.Join(_fileSystem.PathToSaveFile, $"{player1.GuildId}.xml"));
+            DeleteFile(player1.GuildId + ".xml");
         }
 
         [Fact]
@@ -271,7 +270,7 @@ namespace ChronoBot.Tests.Games
 
             Assert.Equal($"{player.Mention} If you have two hands, you can play against yourself that way.", e.Description);
 
-            File.Delete(Path.Join(_fileSystem.PathToSaveFile, $"{player.GuildId}.xml"));
+            DeleteFile(player.GuildId + ".xml");
         }
 
         [Fact]
@@ -283,7 +282,7 @@ namespace ChronoBot.Tests.Games
 
             Assert.Equal("Wrong input. \nType either rock(r), paper(p), or scissors(s) to play.", e.Description);
 
-            File.Delete(Path.Join(_fileSystem.PathToSaveFile, $"{player.GuildId}.xml"));
+            DeleteFile(player.GuildId + ".xml");
         }
 
         [Fact]
@@ -302,7 +301,7 @@ namespace ChronoBot.Tests.Games
                 currentStreak: user.CurrentStreak, bestStreak: user.BestStreak, paperChosen: user.PaperChosen,
                 coins: user.Coins);
 
-            File.Delete(Path.Join(_fileSystem.PathToSaveFile, $"{player.GuildId}.xml"));
+            DeleteFile(player.GuildId + ".xml");
         }
 
         [Fact]
@@ -314,7 +313,7 @@ namespace ChronoBot.Tests.Games
 
             Assert.Equal($"Stats for {player.Username} has been reset.", e.Title);
 
-            File.Delete(Path.Join(_fileSystem.PathToSaveFile, $"{player.GuildId}.xml"));
+            DeleteFile(player.GuildId + ".xml");
         }
 
         [Fact]
@@ -349,7 +348,7 @@ namespace ChronoBot.Tests.Games
                 expectedUser.Resets, expectedUser.RockChosen, expectedUser.PaperChosen,
                 expectedUser.ScissorsChosen, expectedUser.Coins);
 
-            File.Delete(Path.Join(_fileSystem.PathToSaveFile, $"{player.GuildId}.xml"));
+            DeleteFile(player.GuildId + ".xml");
         }
 
         [Fact]
@@ -383,7 +382,7 @@ namespace ChronoBot.Tests.Games
                 expectedUser.Resets, expectedUser.RockChosen, expectedUser.PaperChosen,
                 expectedUser.ScissorsChosen, expectedUser.Coins);
 
-            File.Delete(Path.Join(_fileSystem.PathToSaveFile, $"{player.GuildId}.xml"));
+            DeleteFile(player.GuildId + ".xml");
         }
 
         [Fact]
@@ -395,7 +394,7 @@ namespace ChronoBot.Tests.Games
 
             Assert.Equal("Wrong input. \nType stats/s to show your statistics.\nType reset/r to reset the statistics.", e.Description);
 
-            File.Delete(Path.Join(_fileSystem.PathToSaveFile, $"{player.GuildId}.xml"));
+            DeleteFile(player.GuildId + ".xml");
         }
 
         private void Equal(RpsUserData ud, ulong userId = 0, int plays = 0, int totalPlays = 0,
@@ -430,6 +429,11 @@ namespace ChronoBot.Tests.Games
                 ThumbnailIconUrl = "icon.png",
                 Username = username
             };
+        }
+
+        private void DeleteFile(string filename)
+        {
+            File.Delete(Path.Join(_fileSystem.PathToSaveFile, filename));
         }
     }
 }

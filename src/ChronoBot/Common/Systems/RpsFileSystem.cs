@@ -65,7 +65,7 @@ namespace ChronoBot.Common.Systems
                     value = channelId;
                 else if (name == "Actor")
                     value = actor;
-                else if(name == "Deadline")
+                else if (name == "Deadline")
                     value = dateVs;
                 attributes.Add(new XAttribute(name, value));
             }
@@ -213,6 +213,7 @@ namespace ChronoBot.Common.Systems
             XDocument xml = XDocument.Load(guildPath);
             List<RpsUserData> users = new List<RpsUserData>();
             users.AddRange(CollectUserData(new Dictionary<XDocument, ulong> { { xml, rpsUserData.GuildId } }));
+            bool remove = true;
             foreach (RpsUserData ud in users)
             {
                 if (ud.UserId == rpsUserData.UserId)
@@ -239,9 +240,14 @@ namespace ChronoBot.Common.Systems
                     GetAttribute(_attributeNames.ElementAt(i++), found).Value = rpsUserData.Coins.ToString();
                     GetAttribute(_attributeNames.ElementAt(i++), found).Value = rpsUserData.Actor.ToString();
                     GetAttribute(_attributeNames.ElementAt(i), found).Value = rpsUserData.DateVs.ToString(CultureInfo.InvariantCulture);
+                    remove = false;
                     break;
                 }
             }
+
+            if (remove)
+                return false;
+            
             xml.Save(guildPath);
             return true;
         }
@@ -268,14 +274,20 @@ namespace ChronoBot.Common.Systems
             XDocument xml = XDocument.Load(guildPath);
             List<RpsUserData> users = new List<RpsUserData>();
             users.AddRange(CollectUserData(new Dictionary<XDocument, ulong> { { xml, rpsUserData.GuildId } }));
+            bool remove = true;
             foreach (RpsUserData ud in users)
             {
                 if (ud.UserId != rpsUserData.UserId)
                     continue;
                 xml.Descendants("Service").Descendants(ElementRoot).Descendants("User").Where(x =>
                     x.Attribute(_attributeNames.ElementAt(0))?.Value == ud.UserId.ToString()).Remove();
+                remove = false;
                 break;
             }
+
+            if (remove)
+                return false;
+
             xml.Save(guildPath);
 
             Console.WriteLine("Deleted {0} in {1}.xml", rpsUserData.UserId, rpsUserData.GuildId);
