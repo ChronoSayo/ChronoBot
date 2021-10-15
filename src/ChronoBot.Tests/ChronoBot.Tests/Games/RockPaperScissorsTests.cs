@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Timers;
 using ChronoBot.Common.Systems;
 using ChronoBot.Common.UserDatas;
 using ChronoBot.Enums;
@@ -121,6 +122,22 @@ namespace ChronoBot.Tests.Games
         }
 
         [Fact]
+        public void PlayVsBot_Test_PlayWithEachActor()
+        {
+            RpsPlayData player = CreatePlayer("r");
+            
+            _rps.Play(player, null);
+            _rps.Play(CreatePlayer("p"), null);
+            _rps.Play(CreatePlayer("s"), null);
+            RpsUserData user = (RpsUserData)_fileSystem.Load().ElementAt(0);
+
+            Equal(user, 345678912, 3, 3, user.Wins, user.Losses, user.Draws, user.Ratio, user.CurrentStreak, rockChosen: 1,
+                paperChosen: 1, scissorsChosen: 1, coins: user.Coins);
+
+            File.Delete(Path.Join(_fileSystem.PathToSaveFile, $"{player.GuildId}.xml"));
+        }
+
+        [Fact]
         public void PlayVsBot_Test_BonusStreak()
         {
             RpsPlayData player = CreatePlayer("p");
@@ -178,7 +195,7 @@ namespace ChronoBot.Tests.Games
         }
 
         [Fact]
-        public void PlayVsPlayer_Test_WinLose()
+        public void PlayVsPlayer_Test_RespondingWins()
         {
             RpsPlayData player1 = CreatePlayer("p");
             RpsPlayData player2 = CreatePlayer("s", "Testa", "Test321", 147258369);
@@ -191,6 +208,82 @@ namespace ChronoBot.Tests.Games
 
             Equal(user1, 345678912, 1, 1, losses: 1, paperChosen: 1);
             Equal(user2, 147258369, 1, 1, 1, ratio: 100, currentStreak: 1, scissorsChosen: 1, coins: 1);
+
+            File.Delete(Path.Join(_fileSystem.PathToSaveFile, $"{player1.GuildId}.xml"));
+        }
+
+        [Fact]
+        public void PlayVsPlayer_Test_InstigatorWins()
+        {
+            RpsPlayData player1 = CreatePlayer("s");
+            RpsPlayData player2 = CreatePlayer("p", "Testa", "Test321", 147258369);
+
+            _rps.Play(player1, player2);
+            _rps.Play(player2, player1);
+            var users = (List<RpsUserData>)_fileSystem.Load();
+            RpsUserData user1 = users.Find(x => x.UserId == 345678912);
+            RpsUserData user2 = users.Find(x => x.UserId == 147258369);
+
+            Equal(user2, 147258369, 1, 1, losses: 1, paperChosen: 1);
+            Equal(user1, 345678912, 1, 1, 1, ratio: 100, currentStreak: 1, scissorsChosen: 1, coins: 1);
+
+            File.Delete(Path.Join(_fileSystem.PathToSaveFile, $"{player1.GuildId}.xml"));
+        }
+
+        [Fact]
+        public void PlayVsPlayer_Test_Draw()
+        {
+            RpsPlayData player1 = CreatePlayer("r");
+            RpsPlayData player2 = CreatePlayer("r", "Testa", "Test321", 147258369);
+
+            _rps.Play(player1, player2);
+            _rps.Play(player2, player1);
+            var users = (List<RpsUserData>)_fileSystem.Load();
+            RpsUserData user1 = users.Find(x => x.UserId == 345678912);
+            RpsUserData user2 = users.Find(x => x.UserId == 147258369);
+
+            Equal(user1, 345678912, 1, 1, draws: 1, rockChosen: 1);
+            Equal(user2, 147258369, 1, 1, draws: 1, rockChosen: 1);
+
+            File.Delete(Path.Join(_fileSystem.PathToSaveFile, $"{player1.GuildId}.xml"));
+        }
+
+        [Fact]
+        public void PlayVsPlayer_Test_AlreadyInBattle()
+        {
+            RpsPlayData player1 = CreatePlayer("r");
+            RpsPlayData player2 = CreatePlayer("s", "Testa", "Test321", 147258369);
+
+            _rps.Play(player1, player2);
+            Embed e = _rps.Play(player1, player2);
+
+            Assert.Equal($"{player2.Username} is already in battle.", e.Title);
+
+            File.Delete(Path.Join(_fileSystem.PathToSaveFile, $"{player1.GuildId}.xml"));
+        }
+
+        [Fact]
+        public void PlayVsSelf_Test()
+        {
+            RpsPlayData player = CreatePlayer("p");
+
+            Embed e = _rps.Play(player, player);
+
+            Assert.Equal($"{player.Mention} If you have two hands, you can play against yourself that way.", e.Description);
+
+            File.Delete(Path.Join(_fileSystem.PathToSaveFile, $"{player.GuildId}.xml"));
+        }
+
+        [Fact]
+        public void Play_Test_WrongInput()
+        {
+            RpsPlayData player = CreatePlayer("f");
+
+            Embed e = _rps.Play(player, null);
+
+            Assert.Equal("Wrong input. \nType either rock(r), paper(p), or scissors(s) to play.", e.Description);
+
+            File.Delete(Path.Join(_fileSystem.PathToSaveFile, $"{player.GuildId}.xml"));
         }
 
         [Fact]
