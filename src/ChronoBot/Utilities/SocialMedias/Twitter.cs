@@ -8,6 +8,7 @@ using ChronoBot.Common.UserDatas;
 using ChronoBot.Enums;
 using ChronoBot.Helpers;
 using Discord.Commands;
+using Discord.Rest;
 using Discord.WebSocket;
 using Microsoft.Extensions.Configuration;
 using TweetSharp;
@@ -23,35 +24,13 @@ namespace ChronoBot.Utilities.SocialMedias
         {
             Authenticate();
 
-            OnUpdateTimerAsync(10);
+            OnUpdateTimerAsync(60);
 
             Hyperlink = "https://twitter.com/@name/status/@id";
 
             LoadOrCreateFromFile();
 
             TypeOfSocialMedia = SocialMediaEnum.Twitter.ToString().ToLowerInvariant();
-        }
-
-        private string GetTweetFromPost(string[] split, out string id)
-        {
-            string nameKey = "&";
-            string idKey = "%";
-            string tweetPost = $"https://twitter.com/{nameKey}/status/{idKey}";
-            int statusIndex = split.ToList().FindIndex(x => x == "status");
-            string name = split[statusIndex - 1];
-            string idInString = split[statusIndex + 1];
-            id = string.Empty;
-            foreach (char c in idInString)
-            {
-                if (int.TryParse(c.ToString(), out int i))
-                    id += i.ToString();
-                else
-                    break;
-            }
-
-            tweetPost = tweetPost.Replace(nameKey, name);
-            tweetPost = tweetPost.Replace(idKey, id);
-            return tweetPost;
         }
 
         protected override async Task PostUpdate()
@@ -125,20 +104,20 @@ namespace ChronoBot.Utilities.SocialMedias
             return await Task.FromResult(tweet);
         }
 
-        public override async Task<string> AddSocialMediaUser(SocketCommandContext context, string username, ulong channelId = 0)
+        public override async Task<string> AddSocialMediaUser(ulong guildId, ulong channelId, string username, ulong sendToChannelId = 0)
         {
             Tuple<string, bool> legit;
-            if (!Duplicate(context.Guild.Id, username, SocialMediaEnum.Twitter))
+            if (!Duplicate(guildId, username, SocialMediaEnum.Twitter))
             {
                 legit = await IsLegitTwitterHandle(username);
                 var legitUsername = legit.Item1;
                 bool isLegit = legit.Item2;
                 if (isLegit)
                 {
-                    if (channelId == 0)
-                        channelId = Statics.Debug ? Statics.DebugChannelId : context.Channel.Id;
+                    if (sendToChannelId == 0)
+                        sendToChannelId = Statics.Debug ? Statics.DebugChannelId : channelId;
 
-                    if (!CreateSocialMediaUser(legitUsername, context.Guild.Id, channelId, "0", SocialMediaEnum.Twitter))
+                    if (!CreateSocialMediaUser(legitUsername, channelId, sendToChannelId, "0", SocialMediaEnum.Twitter))
                         return await Task.FromResult($"Failed to add {legitUsername}.");
 
                     return await Task.FromResult("Successfully added " + legitUsername + "\n" + "https://twitter.com/" + legitUsername);

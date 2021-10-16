@@ -27,11 +27,6 @@ namespace ChronoBot.Helpers
         public static string RpsLoseImage => "Images:Rps:Lose";
         public static string RpsDrawImage => "Images:Rps:Draw";
 
-        public static int GetRandom(int min, int max)
-        {
-            return Random.Next(min, max);
-        }
-
         //Send message to my test channel.
         public static async Task DebugSendMessageToChannelAsync(DiscordSocketClient client, string message)
         {

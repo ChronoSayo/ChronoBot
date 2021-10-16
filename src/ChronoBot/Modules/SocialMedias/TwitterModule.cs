@@ -21,7 +21,9 @@ namespace ChronoBot.Modules.SocialMedias
         [Command(SocialMediaCommand + "add", RunMode = RunMode.Async)]
         public override async Task AddAsync(string user, ulong channel = 0)
         {
-            string result = await SocialMedia.AddSocialMediaUser(Context, user, channel);
+            ulong guildId = Context.Guild.Id;
+            ulong channelId = Context.Channel.Id;
+            string result = await SocialMedia.AddSocialMediaUser(guildId, channelId, user, channel);
             await SendMessage(result);
         }
 

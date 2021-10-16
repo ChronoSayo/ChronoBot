@@ -68,7 +68,12 @@ namespace ChronoBot.Utilities.SocialMedias
                 Enabled = true,
                 AutoReset = true
             };
-            UpdateTimer.Elapsed += async (s, e) => await UpdateTimerElapsed();
+            UpdateTimer.Elapsed += OnUpdateTimerOnElapsed;
+        }
+
+        private async void OnUpdateTimerOnElapsed(object s, ElapsedEventArgs e)
+        {
+            await UpdateTimerElapsed();
         }
 
         protected virtual async Task UpdateTimerElapsed()
@@ -81,7 +86,7 @@ namespace ChronoBot.Utilities.SocialMedias
             await Task.CompletedTask;
         }
 
-        public virtual async Task<string> AddSocialMediaUser(SocketCommandContext context, string username, ulong channelId = 0)
+        public virtual async Task<string> AddSocialMediaUser(ulong guildId, ulong channelId, string username, ulong sendToChannelId = 0)
         {
             return await Task.FromResult(string.Empty);
         }
@@ -281,21 +286,6 @@ namespace ChronoBot.Utilities.SocialMedias
         //{
         //    StackTrace st = new StackTrace();
         //    Program.Logger(new LogMessage(severity, st.GetFrame(1).GetMethod().ReflectedType + "." + caller, message, e));
-        //}
-
-        //public virtual void MessageReceived(SocketMessage socketMessage)
-        //{
-        //    MessageReceivedSelf(socketMessage);
-        //    if (socketMessage.Author.IsBot)
-        //        return;
-
-        //    AddSocialMediaUser(socketMessage);
-        //    DeleteSocialMediaUser(socketMessage);
-        //    GetSocialMediaUser(socketMessage);
-        //    ListSavedSocialMediaUsers(socketMessage);
-        //    HowTo(socketMessage);
-
-        //    OtherCommands(socketMessage);
         //}
 
         public virtual void MessageReceivedSelf(SocketMessage socketMessage)
