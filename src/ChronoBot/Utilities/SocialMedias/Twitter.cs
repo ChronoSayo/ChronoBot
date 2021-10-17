@@ -19,9 +19,10 @@ namespace ChronoBot.Utilities.SocialMedias
     {
         private TwitterService _service;
 
-        public Twitter(DiscordSocketClient client, IConfiguration config, IEnumerable<SocialMediaUserData> users, SocialMediaFileSystem fileSystem) : 
+        public Twitter(TwitterService service, DiscordSocketClient client, IConfiguration config, IEnumerable<SocialMediaUserData> users, SocialMediaFileSystem fileSystem) : 
             base(client, config, users, fileSystem)
         {
+            _service = service;
             Authenticate();
 
             OnUpdateTimerAsync(60);
@@ -68,7 +69,8 @@ namespace ChronoBot.Utilities.SocialMedias
             {
                 ScreenName = ud.Name,
                 IncludeRts = false,
-                Count = 100
+                Count = 100,
+                TweetMode = "extended"
             };
             TwitterAsyncResult<IEnumerable<TwitterStatus>> tweets;
             try
@@ -214,10 +216,7 @@ namespace ChronoBot.Utilities.SocialMedias
             string consumerSecret = Config[Statics.TwitterConsumerSecret];
             string token = Config[Statics.TwitterToken];
             string secret = Config[Statics.TwitterSecret];
-            _service = new TwitterService(consumerKey, consumerSecret, token, secret)
-            {
-                TweetMode = "extended",
-            };
+            _service.AuthenticateWith(consumerKey, consumerSecret, token, secret);
         }
     }
 }

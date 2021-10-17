@@ -3,6 +3,7 @@ using ChronoBot.Utilities.Games;
 using ChronoBot.Utilities.SocialMedias;
 using ChronoBot.Utilities.Tools;
 using Microsoft.Extensions.DependencyInjection;
+using TweetSharp;
 
 namespace ChronoBot.Services
 {
@@ -11,10 +12,29 @@ namespace ChronoBot.Services
         public static void RegisterServices(IServiceCollection services)
         {
             services.AddHostedService<CommandHandler>()
-                .AddSingleton<Calculator>()
+                .AddToolServiceCollection()
+                .AddSocialMediaServiceCollection()
+                .AddGamesServiceCollection();
+        }
+
+        private static IServiceCollection AddToolServiceCollection(this IServiceCollection services)
+        {
+            return services
+                .AddSingleton<Calculator>();
+        }
+
+        private static IServiceCollection AddSocialMediaServiceCollection(this IServiceCollection services)
+        {
+            return services
                 .AddSingleton<SocialMedia>()
                 .AddSingleton<SocialMediaFileSystem>()
-                .AddSingleton<Twitter>()
+                .AddSingleton<TwitterService>()
+                .AddSingleton<Twitter>();
+        }
+
+        private static IServiceCollection AddGamesServiceCollection(this IServiceCollection services)
+        {
+            return services
                 .AddSingleton<RockPaperScissors>()
                 .AddSingleton<RpsFileSystem>();
         }
