@@ -119,7 +119,7 @@ namespace ChronoBot.Utilities.SocialMedias
                     if (sendToChannelId == 0)
                         sendToChannelId = Statics.Debug ? Statics.DebugChannelId : channelId;
 
-                    if (!CreateSocialMediaUser(legitUsername, channelId, sendToChannelId, "0", SocialMediaEnum.Twitter))
+                    if (!CreateSocialMediaUser(legitUsername, guildId, sendToChannelId, "0", SocialMediaEnum.Twitter))
                         return await Task.FromResult($"Failed to add {legitUsername}.");
 
                     return await Task.FromResult("Successfully added " + legitUsername + "\n" + "https://twitter.com/" + legitUsername);
