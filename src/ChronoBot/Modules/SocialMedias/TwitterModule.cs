@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Linq;
+using System.Threading.Tasks;
 using ChronoBot.Utilities.SocialMedias;
 using Discord;
 using Discord.Commands;
@@ -38,15 +39,21 @@ namespace ChronoBot.Modules.SocialMedias
         [Command(SocialMediaCommand + "get", RunMode = RunMode.Async), Alias(SocialMediaCommand)]
         public override async Task GetAsync(string user)
         {
-            string result = await SocialMedia.GetSocialMediaUser(Context, user);
+            string result = await SocialMedia.GetSocialMediaUser(Context.Guild.Id, Context.Channel.Id, user);
             await SendMessage(result);
         }
 
         [Command(SocialMediaCommand + "list", RunMode = RunMode.Async), Alias(SocialMediaCommand + "all")]
         public override async Task ListAsync()
         {
-            string result = await SocialMedia.ListSavedSocialMediaUsers(Context);
+            string result = await SocialMedia.ListSavedSocialMediaUsers(Context.Guild.Id, Context.Message.MentionedChannels.ElementAt(0).ToString());
             await SendMessage(result);
+        }
+
+
+        [Command(SocialMediaCommand + "update", RunMode = RunMode.Async), Alias(SocialMediaCommand + "latest")]
+        public override async Task UpdateAsync()
+        {
         }
 
         [Command(SocialMediaCommand + "?", RunMode = RunMode.Async), Alias(SocialMediaCommand + "howto", SocialMediaCommand)]

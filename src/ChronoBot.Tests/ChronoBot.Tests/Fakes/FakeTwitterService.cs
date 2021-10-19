@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Castle.DynamicProxy.Generators.Emitters.SimpleAST;
+using Hammock;
 using TweetSharp;
 
 namespace ChronoBot.Tests.Fakes
@@ -12,7 +13,7 @@ namespace ChronoBot.Tests.Fakes
         {
             var status = new TwitterStatus
             {
-                Author = { RawSource = options.ScreenName },
+                User = new TwitterUser{ScreenName = options.ScreenName},
                 ExtendedEntities = new TwitterExtendedEntities
                 {
                     Media = new List<TwitterExtendedEntity>
@@ -22,7 +23,7 @@ namespace ChronoBot.Tests.Fakes
                 },
                 Id = 123456789
             };
-            var statuses = new TwitterAsyncResult<IEnumerable<TwitterStatus>>(new[] { status }, null);
+            var statuses = new TwitterAsyncResult<IEnumerable<TwitterStatus>>(new[] { status }, new TwitterResponse(null).Response);
             return await Task.FromResult(statuses);
         }
 

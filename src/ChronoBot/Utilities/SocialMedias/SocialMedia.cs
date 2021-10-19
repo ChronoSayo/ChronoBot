@@ -105,12 +105,16 @@ namespace ChronoBot.Utilities.SocialMedias
             return $"Failed to delete {user}";
         }
 
-        public virtual async Task<string> GetSocialMediaUser(SocketCommandContext context, string user)
+        public virtual async Task<string> GetSocialMediaUser(ulong guildId, ulong channelId, string user)
+        {
+            return await Task.FromResult(string.Empty);
+        }
+        public virtual async Task<string> GetSocialMediaUser(ulong guildId, bool isNsfw, string user)
         {
             return await Task.FromResult(string.Empty);
         }
 
-        public virtual async Task<string> ListSavedSocialMediaUsers(SocketCommandContext context)
+        public virtual async Task<string> ListSavedSocialMediaUsers(ulong guildId, string channelMention = "")
         {
             return await Task.FromResult(string.Empty);
         }
@@ -133,7 +137,7 @@ namespace ChronoBot.Utilities.SocialMedias
                 if (usedGuildIDs.Count > 0)
                 {
                     //Checks if both guild and channel ID's has been used.
-                    if (UsedID(usedGuildIDs, guildId) && UsedID(usedChannelIDs, channelId))
+                    if (UsedId(usedGuildIDs, guildId) && UsedId(usedChannelIDs, channelId))
                         continue;
                 }
                 string message = string.Empty;
@@ -184,7 +188,7 @@ namespace ChronoBot.Utilities.SocialMedias
 
         }
 
-        private bool UsedID(List<ulong> idList, ulong id)
+        private bool UsedId(List<ulong> idList, ulong id)
         {
             bool used = false;
             for (int i = 0; i < idList.Count; i++)

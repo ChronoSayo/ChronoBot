@@ -47,7 +47,7 @@ namespace ChronoBot.Utilities.SocialMedias
                     continue;
 
                 var channel = Client.GetGuild(Users[i].GuildId).GetTextChannel(Users[i].ChannelId);
-                TwitterStatus tweet = await GetLatestTwitter(user, channel);
+                TwitterStatus tweet = await GetLatestTwitter(user, channel.IsNsfw);
                 if (tweet == null || tweet.Id == -1)
                     continue;
 
@@ -63,7 +63,7 @@ namespace ChronoBot.Utilities.SocialMedias
             await UpdateSocialMedia(newTweets);
         }
 
-        private async Task<TwitterStatus> GetLatestTwitter(SocialMediaUserData ud, SocketTextChannel channel)
+        private async Task<TwitterStatus> GetLatestTwitter(SocialMediaUserData ud, bool isNsfw)
         {
             ListTweetsOnUserTimelineOptions options = new ListTweetsOnUserTimelineOptions()
             {
@@ -91,7 +91,7 @@ namespace ChronoBot.Utilities.SocialMedias
             }
 
             TwitterStatus tweet = twitterStatuses.ElementAt(0);
-            if (channel.IsNsfw)
+            if (isNsfw)
             {
                 if (tweet.ExtendedEntities == null || !tweet.ExtendedEntities.Any() || !tweet.ExtendedEntities.Media.Any() ||
                     tweet.ExtendedEntities.Media.ElementAt(0).ExtendedEntityType != TwitterMediaType.Photo)
@@ -132,13 +132,12 @@ namespace ChronoBot.Utilities.SocialMedias
             return await Task.FromResult("Already added " + legit.Item1);
         }
 
-        public override async Task<string> GetSocialMediaUser(SocketCommandContext context, string user)
+        public override async Task<string> GetSocialMediaUser(ulong guildId, bool isNsfw, string user)
         {
-            ulong guildId = context.Guild.Id;
             int i = FindIndexByName(guildId, user);
             if (i > -1)
             {
-                TwitterStatus tweet = await GetLatestTwitter(Users[i], context.Channel as SocketTextChannel);
+                TwitterStatus tweet = await GetLatestTwitter(Users[i], isNsfw);
                 if (tweet != null)
                 {
                     SocialMediaUserData temp = Users[i];
@@ -153,7 +152,7 @@ namespace ChronoBot.Utilities.SocialMedias
             return await Task.FromResult("Could not find user.");
         }
 
-        public override async Task<string> ListSavedSocialMediaUsers(SocketCommandContext context)
+        public override async Task<string> ListSavedSocialMediaUsers(ulong guildId, string channelMention = "")
         {
             string line = string.Empty;
             foreach (var user in Users)
@@ -162,17 +161,13 @@ namespace ChronoBot.Utilities.SocialMedias
                 if (Statics.Debug)
                     addToList = true;
                 else
-                {
-                    var guildId = context.Guild.Id;
                     addToList = guildId == user.GuildId;
-                }
 
                 if (!addToList) 
                     continue;
-
-                SocketTextChannel channel = context.Channel as SocketTextChannel;
+                
                 string name = user.Name;
-                line += "■ " + name + " " + (channel == null ? "***Missing channel info.***" : channel.Mention) + "\n";
+                line += "■ " + name + " " + (channelMention ?? "***Missing channel info.***") + "\n";
             }
 
             return await Task.FromResult(line);

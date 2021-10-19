@@ -49,6 +49,11 @@ namespace ChronoBot.Modules.SocialMedias
             await Task.CompletedTask;
         }
 
+        public virtual async Task UpdateAsync()
+        {
+            await Task.CompletedTask;
+        }
+
         public virtual async Task HowToUseAsync()
         {
             await Task.CompletedTask;
