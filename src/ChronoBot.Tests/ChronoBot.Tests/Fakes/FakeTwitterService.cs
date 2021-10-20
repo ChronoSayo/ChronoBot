@@ -1,7 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.Net;
 using System.Threading.Tasks;
-using Castle.DynamicProxy.Generators.Emitters.SimpleAST;
 using Hammock;
 using TweetSharp;
 
@@ -21,16 +20,17 @@ namespace ChronoBot.Tests.Fakes
                         new() { ExtendedEntityType = TwitterMediaType.Photo }
                     }
                 },
-                Id = 123456789
+                Id = 123456789,
+                IdStr = "chirp"
             };
-            var statuses = new TwitterAsyncResult<IEnumerable<TwitterStatus>>(new[] { status }, new TwitterResponse(null).Response);
+            var statuses = new TwitterAsyncResult<IEnumerable<TwitterStatus>>(new[] { status }, null);
             return await Task.FromResult(statuses);
         }
 
         public override async Task<TwitterAsyncResult<IEnumerable<TwitterUser>>> SearchForUserAsync(SearchForUserOptions options)
         {
             string name = options.Q;
-            var user = new TwitterUser()
+            var user = new TwitterUser
             {
                 ScreenName = name
             };

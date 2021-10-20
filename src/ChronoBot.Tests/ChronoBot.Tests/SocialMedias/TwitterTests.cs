@@ -65,7 +65,7 @@ namespace ChronoBot.Tests.SocialMedias
 
             var result = twitter.GetSocialMediaUser(123456789, false, "Tweeter").GetAwaiter().GetResult();
 
-            Assert.Equal("https://twitter.com/Tweeter/status/chirp", result);
+            Assert.Equal("https://twitter.com/Tweeter/status/chirp\n\n", result);
         }
 
         [Fact]

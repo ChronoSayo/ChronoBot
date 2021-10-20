@@ -76,16 +76,22 @@ namespace ChronoBot.Utilities.SocialMedias
             try
             {
                 tweets = await _service.ListTweetsOnUserTimelineAsync(options);
-                if (tweets.Response.StatusCode != HttpStatusCode.OK)
-                    return null;
             }
             catch
             {
                 return null;
             }
 
-            var twitterStatuses = tweets.Value as TwitterStatus[] ?? tweets.Value.ToArray();
-            if (!twitterStatuses.Any())
+            TwitterStatus[] twitterStatuses;
+            try
+            {
+                twitterStatuses = tweets.Value as TwitterStatus[] ?? tweets.Value.ToArray();
+                if (!twitterStatuses.Any())
+                {
+                    return null;
+                }
+            }
+            catch
             {
                 return null;
             }
