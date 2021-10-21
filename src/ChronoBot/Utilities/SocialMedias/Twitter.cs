@@ -1,14 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using System.Threading.Tasks;
 using ChronoBot.Common.Systems;
 using ChronoBot.Common.UserDatas;
 using ChronoBot.Enums;
 using ChronoBot.Helpers;
-using Discord.Commands;
-using Discord.Rest;
 using Discord.WebSocket;
 using Microsoft.Extensions.Configuration;
 using TweetSharp;
@@ -17,7 +14,7 @@ namespace ChronoBot.Utilities.SocialMedias
 {
     public sealed class Twitter : SocialMedia
     {
-        private TwitterService _service;
+        private readonly TwitterService _service;
 
         public Twitter(TwitterService service, DiscordSocketClient client, IConfiguration config, IEnumerable<SocialMediaUserData> users, SocialMediaFileSystem fileSystem) : 
             base(client, config, users, fileSystem)
@@ -36,31 +33,12 @@ namespace ChronoBot.Utilities.SocialMedias
 
         protected override async Task PostUpdate()
         {
-            if (Users.Count == 0)
-                return;
-
-            List<SocialMediaUserData> newTweets = new List<SocialMediaUserData>();
-            for (int i = 0; i < Users.Count; i++)
+            ulong current = 0;
+            foreach (var data in Users.Where(data => data.GuildId != current))
             {
-                SocialMediaUserData user = Users[i];
-                if(user.SocialMedia != SocialMediaEnum.Twitter)
-                    continue;
-
-                var channel = Client.GetGuild(Users[i].GuildId).GetTextChannel(Users[i].ChannelId);
-                TwitterStatus tweet = await GetLatestTwitter(user, channel.IsNsfw);
-                if (tweet == null || tweet.Id == -1)
-                    continue;
-
-                if (!MessageDisplayed(tweet.IdStr, user.GuildId))
-                {
-                    user.Id = tweet.IdStr;
-                    Users[i] = user;
-                    newTweets.Add(user);
-                    FileSystem.UpdateFile(user);
-                }
+                current = data.GuildId;
+                await GetUpdatedSocialMediaUsers(current);
             }
-
-            await UpdateSocialMedia(newTweets);
         }
 
         private async Task<TwitterStatus> GetLatestTwitter(SocialMediaUserData ud, bool isNsfw)
@@ -177,6 +155,38 @@ namespace ChronoBot.Utilities.SocialMedias
             }
 
             return await Task.FromResult(line);
+        }
+
+        public override async Task<string> GetUpdatedSocialMediaUsers(ulong guildId)
+        {
+            if (Users.Count == 0)
+                return await Task.FromResult("No user registered.");
+
+            List<SocialMediaUserData> newTweets = new List<SocialMediaUserData>();
+            for (int i = 0; i < Users.Count; i++)
+            {
+                SocialMediaUserData user = Users[i];
+                if (user.SocialMedia != SocialMediaEnum.Twitter && user.GuildId == guildId)
+                    continue;
+
+                var channel = Client.GetGuild(Users[i].GuildId).GetTextChannel(Users[i].ChannelId);
+                TwitterStatus tweet = await GetLatestTwitter(user, channel.IsNsfw);
+                if (tweet == null || tweet.Id == -1)
+                    continue;
+
+                if (!MessageDisplayed(tweet.IdStr, user.GuildId))
+                {
+                    user.Id = tweet.IdStr;
+                    Users[i] = user;
+                    newTweets.Add(user);
+                    FileSystem.UpdateFile(user);
+                }
+            }
+
+            if (newTweets.Count > 0)
+                return await UpdateSocialMedia(newTweets);
+
+            return await Task.FromResult("No updates since last time.");
         }
 
         private bool MessageDisplayed(string id, ulong guildId)

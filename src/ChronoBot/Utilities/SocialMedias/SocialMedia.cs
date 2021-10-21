@@ -119,15 +119,21 @@ namespace ChronoBot.Utilities.SocialMedias
             return await Task.FromResult(string.Empty);
         }
 
+        public virtual async Task<string> GetUpdatedSocialMediaUsers(ulong guildId)
+        {
+            return await Task.FromResult(string.Empty);
+        }
+
         //If more social media is inheriting from this class, add their clients as parameter if needed.
         //protected virtual string UpdateSocialMedia(List<UserData> users, TwitchAPI api = null)
-        protected virtual async Task UpdateSocialMedia(IEnumerable<SocialMediaUserData> socialMediaUsers)
+        protected virtual async Task<string> UpdateSocialMedia(IEnumerable<SocialMediaUserData> socialMediaUsers)
         {
             //Save guild ID's and channel ID's to avoid repetition
             List<ulong> usedGuildIDs = new List<ulong>();
             List<ulong> usedChannelIDs = new List<ulong>();
             List<SocialMediaUserData> users = socialMediaUsers.ToList();
             //Loop through all updated social media.
+            string message = string.Empty;
             for (int i = 0; i < users.Count; i++)
             {
                 ulong debugGuildId = ulong.Parse(Config["IDs:Guild"]);
@@ -140,7 +146,6 @@ namespace ChronoBot.Utilities.SocialMedias
                     if (UsedId(usedGuildIDs, guildId) && UsedId(usedChannelIDs, channelId))
                         continue;
                 }
-                string message = string.Empty;
                 //Loops through updated social media with the same channel and guild ID.
                 for (int j = 0; j < users.Count; j++)
                 {
@@ -170,13 +175,17 @@ namespace ChronoBot.Utilities.SocialMedias
 
                 //Posts the updated social media.
                 if (Statics.Debug)
-                    await Statics.DebugSendMessageToChannelAsync(Client, message); 
+                    await Statics.DebugSendMessageToChannelAsync(Client, message);
                 else
                     await Client.GetGuild(guildId).GetTextChannel(channelId).SendMessageAsync(message);
+
+                return await Task.FromResult(string.Empty);
 
                 //UserData user = _users[i];
                 //LogToFile($"Updating {user.name} {user.id} {user.channelID} {user.guildID} {user.socialMedia}");
             }
+
+            return await Task.FromResult(string.Empty);
         }
 
         /// <summary>

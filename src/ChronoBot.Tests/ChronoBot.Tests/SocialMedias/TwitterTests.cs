@@ -69,6 +69,16 @@ namespace ChronoBot.Tests.SocialMedias
         }
 
         [Fact]
+        public void GetUpdatedTwitter_Test_Success()
+        {
+            var twitter = LoadTwitter(out _);
+
+            var result = twitter.GetUpdatedSocialMediaUsers(123456789).GetAwaiter().GetResult();
+
+            Assert.Equal("https://twitter.com/Tweeter/status/chirp\n\n", result);
+        }
+
+        [Fact]
         public void DeleteTwitter_Test_Success()
         {
             var twitter = CreateNewTwitter(out var fileSystem);
