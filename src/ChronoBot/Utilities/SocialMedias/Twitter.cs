@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
+using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading.Tasks;
 using ChronoBot.Common.Systems;
 using ChronoBot.Common.UserDatas;
@@ -16,13 +18,14 @@ namespace ChronoBot.Utilities.SocialMedias
     {
         private readonly TwitterService _service;
 
-        public Twitter(TwitterService service, DiscordSocketClient client, IConfiguration config, IEnumerable<SocialMediaUserData> users, SocialMediaFileSystem fileSystem) : 
-            base(client, config, users, fileSystem)
+        public Twitter(TwitterService service, DiscordSocketClient client, IConfiguration config,
+            IEnumerable<SocialMediaUserData> users, SocialMediaFileSystem fileSystem, int seconds = 60) :
+            base(client, config, users, fileSystem, seconds)
         {
             _service = service;
             Authenticate();
 
-            OnUpdateTimerAsync(60);
+            OnUpdateTimerAsync(seconds);
 
             Hyperlink = "https://twitter.com/@name/status/@id";
 
@@ -34,9 +37,12 @@ namespace ChronoBot.Utilities.SocialMedias
         protected override async Task PostUpdate()
         {
             ulong current = 0;
-            foreach (var data in Users.Where(data => data.GuildId != current))
+            for(int i = 0; i < Users.Count; i++)
             {
-                current = data.GuildId;
+                if(Users[i].GuildId == current)
+                    continue;
+                
+                current = Users[i].GuildId;
                 await GetUpdatedSocialMediaUsers(current);
             }
         }
@@ -50,24 +56,14 @@ namespace ChronoBot.Utilities.SocialMedias
                 Count = 100,
                 TweetMode = "extended"
             };
-            TwitterAsyncResult<IEnumerable<TwitterStatus>> tweets;
-            try
-            {
-                tweets = await _service.ListTweetsOnUserTimelineAsync(options);
-            }
-            catch
-            {
-                return null;
-            }
 
+            var tweets = await _service.ListTweetsOnUserTimelineAsync(options);
             TwitterStatus[] twitterStatuses;
             try
             {
                 twitterStatuses = tweets.Value as TwitterStatus[] ?? tweets.Value.ToArray();
                 if (!twitterStatuses.Any())
-                {
                     return null;
-                }
             }
             catch
             {
@@ -83,9 +79,7 @@ namespace ChronoBot.Utilities.SocialMedias
             }
 
             if (tweet.Id == 0 || tweet.IdStr == "" || tweet.IdStr == null)
-            {
                 return null;
-            }
             
             return await Task.FromResult(tweet);
         }
@@ -130,7 +124,7 @@ namespace ChronoBot.Utilities.SocialMedias
                     return await Task.FromResult(GetTwitterUrl(Users[i]));
                 }
 
-                return await Task.FromResult("Could not retrieve Tweet");
+                return await Task.FromResult("Could not retrieve Tweet.");
             }
 
             return await Task.FromResult("Could not find user.");
@@ -166,21 +160,21 @@ namespace ChronoBot.Utilities.SocialMedias
             for (int i = 0; i < Users.Count; i++)
             {
                 SocialMediaUserData user = Users[i];
-                if (user.SocialMedia != SocialMediaEnum.Twitter && user.GuildId == guildId)
+                if (user.SocialMedia != SocialMediaEnum.Twitter || user.GuildId != guildId)
                     continue;
 
-                var channel = Client.GetGuild(Users[i].GuildId).GetTextChannel(Users[i].ChannelId);
-                TwitterStatus tweet = await GetLatestTwitter(user, channel.IsNsfw);
+                var channel = Client.GetGuild(user.GuildId)?.GetTextChannel(user.ChannelId);
+                TwitterStatus tweet = await GetLatestTwitter(user, channel is { IsNsfw: true });
                 if (tweet == null || tweet.Id == -1)
                     continue;
 
-                if (!MessageDisplayed(tweet.IdStr, user.GuildId))
-                {
-                    user.Id = tweet.IdStr;
-                    Users[i] = user;
-                    newTweets.Add(user);
-                    FileSystem.UpdateFile(user);
-                }
+                if (MessageDisplayed(tweet.IdStr, user.GuildId)) 
+                    continue;
+
+                user.Id = tweet.IdStr;
+                Users[i] = user;
+                newTweets.Add(user);
+                FileSystem.UpdateFile(user);
             }
 
             if (newTweets.Count > 0)
@@ -216,9 +210,16 @@ namespace ChronoBot.Utilities.SocialMedias
                 Q = name,
                 Count = 1
             };
-            var tu = await _service.SearchForUserAsync(options);
-            var twitterUsers = tu.Value as TwitterUser[] ?? tu.Value.ToArray();
-            return await Task.FromResult(twitterUsers.Any() ? twitterUsers.ElementAt(0) : null);
+            try
+            {
+                var tu = await _service.SearchForUserAsync(options);
+                var twitterUsers = tu.Value as TwitterUser[] ?? tu.Value.ToArray();
+                return await Task.FromResult(twitterUsers.Any() ? twitterUsers.ElementAt(0) : null);
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         private void Authenticate()

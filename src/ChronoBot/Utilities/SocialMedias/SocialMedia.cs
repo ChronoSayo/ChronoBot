@@ -26,7 +26,8 @@ namespace ChronoBot.Utilities.SocialMedias
         protected string TypeOfSocialMedia;
         protected List<SocialMediaUserData> Users;
 
-        public SocialMedia(DiscordSocketClient client, IConfiguration config, IEnumerable<SocialMediaUserData> users, SocialMediaFileSystem fileSystem)
+        public SocialMedia(DiscordSocketClient client, IConfiguration config, IEnumerable<SocialMediaUserData> users,
+            SocialMediaFileSystem fileSystem, int seconds = 60)
         {
             Client = client;
             Config = config;
@@ -177,9 +178,18 @@ namespace ChronoBot.Utilities.SocialMedias
                 if (Statics.Debug)
                     await Statics.DebugSendMessageToChannelAsync(Client, message);
                 else
-                    await Client.GetGuild(guildId).GetTextChannel(channelId).SendMessageAsync(message);
+                {
+                    try
+                    {
+                        await Client.GetGuild(guildId).GetTextChannel(channelId).SendMessageAsync(message);
+                    }
+                    catch 
+                    {
+                        //Ignore
+                    }
+                }
 
-                return await Task.FromResult(string.Empty);
+                return await Task.FromResult(message);
 
                 //UserData user = _users[i];
                 //LogToFile($"Updating {user.name} {user.id} {user.channelID} {user.guildID} {user.socialMedia}");
