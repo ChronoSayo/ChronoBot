@@ -1,16 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Net.NetworkInformation;
-using System.Reflection;
-using System.Text;
+using System.Linq;
 using System.Threading.Tasks;
 using ChronoBot.Helpers;
-using ChronoBot.Modules.Tools;
 using ChronoBot.Utilities.SocialMedias;
 using Discord;
 using Discord.Commands;
-using Discord.Rest;
 using Discord.WebSocket;
 using Microsoft.Extensions.Logging;
 
@@ -31,27 +26,38 @@ namespace ChronoBot.Modules.SocialMedias
 
         public virtual async Task AddAsync(string user, ulong channel = 0)
         {
-            await Task.CompletedTask;
+            ulong guildId = Context.Guild.Id;
+            ulong channelId = Context.Channel.Id;
+            string result = await SocialMedia.AddSocialMediaUser(guildId, channelId, user, channel);
+            await SendMessage(result);
         }
 
         public virtual async Task DeleteAsync(string user)
         {
-            await Task.CompletedTask;
+            ulong guildId = Context.Guild.Id;
+            string result = SocialMedia.DeleteSocialMediaUser(guildId, user);
+            await SendMessage(result);
         }
 
         public virtual async Task GetAsync(string user)
         {
-            await Task.CompletedTask;
+            string result = await SocialMedia.GetSocialMediaUser(Context.Guild.Id, Context.Channel.Id, user);
+            await SendMessage(result);
         }
 
         public virtual async Task ListAsync()
         {
-            await Task.CompletedTask;
+            string result = await SocialMedia.ListSavedSocialMediaUsers(Context.Guild.Id, Context.Message.MentionedChannels.ElementAt(0).ToString());
+            var embed = new EmbedBuilder()
+                .WithDescription(result)
+                .Build();
+            await SendMessage(embed);
         }
 
         public virtual async Task UpdateAsync()
         {
-            await Task.CompletedTask;
+            string result = await SocialMedia.GetUpdatedSocialMediaUsers(Context.Guild.Id);
+            await SendMessage(result);
         }
 
         public virtual async Task HowToUseAsync()

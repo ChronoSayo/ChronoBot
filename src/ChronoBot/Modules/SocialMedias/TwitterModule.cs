@@ -1,7 +1,5 @@
-﻿using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using ChronoBot.Utilities.SocialMedias;
-using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using Microsoft.Extensions.Logging;
@@ -22,43 +20,31 @@ namespace ChronoBot.Modules.SocialMedias
         [Command(SocialMediaCommand + "add", RunMode = RunMode.Async)]
         public override async Task AddAsync(string user, ulong channel = 0)
         {
-            ulong guildId = Context.Guild.Id;
-            ulong channelId = Context.Channel.Id;
-            string result = await SocialMedia.AddSocialMediaUser(guildId, channelId, user, channel);
-            await SendMessage(result);
+            await base.AddAsync(user, channel);
         }
 
         [Command(SocialMediaCommand + "delete", RunMode = RunMode.Async), Alias(SocialMediaCommand + "del", SocialMediaCommand + "remove")]
         public override async Task DeleteAsync(string user)
         {
-            ulong guildId = Context.Guild.Id;
-            string result = SocialMedia.DeleteSocialMediaUser(guildId, user);
-            await SendMessage(result);
+            await base.DeleteAsync(user);
         }
 
         [Command(SocialMediaCommand + "get", RunMode = RunMode.Async), Alias(SocialMediaCommand)]
         public override async Task GetAsync(string user)
         {
-            string result = await SocialMedia.GetSocialMediaUser(Context.Guild.Id, Context.Channel.Id, user);
-            await SendMessage(result);
+            await base.GetAsync(user);
         }
 
         [Command(SocialMediaCommand + "list", RunMode = RunMode.Async), Alias(SocialMediaCommand + "all")]
         public override async Task ListAsync()
         {
-            string result = await SocialMedia.ListSavedSocialMediaUsers(Context.Guild.Id, Context.Message.MentionedChannels.ElementAt(0).ToString());
-            var embed = new EmbedBuilder()
-                .WithDescription(result)
-                .Build();
-            await SendMessage(embed);
+            await base.ListAsync();
         }
-
 
         [Command(SocialMediaCommand + "update", RunMode = RunMode.Async), Alias(SocialMediaCommand + "latest")]
         public override async Task UpdateAsync()
         {
-            string result = await SocialMedia.GetUpdatedSocialMediaUsers(Context.Guild.Id);
-            await SendMessage(result);
+            await base.UpdateAsync();
         }
 
         [Command(SocialMediaCommand + "?", RunMode = RunMode.Async), Alias(SocialMediaCommand + "howto", SocialMediaCommand)]

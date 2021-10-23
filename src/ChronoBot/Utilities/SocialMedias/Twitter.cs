@@ -32,19 +32,6 @@ namespace ChronoBot.Utilities.SocialMedias
             TypeOfSocialMedia = SocialMediaEnum.Twitter.ToString().ToLowerInvariant();
         }
 
-        protected override async Task PostUpdate()
-        {
-            ulong current = 0;
-            for(int i = 0; i < Users.Count; i++)
-            {
-                if(Users[i].GuildId == current)
-                    continue;
-                
-                current = Users[i].GuildId;
-                await GetUpdatedSocialMediaUsers(current);
-            }
-        }
-
         private async Task<TwitterStatus> GetLatestTwitter(SocialMediaUserData ud, bool isNsfw)
         {
             ListTweetsOnUserTimelineOptions options = new ListTweetsOnUserTimelineOptions()
@@ -108,51 +95,36 @@ namespace ChronoBot.Utilities.SocialMedias
             return await Task.FromResult("Already added " + legit.Item1);
         }
 
-        public override async Task<string> GetSocialMediaUser(ulong guildId, bool isNsfw, string user)
+        public override async Task<string> GetSocialMediaUser(ulong guildId, bool isNsfw, string username)
         {
-            int i = FindIndexByName(guildId, user);
-            if (i > -1)
-            {
-                TwitterStatus tweet = await GetLatestTwitter(Users[i], isNsfw);
-                if (tweet != null)
-                {
-                    SocialMediaUserData temp = Users[i];
-                    temp.Id = tweet.IdStr;
-                    Users[i] = temp;
-                    return await Task.FromResult(GetTwitterUrl(Users[i]));
-                }
+            int i = FindIndexByName(guildId, username);
+            if (i == -1) 
+                return await Task.FromResult("Could not find Twitter handle.");
 
-                return await Task.FromResult("Could not retrieve Tweet.");
+            TwitterStatus tweet = await GetLatestTwitter(Users[i], isNsfw);
+            if (tweet != null)
+            {
+                SocialMediaUserData temp = Users[i];
+                temp.Id = tweet.IdStr;
+                Users[i] = temp;
+                return await Task.FromResult(GetTwitterUrl(Users[i]));
             }
 
-            return await Task.FromResult("Could not find user.");
+            return await Task.FromResult("Could not retrieve Tweet.");
         }
 
         public override async Task<string> ListSavedSocialMediaUsers(ulong guildId, string channelMention = "")
         {
-            string line = string.Empty;
-            foreach (var user in Users)
-            {
-                bool addToList;
-                if (Statics.Debug)
-                    addToList = true;
-                else
-                    addToList = guildId == user.GuildId;
+            if (Users.Count == 0)
+                return await Task.FromResult("No Twitter handles registered.");
 
-                if (!addToList) 
-                    continue;
-                
-                string name = user.Name;
-                line += "■ " + name + " " + (channelMention ?? "***Missing channel info.***") + "\n";
-            }
-
-            return await Task.FromResult(line);
+            return await base.ListSavedSocialMediaUsers(guildId, channelMention);
         }
 
         public override async Task<string> GetUpdatedSocialMediaUsers(ulong guildId)
         {
             if (Users.Count == 0)
-                return await Task.FromResult("No user registered.");
+                return await Task.FromResult("No Twitter handles registered.");
 
             List<SocialMediaUserData> newTweets = new List<SocialMediaUserData>();
             for (int i = 0; i < Users.Count; i++)

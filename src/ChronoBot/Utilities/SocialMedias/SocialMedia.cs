@@ -76,12 +76,20 @@ namespace ChronoBot.Utilities.SocialMedias
 
         protected virtual async Task UpdateTimerElapsed()
         {
-            await PostUpdate();
+            await AutoUpdate();
         }
 
-        protected virtual async Task PostUpdate()
+        protected virtual async Task AutoUpdate()
         {
-            await Task.CompletedTask;
+            ulong current = 0;
+            for (int i = 0; i < Users.Count; i++)
+            {
+                if (Users[i].GuildId == current)
+                    continue;
+
+                current = Users[i].GuildId;
+                await GetUpdatedSocialMediaUsers(current);
+            }
         }
 
         public virtual async Task<string> AddSocialMediaUser(ulong guildId, ulong channelId, string username, ulong sendToChannelId = 0)
@@ -102,18 +110,34 @@ namespace ChronoBot.Utilities.SocialMedias
             return $"Failed to delete {user}";
         }
 
-        public virtual async Task<string> GetSocialMediaUser(ulong guildId, ulong channelId, string user)
+        public virtual async Task<string> GetSocialMediaUser(ulong guildId, ulong channelId, string username)
         {
             return await Task.FromResult(string.Empty);
         }
-        public virtual async Task<string> GetSocialMediaUser(ulong guildId, bool isNsfw, string user)
+        public virtual async Task<string> GetSocialMediaUser(ulong guildId, bool isNsfw, string username)
         {
             return await Task.FromResult(string.Empty);
         }
 
         public virtual async Task<string> ListSavedSocialMediaUsers(ulong guildId, string channelMention = "")
         {
-            return await Task.FromResult(string.Empty);
+            string line = string.Empty;
+            foreach (var user in Users)
+            {
+                bool addToList;
+                if (Statics.Debug)
+                    addToList = true;
+                else
+                    addToList = guildId == user.GuildId;
+
+                if (!addToList)
+                    continue;
+
+                string name = user.Name;
+                line += "■ " + name + " " + (channelMention ?? "***Missing channel info.***") + "\n";
+            }
+
+            return await Task.FromResult(line);
         }
 
         public virtual async Task<string> GetUpdatedSocialMediaUsers(ulong guildId)
