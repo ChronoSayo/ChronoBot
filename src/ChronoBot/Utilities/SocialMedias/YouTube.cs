@@ -14,7 +14,7 @@ using Microsoft.Extensions.Configuration;
 
 namespace ChronoBot.Utilities.SocialMedias
 {
-    sealed class YouTube : SocialMedia
+    public sealed class YouTube : SocialMedia
     {
         private readonly YouTubeService _service;
         private readonly string _channelLink;
@@ -26,7 +26,7 @@ namespace ChronoBot.Utilities.SocialMedias
             _service = service;
             if (string.IsNullOrEmpty(_service.ApiKey))
                 _service = new YouTubeService(new BaseClientService.Initializer
-                    { ApiKey = Statics.YouTubeApiKey, ApplicationName = "ChronoBot" });
+                    { ApiKey = Config[Statics.YouTubeApiKey], ApplicationName = "ChronoBot" });
 
             Hyperlink = "https://www.youtube.com/watch?v=";
 
@@ -38,50 +38,28 @@ namespace ChronoBot.Utilities.SocialMedias
 
             TypeOfSocialMedia = SocialMediaEnum.YouTube.ToString().ToLowerInvariant();
         } 
-        
-        private List<string> GetVideoId(string username)
+
+        private async Task<List<string>> SearchForYouTuber(string user)
         {
             List<string> channelInfo = new List<string>();
-            try
+
+            var searchListRequest = _service.Search.List("snippet");
+            searchListRequest.Q = user;
+            searchListRequest.MaxResults = 5;
+
+            var searchListResponse = await searchListRequest.ExecuteAsync(); 
+            foreach (var searchResult in searchListResponse.Items)
             {
-                channelInfo = SearchForYouTuber(username, false);
-            }
-            catch
-            {
-                try
+                switch (searchResult.Id.Kind)
                 {
-                    channelInfo = SearchForYouTuber(username, true);
-                }
-                catch
-                {
-                    // ignored
+                    case "youtube#channel":
+                        channelInfo.Add(searchResult.Snippet.Title);
+                        channelInfo.Add(searchResult.Id.ChannelId);
+                        break;
                 }
             }
 
-            return channelInfo;
-        }
-
-        private List<string> SearchForYouTuber(string user, bool checkId)
-        {
-            List<string> channelInfo = new List<string>();
-            ChannelsResource.ListRequest channelListReq = _service.Channels.List("contentDetails");
-            if (checkId)
-                channelListReq.Id = user;
-            else
-                channelListReq.ForUsername = user;
-
-            ChannelListResponse channelResponse = channelListReq.Execute();
-            string channelID = channelResponse.Items.ElementAt(0).ContentDetails.RelatedPlaylists.Uploads;
-
-            PlaylistItemsResource.ListRequest playlistReq = _service.PlaylistItems.List("snippet");
-            playlistReq.PlaylistId = channelID;
-
-            PlaylistItemListResponse listRespond = playlistReq.Execute();
-            channelInfo.Add(listRespond.Items.ElementAt(0).Snippet.ResourceId.VideoId);
-            channelInfo.Add(listRespond.Items.ElementAt(0).Snippet.ChannelId);
-            channelInfo.Add(listRespond.Items.ElementAt(0).Snippet.ChannelTitle);
-
-            return channelInfo;
+            return await Task.FromResult(channelInfo);
         }
 
         public override async Task<string> AddSocialMediaUser(ulong guildId, ulong channelId, string username, ulong sendToChannelId = 0)
@@ -89,19 +67,19 @@ namespace ChronoBot.Utilities.SocialMedias
             if (Duplicate(guildId, username, SocialMediaEnum.YouTube))
                 return await Task.FromResult($"Already added {username}");
 
-            List<string> ytChannelInfo = GetVideoId(username); //0: Video ID. 1: Channel ID. 2: Username.
-            if (ytChannelInfo.Count > 0)
-            {
-                if (sendToChannelId == 0)
-                    sendToChannelId = Statics.Debug ? Statics.DebugChannelId : channelId;
+            var ytChannelInfo = await SearchForYouTuber(username);
+            if (ytChannelInfo.Count <= 0) 
+                return await Task.FromResult("Can't find " + username);
 
-                if (!CreateSocialMediaUser(username, guildId, sendToChannelId, "0", SocialMediaEnum.Twitter))
-                    return await Task.FromResult($"Failed to add {username}.");
+            string name = ytChannelInfo[0];
+            if (sendToChannelId == 0)
+                sendToChannelId = Statics.Debug ? Statics.DebugChannelId : channelId;
 
-                return await Task.FromResult($"Successfully added {ytChannelInfo[2]} \n{_channelLink + username}");
-            }
+            if (!CreateSocialMediaUser(username, guildId, sendToChannelId, "0", SocialMediaEnum.Twitter))
+                return await Task.FromResult($"Failed to add {name}.");
 
-            return await Task.FromResult("Can't find " + username);
+            return await Task.FromResult($"Successfully added {name} \n{_channelLink + name}");
+
         }
 
         public override async Task<string> GetSocialMediaUser(ulong guildId, ulong channelId, string username)
@@ -110,7 +88,7 @@ namespace ChronoBot.Utilities.SocialMedias
             if (i == -1)
                 return await Task.FromResult("Could not find YouTuber.");
 
-            List<string> ytChannelInfo = GetVideoId(username);
+            List<string> ytChannelInfo = await SearchForYouTuber(username);
             if (ytChannelInfo.Count > 0)
                 return await Task.FromResult(GetYouTuber(Users[i]));
 
@@ -138,7 +116,7 @@ namespace ChronoBot.Utilities.SocialMedias
                 if (user.SocialMedia != SocialMediaEnum.YouTube || user.GuildId != guildId)
                     continue;
 
-                List<string> channelInfo = GetVideoId(user.Name);
+                List<string> channelInfo = await SearchForYouTuber(user.Name);
                 if (channelInfo.Count == 0)
                     continue;
                 if (channelInfo[0] == user.Id)
