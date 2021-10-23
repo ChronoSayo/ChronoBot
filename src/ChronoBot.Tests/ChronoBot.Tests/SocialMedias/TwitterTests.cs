@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Threading;
+using System.Threading.Tasks;
 using ChronoBot.Common.Systems;
 using ChronoBot.Common.UserDatas;
 using ChronoBot.Helpers;
@@ -9,6 +10,7 @@ using ChronoBot.Utilities.SocialMedias;
 using Discord.WebSocket;
 using Microsoft.Extensions.Configuration;
 using Moq;
+using TweetSharp;
 using Xunit;
 
 namespace ChronoBot.Tests.SocialMedias
@@ -82,7 +84,7 @@ namespace ChronoBot.Tests.SocialMedias
         }
 
         [Fact]
-        public void PostUpdate_Test_Success()
+        public void AutoUpdate_Test_Success()
         {
             var twitter = CreateNewTwitter(out var fileSystem, "Post Update", 2);
 

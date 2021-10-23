@@ -1,12 +1,15 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading;
+using System.Threading.Tasks;
 using ChronoBot.Common.Systems;
 using ChronoBot.Common.UserDatas;
 using ChronoBot.Helpers;
 using ChronoBot.Tests.Fakes;
 using ChronoBot.Utilities.SocialMedias;
 using Discord.WebSocket;
+using Google.Apis.YouTube.v3.Data;
 using Microsoft.Extensions.Configuration;
 using Moq;
 using Xunit;
@@ -36,32 +39,32 @@ namespace ChronoBot.Tests.SocialMedias
         [Fact]
         public void AddYouTube_Test_Success()
         {
-            var twitter = CreateNewTwitter(out var fileSystem);
+            var twitter = CreateNewYouTube(out var fileSystem);
 
-            twitter.AddSocialMediaUser(1, 4, "Tweeter").GetAwaiter().GetResult();
+            twitter.AddSocialMediaUser(1, 4, "YouTuber").GetAwaiter().GetResult();
             var users = (List<SocialMediaUserData>)fileSystem.Load();
-            var user = users.Find(x => x.Name == "Tweeter");
+            var user = users.Find(x => x.Name == "YouTuber");
 
             Assert.NotNull(user);
-            Assert.Equal("Tweeter", user.Name);
+            Assert.Equal("YouTuber", user.Name);
 
             File.Delete(Path.Combine(fileSystem.PathToSaveFile, "1.xml"));
         }
 
         [Fact]
-        public void AddTwitter_Test_Duplicate_Fail()
+        public void AddYouTube_Test_Duplicate_Fail()
         {
-            var twitter = LoadTwitter(out _);
+            var twitter = LoadYouTube(out _);
 
-            string result = twitter.AddSocialMediaUser(123456789, 4, "Tweeter").GetAwaiter().GetResult();
+            string result = twitter.AddSocialMediaUser(123456789, 4, "YouTube").GetAwaiter().GetResult();
 
-            Assert.Equal("Already added Tweeter", result);
+            Assert.Equal("Already added YouTube", result);
         }
 
         [Fact]
-        public void AddTwitter_Test_NotFound_Fail()
+        public void AddYouTube_Test_NotFound_Fail()
         {
-            var twitter = LoadTwitter(out _);
+            var twitter = LoadYouTube(out _);
 
             string result = twitter.AddSocialMediaUser(123456789, 4, "NotFound").GetAwaiter().GetResult();
 
@@ -69,9 +72,9 @@ namespace ChronoBot.Tests.SocialMedias
         }
 
         [Fact]
-        public void GetTwitter_Test_Success()
+        public void GetYouTube_Test_Success()
         {
-            var twitter = LoadTwitter(out _);
+            var twitter = LoadYouTube(out _);
 
             var result = twitter.GetSocialMediaUser(123456789, false, "Tweeter").GetAwaiter().GetResult();
 
@@ -79,9 +82,9 @@ namespace ChronoBot.Tests.SocialMedias
         }
 
         [Fact]
-        public void PostUpdate_Test_Success()
+        public void AutoUpdate_Test_Success()
         {
-            var twitter = CreateNewTwitter(out var fileSystem, "Post Update", 2);
+            var twitter = CreateNewYouTube(out var fileSystem, "Post Update", 2);
 
             twitter.AddSocialMediaUser(123456789, 5, "PostUpdate").GetAwaiter().GetResult();
             twitter.AddSocialMediaUser(123456789, 5, "PostUpdate2").GetAwaiter().GetResult();
@@ -102,9 +105,9 @@ namespace ChronoBot.Tests.SocialMedias
         }
 
         [Fact]
-        public void GetTwitter_Test_NotNsfw_Success()
+        public void GetYouTube_Test_NotNsfw_Success()
         {
-            var twitter = CreateNewTwitter(out var fileSystem);
+            var twitter = CreateNewYouTube(out var fileSystem);
 
             twitter.AddSocialMediaUser(123456789, 5, "NotNsfw").GetAwaiter().GetResult();
             var result = twitter.GetSocialMediaUser(123456789, true, "NotNsfw").GetAwaiter().GetResult();
@@ -115,9 +118,9 @@ namespace ChronoBot.Tests.SocialMedias
         }
 
         [Fact]
-        public void GetTwitter_Test_NoId_Fail()
+        public void GetYouTube_Test_NoId_Fail()
         {
-            var twitter = CreateNewTwitter(out var fileSystem);
+            var twitter = CreateNewYouTube(out var fileSystem);
 
             twitter.AddSocialMediaUser(123456789, 5, "NoId").GetAwaiter().GetResult();
             var result = twitter.GetSocialMediaUser(123456789, true, "NoId").GetAwaiter().GetResult();
@@ -128,9 +131,9 @@ namespace ChronoBot.Tests.SocialMedias
         }
 
         [Fact]
-        public void GetTwitter_Test_NotFindUser_Fail()
+        public void GetYouTube_Test_NotFindUser_Fail()
         {
-            var twitter = LoadTwitter(out _);
+            var twitter = LoadYouTube(out _);
 
             var result = twitter.GetSocialMediaUser(123456789, false, "Fail").GetAwaiter().GetResult();
 
@@ -138,9 +141,9 @@ namespace ChronoBot.Tests.SocialMedias
         }
 
         [Fact]
-        public void GetTwitter_Test_CouldNotRetrieve_Fail()
+        public void GetYouTube_Test_CouldNotRetrieve_Fail()
         {
-            var twitter = CreateNewTwitter(out var fileSystem);
+            var twitter = CreateNewYouTube(out var fileSystem);
 
             twitter.AddSocialMediaUser(123456789, 5, "Fail").GetAwaiter().GetResult();
             var result = twitter.GetSocialMediaUser(123456789, false, "Fail").GetAwaiter().GetResult();
@@ -151,9 +154,9 @@ namespace ChronoBot.Tests.SocialMedias
         }
 
         [Fact]
-        public void GetUpdatedTwitter_Test_Success()
+        public void GetUpdatedYouTube_Test_Success()
         {
-            var twitter = CreateNewTwitter(out var fileSystem);
+            var twitter = CreateNewYouTube(out var fileSystem);
 
             twitter.AddSocialMediaUser(123456789, 6, "Updated", 9).GetAwaiter().GetResult();
             var result = twitter.GetUpdatedSocialMediaUsers(123456789).GetAwaiter().GetResult();
@@ -164,9 +167,9 @@ namespace ChronoBot.Tests.SocialMedias
         }
 
         [Fact]
-        public void GetUpdatedTwitter_Test_MultipleUsers_Success()
+        public void GetUpdatedYouTube_Test_MultipleUsers_Success()
         {
-            var twitter = CreateNewTwitter(out var fileSystem);
+            var twitter = CreateNewYouTube(out var fileSystem);
 
             twitter.AddSocialMediaUser(123456789, 8, "Fail").GetAwaiter().GetResult();
             var result = twitter.GetUpdatedSocialMediaUsers(123456789).GetAwaiter().GetResult();
@@ -177,9 +180,9 @@ namespace ChronoBot.Tests.SocialMedias
         }
 
         [Fact]
-        public void GetUpdatedTwitter_Test_NoUpdate_Fail()
+        public void GetUpdatedYouTube_Test_NoUpdate_Fail()
         {
-            var twitter = LoadTwitter(out _);
+            var twitter = LoadYouTube(out _);
 
             var result = twitter.GetUpdatedSocialMediaUsers(123456789).GetAwaiter().GetResult();
 
@@ -187,9 +190,9 @@ namespace ChronoBot.Tests.SocialMedias
         }
 
         [Fact]
-        public void GetUpdatedTwitter_Test_MessageDisplayed_Fail()
+        public void GetUpdatedYouTube_Test_MessageDisplayed_Fail()
         {
-            var twitter = CreateNewTwitter(out var fileSystem);
+            var twitter = CreateNewYouTube(out var fileSystem);
 
             twitter.AddSocialMediaUser(123456789, 6, "Tweeter", 9).GetAwaiter().GetResult();
             twitter.GetUpdatedSocialMediaUsers(123456789).GetAwaiter().GetResult();
@@ -201,9 +204,9 @@ namespace ChronoBot.Tests.SocialMedias
         }
 
         [Fact]
-        public void GetUpdatedTwitter_Test_NoUsers_Fail()
+        public void GetUpdatedYouTube_Test_NoUsers_Fail()
         {
-            var twitter = CreateNewTwitter(out var fileSystem, "Empty");
+            var twitter = CreateNewYouTube(out var fileSystem, "Empty");
 
             var result = twitter.GetUpdatedSocialMediaUsers(123456789).GetAwaiter().GetResult();
 
@@ -213,9 +216,9 @@ namespace ChronoBot.Tests.SocialMedias
         }
 
         [Fact]
-        public void GetUpdatedTwitter_Test_NoStatus_Fail()
+        public void GetUpdatedYouTube_Test_NoStatus_Fail()
         {
-            var twitter = CreateNewTwitter(out var fileSystem, "Empty");
+            var twitter = CreateNewYouTube(out var fileSystem, "Empty");
 
             twitter.AddSocialMediaUser(123456789, 12, "NoStatus").GetAwaiter().GetResult();
             var result = twitter.GetUpdatedSocialMediaUsers(123456789).GetAwaiter().GetResult();
@@ -226,9 +229,9 @@ namespace ChronoBot.Tests.SocialMedias
         }
 
         [Fact]
-        public void GetUpdatedTwitter_Test_EmptyStatus_Fail()
+        public void GetUpdatedYouTube_Test_EmptyStatus_Fail()
         {
-            var twitter = CreateNewTwitter(out var fileSystem, "Empty");
+            var twitter = CreateNewYouTube(out var fileSystem, "Empty");
 
             twitter.AddSocialMediaUser(123456789, 12, "EmptyStatus").GetAwaiter().GetResult();
             var result = twitter.GetUpdatedSocialMediaUsers(123456789).GetAwaiter().GetResult();
@@ -241,7 +244,7 @@ namespace ChronoBot.Tests.SocialMedias
         [Fact]
         public void ListSocialMedias_Test_Success()
         {
-            var twitter = CreateNewTwitter(out var fileSystem, "List");
+            var twitter = CreateNewYouTube(out var fileSystem, "List");
 
             twitter.AddSocialMediaUser(123456789, 6, "Tweeter").GetAwaiter().GetResult();
             twitter.AddSocialMediaUser(123456789, 5, "NewTweeter").GetAwaiter().GetResult();
@@ -255,9 +258,9 @@ namespace ChronoBot.Tests.SocialMedias
         }
 
         [Fact]
-        public void DeleteTwitter_Test_Success()
+        public void DeleteYouTube_Test_Success()
         {
-            var twitter = CreateNewTwitter(out var fileSystem, "Delete");
+            var twitter = CreateNewYouTube(out var fileSystem, "Delete");
 
             twitter.AddSocialMediaUser(1, 4, "DeleteTweeter").GetAwaiter().GetResult();
             var users = (List<SocialMediaUserData>)fileSystem.Load();
@@ -274,7 +277,7 @@ namespace ChronoBot.Tests.SocialMedias
             File.Delete(Path.Combine(fileSystem.PathToSaveFile, "1.xml"));
         }
 
-        private YouTube CreateNewTwitter(out SocialMediaFileSystem fileSystem, string folderName = "New", int seconds = 60)
+        private YouTube CreateNewYouTube(out SocialMediaFileSystem fileSystem, string folderName = "New", int seconds = 60)
         {
             string path = Path.Combine(Directory.GetCurrentDirectory(), "Test Files", GetType().Name, folderName);
             if (Directory.Exists(path))
@@ -284,7 +287,7 @@ namespace ChronoBot.Tests.SocialMedias
             return new YouTube(_fakeYouTube, _mockClient.Object, _config.Object, new List<SocialMediaUserData>(), fileSystem, seconds);
         }
 
-        private YouTube LoadTwitter(out SocialMediaFileSystem fileSystem)
+        private YouTube LoadYouTube(out SocialMediaFileSystem fileSystem)
         {
             fileSystem = new SocialMediaFileSystem(Path.Combine(Directory.GetCurrentDirectory(), "Test Files", GetType().Name, "Load"));
 

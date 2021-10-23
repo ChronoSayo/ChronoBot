@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using ChronoBot.Common.Systems;
 using ChronoBot.Common.UserDatas;
@@ -43,6 +44,9 @@ namespace ChronoBot.Utilities.SocialMedias
             };
 
             var tweets = await _service.ListTweetsOnUserTimelineAsync(options);
+            if (tweets.Response.StatusCode != HttpStatusCode.OK)
+                return null;
+
             TwitterStatus[] twitterStatuses;
             try
             {
