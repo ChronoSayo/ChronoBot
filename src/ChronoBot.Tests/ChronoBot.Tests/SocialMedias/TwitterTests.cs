@@ -1,17 +1,13 @@
 ﻿using System.Collections.Generic;
 using System.IO;
-using System.IO.Compression;
-using System.Linq;
 using System.Threading;
 using ChronoBot.Common.Systems;
 using ChronoBot.Common.UserDatas;
 using ChronoBot.Helpers;
 using ChronoBot.Tests.Fakes;
 using ChronoBot.Utilities.SocialMedias;
-using Discord.Commands;
 using Discord.WebSocket;
 using Microsoft.Extensions.Configuration;
-using Microsoft.VisualStudio.TestPlatform.PlatformAbstractions;
 using Moq;
 using Xunit;
 
@@ -22,7 +18,6 @@ namespace ChronoBot.Tests.SocialMedias
         private readonly FakeTwitterService _fakeTwitter;
         private readonly Mock<DiscordSocketClient> _mockClient;
         private readonly Mock<IConfiguration> _config;
-        private string _path;
 
         public TwitterTests()
         {

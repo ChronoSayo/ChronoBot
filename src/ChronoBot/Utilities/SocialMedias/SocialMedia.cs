@@ -194,15 +194,6 @@ namespace ChronoBot.Utilities.SocialMedias
             return await Task.FromResult(string.Empty);
         }
 
-        /// <summary>
-        /// Implement social media specific functions here.
-        /// </summary>
-        /// <param name="socketMessage"></param>
-        protected virtual void OtherCommands(SocketMessage socketMessage)
-        {
-
-        }
-
         private bool UsedId(List<ulong> idList, ulong id)
         {
             bool used = false;
@@ -241,30 +232,6 @@ namespace ChronoBot.Utilities.SocialMedias
             return message + "\n\n";
         }
 
-        private string FormatMarkup(string name)
-        {
-            string formatName = name;
-            int count = 0;
-            int index = -1;
-            for(int i = 0; i < formatName.Length; i++)
-            {
-                if (formatName[i] == '_')
-                    count++;
-                else
-                    count = 0;
-                if (count == 2)
-                {
-                    index = i;
-                    break;
-                }
-            }
-
-            if(count == 2)
-                formatName = formatName.Insert(index, "\\");
-
-            return formatName;
-        }
-
         protected virtual bool Duplicate(ulong guildId, string name, SocialMediaEnum socialMedia)
         {
             bool duplicate = false;
@@ -285,21 +252,9 @@ namespace ChronoBot.Utilities.SocialMedias
             return duplicate;
         }
 
-        protected virtual int FindIndexByName(ulong guildID, string name)
+        protected virtual int FindIndexByName(ulong guildId, string name)
         {
-            int index = -1;
-
-            for (int i = 0; i < Users.Count; i++)
-            {
-                if (Users[i].GuildId != guildID ||
-                    !string.Equals(Users[i].Name, name, StringComparison.CurrentCultureIgnoreCase)) 
-                    continue;
-
-                index = i;
-                break;
-            }
-
-            return index;
+            return Users.FindIndex(x => x.GuildId == guildId && x.Name == name);
         }
 
         //protected virtual void LogToFile(LogSeverity severity, string message, Exception e = null, [CallerMemberName] string caller = null)
@@ -307,11 +262,5 @@ namespace ChronoBot.Utilities.SocialMedias
         //    StackTrace st = new StackTrace();
         //    Program.Logger(new LogMessage(severity, st.GetFrame(1).GetMethod().ReflectedType + "." + caller, message, e));
         //}
-
-        public virtual void MessageReceivedSelf(SocketMessage socketMessage)
-        {
-
-        }
-
     }
 }
