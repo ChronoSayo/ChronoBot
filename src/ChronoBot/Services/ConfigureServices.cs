@@ -2,6 +2,7 @@
 using ChronoBot.Utilities.Games;
 using ChronoBot.Utilities.SocialMedias;
 using ChronoBot.Utilities.Tools;
+using Google.Apis.YouTube.v3;
 using Microsoft.Extensions.DependencyInjection;
 using TweetSharp;
 
@@ -29,14 +30,16 @@ namespace ChronoBot.Services
                 .AddSingleton<SocialMedia>()
                 .AddSingleton<SocialMediaFileSystem>()
                 .AddSingleton<TwitterService>()
-                .AddSingleton<Twitter>();
+                .AddSingleton<Twitter>()
+                .AddSingleton<YouTubeService>()
+                .AddSingleton<SocialMedia>();
         }
 
         private static IServiceCollection AddGamesServiceCollection(this IServiceCollection services)
         {
             return services
-                .AddSingleton<RockPaperScissors>()
-                .AddSingleton<RpsFileSystem>();
+                .AddSingleton<RpsFileSystem>()
+                .AddSingleton<RockPaperScissors>();
         }
     }
 }

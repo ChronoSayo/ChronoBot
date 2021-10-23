@@ -23,6 +23,8 @@ namespace ChronoBot.Helpers
         public static string TwitterToken => "Tokens:Twitter:Token";
         public static string TwitterSecret => "Tokens:Twitter:Secret";
 
+        public static string YouTubeApiKey => "Tokens:YouTube";
+
         public static string RpsWinImage => "Images:Rps:Win";
         public static string RpsLoseImage => "Images:Rps:Lose";
         public static string RpsDrawImage => "Images:Rps:Draw";
