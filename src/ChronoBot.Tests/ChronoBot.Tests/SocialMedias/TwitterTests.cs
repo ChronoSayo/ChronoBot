@@ -249,11 +249,17 @@ namespace ChronoBot.Tests.SocialMedias
         [Fact]
         public void ListSocialMedias_Test_Success()
         {
-            var twitter = LoadTwitter(out _);
-            
+            var twitter = CreateNewTwitter(out var fileSystem, "List");
+
+            twitter.AddSocialMediaUser(123456789, 6, "Tweeter").GetAwaiter().GetResult();
+            twitter.AddSocialMediaUser(123456789, 5, "NewTweeter").GetAwaiter().GetResult();
+            twitter.AddSocialMediaUser(987654321, 5, "NewGuildTweeter").GetAwaiter().GetResult();
             var result = twitter.ListSavedSocialMediaUsers(123456789).GetAwaiter().GetResult();
 
-            Assert.Equal("No updates since last time.", result);
+            Assert.Equal("■ Tweeter \n■ NewTweeter \n", result);
+            
+            File.Delete(Path.Combine(fileSystem.PathToSaveFile, "123456789.xml"));
+            File.Delete(Path.Combine(fileSystem.PathToSaveFile, "987654321.xml"));
         }
 
         [Fact]
@@ -282,7 +288,7 @@ namespace ChronoBot.Tests.SocialMedias
             if(Directory.Exists(path))
                 Directory.Delete(path, true);
             fileSystem = new SocialMediaFileSystem(path);
-
+            
             return new Twitter(_fakeTwitter, _mockClient.Object, _config.Object, new List<SocialMediaUserData>(), fileSystem, seconds);
         }
 

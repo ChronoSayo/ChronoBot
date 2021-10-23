@@ -1,18 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Timers;
 using ChronoBot.Common.Systems;
 using ChronoBot.Common.UserDatas;
 using ChronoBot.Enums;
 using ChronoBot.Helpers;
-using Discord;
-using Discord.Commands;
 using Discord.WebSocket;
 using Microsoft.Extensions.Configuration;
-using TweetSharp;
 
 namespace ChronoBot.Utilities.SocialMedias
 {
@@ -296,7 +292,7 @@ namespace ChronoBot.Utilities.SocialMedias
             for (int i = 0; i < Users.Count; i++)
             {
                 if (Users[i].GuildId != guildID ||
-                    !String.Equals(Users[i].Name, name, StringComparison.CurrentCultureIgnoreCase)) 
+                    !string.Equals(Users[i].Name, name, StringComparison.CurrentCultureIgnoreCase)) 
                     continue;
 
                 index = i;

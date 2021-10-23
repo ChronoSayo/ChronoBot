@@ -47,13 +47,18 @@ namespace ChronoBot.Modules.SocialMedias
         public override async Task ListAsync()
         {
             string result = await SocialMedia.ListSavedSocialMediaUsers(Context.Guild.Id, Context.Message.MentionedChannels.ElementAt(0).ToString());
-            await SendMessage(result);
+            var embed = new EmbedBuilder()
+                .WithDescription(result)
+                .Build();
+            await SendMessage(embed);
         }
 
 
         [Command(SocialMediaCommand + "update", RunMode = RunMode.Async), Alias(SocialMediaCommand + "latest")]
         public override async Task UpdateAsync()
         {
+            string result = await SocialMedia.GetUpdatedSocialMediaUsers(Context.Guild.Id);
+            await SendMessage(result);
         }
 
         [Command(SocialMediaCommand + "?", RunMode = RunMode.Async), Alias(SocialMediaCommand + "howto", SocialMediaCommand)]
