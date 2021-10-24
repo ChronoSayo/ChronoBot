@@ -84,7 +84,7 @@ namespace ChronoBot.Utilities.SocialMedias
 
         public override async Task<string> GetSocialMediaUser(ulong guildId, ulong channelId, string username)
         {
-            int i = FindIndexByName(guildId, username);
+            int i = FindIndexByName(guildId, username, SocialMediaEnum.YouTube);
             if (i == -1)
                 return await Task.FromResult("Could not find YouTuber.");
 
@@ -96,12 +96,12 @@ namespace ChronoBot.Utilities.SocialMedias
             return await Task.FromResult("Could not retrieve YouTube channel.");
         }
 
-        public override async Task<string> ListSavedSocialMediaUsers(ulong guildId, string channelMention = "")
+        public override async Task<string> ListSavedSocialMediaUsers(ulong guildId, SocialMediaEnum socialMedia, string channelMention = "")
         {
             if (Users.Count == 0)
                 return await Task.FromResult("No YouTubers registered.");
 
-            return await base.ListSavedSocialMediaUsers(guildId, channelMention);
+            return await base.ListSavedSocialMediaUsers(guildId, SocialMediaEnum.YouTube, channelMention);
         }
 
         public override async Task<string> GetUpdatedSocialMediaUsers(ulong guildId)

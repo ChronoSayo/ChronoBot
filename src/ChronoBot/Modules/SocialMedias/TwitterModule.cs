@@ -1,4 +1,5 @@
 ﻿using System.Threading.Tasks;
+using ChronoBot.Enums;
 using ChronoBot.Utilities.SocialMedias;
 using Discord.Commands;
 using Discord.WebSocket;
@@ -15,6 +16,7 @@ namespace ChronoBot.Modules.SocialMedias
         {
             _logger = logger;
             SocialMedia = socialMedia;
+            SocialMediaType = SocialMediaEnum.Twitter;
         }
 
         [Command(SocialMediaCommand + "add", RunMode = RunMode.Async)]

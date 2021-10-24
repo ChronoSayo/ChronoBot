@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using ChronoBot.Enums;
 using ChronoBot.Helpers;
 using ChronoBot.Utilities.SocialMedias;
 using Discord;
@@ -16,6 +17,7 @@ namespace ChronoBot.Modules.SocialMedias
         protected readonly DiscordSocketClient Client;
         private readonly ILogger<SocialMediaModule> _logger;
         protected SocialMedia SocialMedia;
+        protected SocialMediaEnum SocialMediaType;
 
         public SocialMediaModule(DiscordSocketClient client, ILogger<SocialMediaModule> logger, SocialMedia socialMedia)
         {
@@ -35,7 +37,7 @@ namespace ChronoBot.Modules.SocialMedias
         public virtual async Task DeleteAsync(string user)
         {
             ulong guildId = Context.Guild.Id;
-            string result = SocialMedia.DeleteSocialMediaUser(guildId, user);
+            string result = SocialMedia.DeleteSocialMediaUser(guildId, user, SocialMediaType);
             await SendMessage(result);
         }
 
@@ -47,7 +49,7 @@ namespace ChronoBot.Modules.SocialMedias
 
         public virtual async Task ListAsync()
         {
-            string result = await SocialMedia.ListSavedSocialMediaUsers(Context.Guild.Id, Context.Message.MentionedChannels.ElementAt(0).ToString());
+            string result = await SocialMedia.ListSavedSocialMediaUsers(Context.Guild.Id, SocialMediaType, Context.Message.MentionedChannels.ElementAt(0).ToString());
             var embed = new EmbedBuilder()
                 .WithDescription(result)
                 .Build();

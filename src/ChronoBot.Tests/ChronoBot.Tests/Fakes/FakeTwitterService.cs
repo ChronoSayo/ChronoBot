@@ -8,6 +8,8 @@ namespace ChronoBot.Tests.Fakes
 {
     public class FakeTwitterService : TwitterService
     {
+        public override TwitterResponse Response => base.Response;
+
         public override async Task<TwitterAsyncResult<IEnumerable<TwitterStatus>>> ListTweetsOnUserTimelineAsync(ListTweetsOnUserTimelineOptions options)
         {
             if (options.ScreenName == "Fail")
