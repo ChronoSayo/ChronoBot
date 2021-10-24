@@ -1,7 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Service>
   <YouTube>
-    <User Name="YouTuber" ChannelID="1" ID="wecylinder" />
+    <User Name="YouTuber1" ChannelID="1" ID="wecylinder" />
+    <User Name="YouTuber2" ChannelID="2" ID="123" />
+    <User Name="YouTuber3" ChannelID="3" ID="456" />
   </YouTube>
   <Twitch>
     <User Name="Streamer" ChannelID="2" ID="spasm" />

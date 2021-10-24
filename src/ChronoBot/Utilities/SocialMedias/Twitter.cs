@@ -101,7 +101,7 @@ namespace ChronoBot.Utilities.SocialMedias
 
         public override async Task<string> GetSocialMediaUser(ulong guildId, bool isNsfw, string username)
         {
-            int i = FindIndexByName(guildId, username);
+            int i = FindIndexByName(guildId, username, SocialMediaEnum.Twitter);
             if (i == -1) 
                 return await Task.FromResult("Could not find Twitter handle.");
 
@@ -117,12 +117,12 @@ namespace ChronoBot.Utilities.SocialMedias
             return await Task.FromResult("Could not retrieve Tweet.");
         }
 
-        public override async Task<string> ListSavedSocialMediaUsers(ulong guildId, string channelMention = "")
+        public override async Task<string> ListSavedSocialMediaUsers(ulong guildId, SocialMediaEnum socialMedia, string channelMention = "")
         {
             if (Users.Count == 0)
                 return await Task.FromResult("No Twitter handles registered.");
 
-            return await base.ListSavedSocialMediaUsers(guildId, channelMention);
+            return await base.ListSavedSocialMediaUsers(guildId, SocialMediaEnum.Twitter, channelMention);
         }
 
         public override async Task<string> GetUpdatedSocialMediaUsers(ulong guildId)

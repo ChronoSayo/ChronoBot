@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using ChronoBot.Common.Systems;
 using ChronoBot.Common.UserDatas;
+using ChronoBot.Enums;
 using ChronoBot.Helpers;
 using ChronoBot.Tests.Fakes;
 using ChronoBot.Utilities.SocialMedias;
@@ -58,7 +59,7 @@ namespace ChronoBot.Tests.SocialMedias
         {
             var twitter = LoadTwitter(out _);
 
-            string result = twitter.AddSocialMediaUser(123456789, 4, "Tweeter").GetAwaiter().GetResult();
+            string result = twitter.AddSocialMediaUser(123456789, 4, "Tweeter1").GetAwaiter().GetResult();
 
             Assert.Equal("Already added Tweeter", result);
         }
@@ -78,9 +79,9 @@ namespace ChronoBot.Tests.SocialMedias
         {
             var twitter = LoadTwitter(out _);
 
-            var result = twitter.GetSocialMediaUser(123456789, false, "Tweeter").GetAwaiter().GetResult();
+            var result = twitter.GetSocialMediaUser(123456789, false, "Tweeter1").GetAwaiter().GetResult();
 
-            Assert.Equal("https://twitter.com/Tweeter/status/chirp\n\n", result);
+            Assert.Equal("https://twitter.com/Tweeter1/status/chirp\n\n", result);
         }
 
         [Fact]
@@ -247,13 +248,11 @@ namespace ChronoBot.Tests.SocialMedias
         public void ListSocialMedias_Test_Success()
         {
             var twitter = CreateNewTwitter(out var fileSystem, "List");
-
-            twitter.AddSocialMediaUser(123456789, 6, "Tweeter").GetAwaiter().GetResult();
-            twitter.AddSocialMediaUser(123456789, 5, "NewTweeter").GetAwaiter().GetResult();
+            
             twitter.AddSocialMediaUser(987654321, 5, "NewGuildTweeter").GetAwaiter().GetResult();
-            var result = twitter.ListSavedSocialMediaUsers(123456789).GetAwaiter().GetResult();
+            var result = twitter.ListSavedSocialMediaUsers(123456789, SocialMediaEnum.Twitter).GetAwaiter().GetResult();
 
-            Assert.Equal("■ Tweeter \n■ NewTweeter \n", result);
+            Assert.Equal("■ Tweeter1 \n■ Tweeter2 \n■ Tweeter3", result);
             
             File.Delete(Path.Combine(fileSystem.PathToSaveFile, "123456789.xml"));
             File.Delete(Path.Combine(fileSystem.PathToSaveFile, "987654321.xml"));
@@ -270,7 +269,7 @@ namespace ChronoBot.Tests.SocialMedias
             Assert.NotNull(users.Find(x => x.Name == "DeleteTweeter"));
             Assert.Equal("DeleteTweeter", users.Find(x => x.Name == "DeleteTweeter")?.Name);
             var user = users.Find(x => x.Name == "DeleteTweeter");
-            string result = twitter.DeleteSocialMediaUser(1, user?.Name);
+            string result = twitter.DeleteSocialMediaUser(1, user?.Name, SocialMediaEnum.Twitter);
             users = (List<SocialMediaUserData>)fileSystem.Load();
 
             Assert.Empty(users);

@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using ChronoBot.Common.Systems;
 using ChronoBot.Common.UserDatas;
+using ChronoBot.Enums;
 using ChronoBot.Helpers;
 using ChronoBot.Tests.Fakes;
 using ChronoBot.Utilities.SocialMedias;
@@ -16,13 +18,13 @@ using Xunit;
 
 namespace ChronoBot.Tests.SocialMedias
 {
-    public class YouTubeTest
+    public class YouTubeTests
     {
         private readonly FakeYouTubeService _fakeYouTube;
         private readonly Mock<DiscordSocketClient> _mockClient;
         private readonly Mock<IConfiguration> _config;
 
-        public YouTubeTest()
+        public YouTubeTests()
         {
             _config = new Mock<IConfiguration>();
             _config.SetupGet(x => x[It.Is<string>(y => y == "Tokens:Discord")]).Returns("DiscordToken");
@@ -37,259 +39,46 @@ namespace ChronoBot.Tests.SocialMedias
         }
 
         [Fact]
-        public void AddYouTube_Test_Success()
-        {
-            var twitter = CreateNewYouTube(out var fileSystem);
-
-            twitter.AddSocialMediaUser(1, 4, "YouTuber").GetAwaiter().GetResult();
-            var users = (List<SocialMediaUserData>)fileSystem.Load();
-            var user = users.Find(x => x.Name == "YouTuber");
-
-            Assert.NotNull(user);
-            Assert.Equal("YouTuber", user.Name);
-
-            File.Delete(Path.Combine(fileSystem.PathToSaveFile, "1.xml"));
-        }
-
-        [Fact]
-        public void AddYouTube_Test_Duplicate_Fail()
-        {
-            var twitter = LoadYouTube(out _);
-
-            string result = twitter.AddSocialMediaUser(123456789, 4, "YouTube").GetAwaiter().GetResult();
-
-            Assert.Equal("Already added YouTube", result);
-        }
-
-        [Fact]
-        public void AddYouTube_Test_NotFound_Fail()
-        {
-            var twitter = LoadYouTube(out _);
-
-            string result = twitter.AddSocialMediaUser(123456789, 4, "NotFound").GetAwaiter().GetResult();
-
-            Assert.Equal("Can't find NotFound", result);
-        }
-
-        [Fact]
-        public void GetYouTube_Test_Success()
-        {
-            var twitter = LoadYouTube(out _);
-
-            var result = twitter.GetSocialMediaUser(123456789, false, "Tweeter").GetAwaiter().GetResult();
-
-            Assert.Equal("https://twitter.com/Tweeter/status/chirp\n\n", result);
-        }
-
-        [Fact]
-        public void AutoUpdate_Test_Success()
-        {
-            var twitter = CreateNewYouTube(out var fileSystem, "Post Update", 2);
-
-            twitter.AddSocialMediaUser(123456789, 5, "PostUpdate").GetAwaiter().GetResult();
-            twitter.AddSocialMediaUser(123456789, 5, "PostUpdate2").GetAwaiter().GetResult();
-            var users = (List<SocialMediaUserData>)fileSystem.Load();
-            var user = users.Find(x => x.Name == "PostUpdate");
-
-            Assert.NotNull(user);
-            Assert.Equal("0", user.Id);
-
-            Thread.Sleep(2500);
-            users = (List<SocialMediaUserData>)fileSystem.Load();
-            user = users.Find(x => x.Name == "PostUpdate");
-
-            Assert.NotNull(user);
-            Assert.Equal("chirp", user.Id);
-
-            File.Delete(Path.Combine(fileSystem.PathToSaveFile, "123456789.xml"));
-        }
-
-        [Fact]
-        public void GetYouTube_Test_NotNsfw_Success()
-        {
-            var twitter = CreateNewYouTube(out var fileSystem);
-
-            twitter.AddSocialMediaUser(123456789, 5, "NotNsfw").GetAwaiter().GetResult();
-            var result = twitter.GetSocialMediaUser(123456789, true, "NotNsfw").GetAwaiter().GetResult();
-
-            Assert.Equal("https://twitter.com/NotNsfw/status/chirp\n\n", result);
-
-            File.Delete(Path.Combine(fileSystem.PathToSaveFile, "123456789.xml"));
-        }
-
-        [Fact]
-        public void GetYouTube_Test_NoId_Fail()
-        {
-            var twitter = CreateNewYouTube(out var fileSystem);
-
-            twitter.AddSocialMediaUser(123456789, 5, "NoId").GetAwaiter().GetResult();
-            var result = twitter.GetSocialMediaUser(123456789, true, "NoId").GetAwaiter().GetResult();
-
-            Assert.Equal("Could not retrieve Tweet.", result);
-
-            File.Delete(Path.Combine(fileSystem.PathToSaveFile, "123456789.xml"));
-        }
-
-        [Fact]
-        public void GetYouTube_Test_NotFindUser_Fail()
-        {
-            var twitter = LoadYouTube(out _);
-
-            var result = twitter.GetSocialMediaUser(123456789, false, "Fail").GetAwaiter().GetResult();
-
-            Assert.Equal("Could not find user.", result);
-        }
-
-        [Fact]
-        public void GetYouTube_Test_CouldNotRetrieve_Fail()
-        {
-            var twitter = CreateNewYouTube(out var fileSystem);
-
-            twitter.AddSocialMediaUser(123456789, 5, "Fail").GetAwaiter().GetResult();
-            var result = twitter.GetSocialMediaUser(123456789, false, "Fail").GetAwaiter().GetResult();
-
-            Assert.Equal("Could not retrieve Tweet.", result);
-
-            File.Delete(Path.Combine(fileSystem.PathToSaveFile, "123456789.xml"));
-        }
-
-        [Fact]
-        public void GetUpdatedYouTube_Test_Success()
-        {
-            var twitter = CreateNewYouTube(out var fileSystem);
-
-            twitter.AddSocialMediaUser(123456789, 6, "Updated", 9).GetAwaiter().GetResult();
-            var result = twitter.GetUpdatedSocialMediaUsers(123456789).GetAwaiter().GetResult();
-
-            Assert.Equal("https://twitter.com/Updated/status/kaw-kaw\n\n", result);
-
-            File.Delete(Path.Combine(fileSystem.PathToSaveFile, "123456789.xml"));
-        }
-
-        [Fact]
-        public void GetUpdatedYouTube_Test_MultipleUsers_Success()
-        {
-            var twitter = CreateNewYouTube(out var fileSystem);
-
-            twitter.AddSocialMediaUser(123456789, 8, "Fail").GetAwaiter().GetResult();
-            var result = twitter.GetUpdatedSocialMediaUsers(123456789).GetAwaiter().GetResult();
-
-            Assert.Equal("No updates since last time.", result);
-
-            File.Delete(Path.Combine(fileSystem.PathToSaveFile, "123456789.xml"));
-        }
-
-        [Fact]
-        public void GetUpdatedYouTube_Test_NoUpdate_Fail()
-        {
-            var twitter = LoadYouTube(out _);
-
-            var result = twitter.GetUpdatedSocialMediaUsers(123456789).GetAwaiter().GetResult();
-
-            Assert.Equal("No updates since last time.", result);
-        }
-
-        [Fact]
-        public void GetUpdatedYouTube_Test_MessageDisplayed_Fail()
-        {
-            var twitter = CreateNewYouTube(out var fileSystem);
-
-            twitter.AddSocialMediaUser(123456789, 6, "Tweeter", 9).GetAwaiter().GetResult();
-            twitter.GetUpdatedSocialMediaUsers(123456789).GetAwaiter().GetResult();
-            var result = twitter.GetUpdatedSocialMediaUsers(123456789).GetAwaiter().GetResult();
-
-            Assert.Equal("No updates since last time.", result);
-
-            File.Delete(Path.Combine(fileSystem.PathToSaveFile, "123456789.xml"));
-        }
-
-        [Fact]
-        public void GetUpdatedYouTube_Test_NoUsers_Fail()
-        {
-            var twitter = CreateNewYouTube(out var fileSystem, "Empty");
-
-            var result = twitter.GetUpdatedSocialMediaUsers(123456789).GetAwaiter().GetResult();
-
-            Assert.Equal("No user registered.", result);
-
-            File.Delete(Path.Combine(fileSystem.PathToSaveFile, "123456789.xml"));
-        }
-
-        [Fact]
-        public void GetUpdatedYouTube_Test_NoStatus_Fail()
-        {
-            var twitter = CreateNewYouTube(out var fileSystem, "Empty");
-
-            twitter.AddSocialMediaUser(123456789, 12, "NoStatus").GetAwaiter().GetResult();
-            var result = twitter.GetUpdatedSocialMediaUsers(123456789).GetAwaiter().GetResult();
-
-            Assert.Equal("No updates since last time.", result);
-
-            File.Delete(Path.Combine(fileSystem.PathToSaveFile, "123456789.xml"));
-        }
-
-        [Fact]
-        public void GetUpdatedYouTube_Test_EmptyStatus_Fail()
-        {
-            var twitter = CreateNewYouTube(out var fileSystem, "Empty");
-
-            twitter.AddSocialMediaUser(123456789, 12, "EmptyStatus").GetAwaiter().GetResult();
-            var result = twitter.GetUpdatedSocialMediaUsers(123456789).GetAwaiter().GetResult();
-
-            Assert.Equal("No updates since last time.", result);
-
-            File.Delete(Path.Combine(fileSystem.PathToSaveFile, "123456789.xml"));
-        }
-
-        [Fact]
         public void ListSocialMedias_Test_Success()
         {
-            var twitter = CreateNewYouTube(out var fileSystem, "List");
-
-            twitter.AddSocialMediaUser(123456789, 6, "Tweeter").GetAwaiter().GetResult();
-            twitter.AddSocialMediaUser(123456789, 5, "NewTweeter").GetAwaiter().GetResult();
-            twitter.AddSocialMediaUser(987654321, 5, "NewGuildTweeter").GetAwaiter().GetResult();
-            var result = twitter.ListSavedSocialMediaUsers(123456789).GetAwaiter().GetResult();
-
-            Assert.Equal("■ Tweeter \n■ NewTweeter \n", result);
-
-            File.Delete(Path.Combine(fileSystem.PathToSaveFile, "123456789.xml"));
-            File.Delete(Path.Combine(fileSystem.PathToSaveFile, "987654321.xml"));
+            var twitter = LoadYouTubeService();
+            var result = twitter.ListSavedSocialMediaUsers(123456789, SocialMediaEnum.YouTube).GetAwaiter().GetResult();
+            
+            Assert.Equal("■ YouTuber1 \n■ YouTuber2 \n■ YouTuber3 \n", result);
         }
 
         [Fact]
         public void DeleteYouTube_Test_Success()
         {
-            var twitter = CreateNewYouTube(out var fileSystem, "Delete");
-
-            twitter.AddSocialMediaUser(1, 4, "DeleteTweeter").GetAwaiter().GetResult();
+            var twitter = LoadCopyYouTubeService(out var fileSystem);
+            
+            string result = twitter.DeleteSocialMediaUser(123456789, "YouTuber2", SocialMediaEnum.YouTube);
             var users = (List<SocialMediaUserData>)fileSystem.Load();
-            Assert.Single(users);
-            Assert.NotNull(users.Find(x => x.Name == "DeleteTweeter"));
-            Assert.Equal("DeleteTweeter", users.Find(x => x.Name == "DeleteTweeter")?.Name);
-            var user = users.Find(x => x.Name == "DeleteTweeter");
-            string result = twitter.DeleteSocialMediaUser(1, user?.Name);
-            users = (List<SocialMediaUserData>)fileSystem.Load();
+            users.RemoveAll(x => x.SocialMedia != SocialMediaEnum.YouTube);
 
-            Assert.Empty(users);
-            Assert.Equal("Successfully deleted DeleteTweeter", result);
+            Assert.Equal(2, users.Count);
+            Assert.Equal("Successfully deleted YouTuber2", result);
 
-            File.Delete(Path.Combine(fileSystem.PathToSaveFile, "1.xml"));
+            Directory.Delete(fileSystem.PathToSaveFile, true);
         }
 
-        private YouTube CreateNewYouTube(out SocialMediaFileSystem fileSystem, string folderName = "New", int seconds = 60)
+        private YouTube LoadYouTubeService()
         {
-            string path = Path.Combine(Directory.GetCurrentDirectory(), "Test Files", GetType().Name, folderName);
+            var fileSystem = new SocialMediaFileSystem(Path.Combine(Directory.GetCurrentDirectory(), "Test Files", GetType().Name, "Load"));
+
+            return new YouTube(_fakeYouTube, _mockClient.Object, _config.Object, new List<SocialMediaUserData>(), fileSystem);
+        }
+
+
+        private YouTube LoadCopyYouTubeService(out SocialMediaFileSystem fileSystem)
+        {
+            string path = Path.Combine(Directory.GetCurrentDirectory(), "Test Files", GetType().Name, "Update");
             if (Directory.Exists(path))
                 Directory.Delete(path, true);
+            Directory.CreateDirectory(path);
+            File.Copy(Path.Combine(Directory.GetCurrentDirectory(), "Test Files", GetType().Name, "Load", "123456789.xml"), 
+                Path.Combine(path, "123456789.xml"));
             fileSystem = new SocialMediaFileSystem(path);
-
-            return new YouTube(_fakeYouTube, _mockClient.Object, _config.Object, new List<SocialMediaUserData>(), fileSystem, seconds);
-        }
-
-        private YouTube LoadYouTube(out SocialMediaFileSystem fileSystem)
-        {
-            fileSystem = new SocialMediaFileSystem(Path.Combine(Directory.GetCurrentDirectory(), "Test Files", GetType().Name, "Load"));
 
             return new YouTube(_fakeYouTube, _mockClient.Object, _config.Object, new List<SocialMediaUserData>(), fileSystem);
         }

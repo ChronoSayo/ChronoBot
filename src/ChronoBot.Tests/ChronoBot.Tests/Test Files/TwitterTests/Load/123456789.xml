@@ -7,7 +7,9 @@
     <User Name="Streamer" ChannelID="2" ID="spasm" />
   </Twitch>
   <Twitter>
-    <User Name="Tweeter" ChannelID="3" ID="chirp" />
+    <User Name="Tweeter1" ChannelID="1" ID="chirp" />
+    <User Name="Tweeter2" ChannelID="2" ID="chirps" />
+    <User Name="Tweeter3" ChannelID="3" ID="chirpf" />
   </Twitter>
   <RockPaperScissors>
     <User UserID="69" ChannelID="4" Plays="10" TotalPlays="10" Wins="5" Losses="4" Draws="1" Ratio="50" Resets="0" Rocks="2" Papers="5" Scissors="3" CurrentStreak="0" BestStreak="2" Coins="1" UserIDOpponent="420" Actor="Rock" Deadline="08/28/2021 19:34:39" />

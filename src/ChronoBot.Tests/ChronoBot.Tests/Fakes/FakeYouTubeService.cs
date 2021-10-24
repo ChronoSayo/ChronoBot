@@ -6,9 +6,6 @@ namespace ChronoBot.Tests.Fakes
 {
     public class FakeYouTubeService : YouTubeService
     {
-        public override SearchResource Search
-        {
-            get;
-        }
+        
     }
 }

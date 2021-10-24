@@ -97,9 +97,9 @@ namespace ChronoBot.Utilities.SocialMedias
             return await Task.FromResult(string.Empty);
         }
 
-        public virtual string DeleteSocialMediaUser(ulong guildId, string user)
+        public virtual string DeleteSocialMediaUser(ulong guildId, string user, SocialMediaEnum socialMedia)
         {
-            int i = FindIndexByName(guildId, user);
+            int i = FindIndexByName(guildId, user, socialMedia);
             if (i > -1)
             {
                 SocialMediaUserData ud = Users[i];
@@ -119,11 +119,14 @@ namespace ChronoBot.Utilities.SocialMedias
             return await Task.FromResult(string.Empty);
         }
 
-        public virtual async Task<string> ListSavedSocialMediaUsers(ulong guildId, string channelMention = "")
+        public virtual async Task<string> ListSavedSocialMediaUsers(ulong guildId, SocialMediaEnum socialMedia, string channelMention = "")
         {
             string line = string.Empty;
             foreach (var user in Users)
             {
+                if(user.SocialMedia != socialMedia)
+                    continue;
+
                 bool addToList;
                 if (Statics.Debug)
                     addToList = true;
@@ -134,7 +137,7 @@ namespace ChronoBot.Utilities.SocialMedias
                     continue;
 
                 string name = user.Name;
-                line += "■ " + name + " " + (channelMention ?? "***Missing channel info.***") + "\n";
+                line += $"■ {name} {(channelMention ?? "***Missing channel info.***")}\n";
             }
 
             return await Task.FromResult(line);
@@ -276,9 +279,9 @@ namespace ChronoBot.Utilities.SocialMedias
             return duplicate;
         }
 
-        protected virtual int FindIndexByName(ulong guildId, string name)
+        protected virtual int FindIndexByName(ulong guildId, string name, SocialMediaEnum socialMedia)
         {
-            return Users.FindIndex(x => x.GuildId == guildId && x.Name == name);
+            return Users.FindIndex(x => x.GuildId == guildId && x.Name == name && x.SocialMedia == socialMedia);
         }
 
         //protected virtual void LogToFile(LogSeverity severity, string message, Exception e = null, [CallerMemberName] string caller = null)

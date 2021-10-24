@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
+using ChronoBot.Enums;
 using ChronoBot.Utilities.SocialMedias;
 using Discord;
 using Discord.Commands;
@@ -18,6 +19,7 @@ namespace ChronoBot.Modules.SocialMedias
         {
             _logger = logger;
             SocialMedia = socialMedia;
+            SocialMediaType = SocialMediaEnum.YouTube;
         }
 
         [Command(SocialMediaCommand + "add", RunMode = RunMode.Async), Alias(AltSocialMediaCommand + "add")]
