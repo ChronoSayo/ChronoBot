@@ -25,6 +25,9 @@ namespace ChronoBot.Helpers
 
         public static string YouTubeApiKey => "Tokens:YouTube";
 
+        public static string TwitchClientId => "Twitch:ClientID";
+        public static string TwitchSecret => "Twitch:Secret";
+
         public static string RpsWinImage => "Images:Rps:Win";
         public static string RpsLoseImage => "Images:Rps:Lose";
         public static string RpsDrawImage => "Images:Rps:Draw";

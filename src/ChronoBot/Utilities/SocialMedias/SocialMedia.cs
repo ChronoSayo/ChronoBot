@@ -9,6 +9,7 @@ using ChronoBot.Enums;
 using ChronoBot.Helpers;
 using Discord.WebSocket;
 using Microsoft.Extensions.Configuration;
+using TwitchLib.Api;
 
 namespace ChronoBot.Utilities.SocialMedias
 {
@@ -149,8 +150,7 @@ namespace ChronoBot.Utilities.SocialMedias
         }
 
         //If more social media is inheriting from this class, add their clients as parameter if needed.
-        //protected virtual string UpdateSocialMedia(List<UserData> users, TwitchAPI api = null)
-        protected virtual async Task<string> UpdateSocialMedia(IEnumerable<SocialMediaUserData> socialMediaUsers)
+        protected virtual async Task<string> UpdateSocialMedia(IEnumerable<SocialMediaUserData> socialMediaUsers, TwitchAPI api = null)
         {
             //Save guild ID's and channel ID's to avoid repetition
             List<ulong> usedGuildIDs = new List<ulong>();
@@ -180,9 +180,9 @@ namespace ChronoBot.Utilities.SocialMedias
                         //Add more cases here if more social media is added.
                         switch(TypeOfSocialMedia)
                         {
-                            //case "!twitch":
-                            //    message += GetStreamerUrlAndGame(users[j], api);
-                            //    break;
+                            case "!twitch":
+                                message += GetStreamerUrlAndGame(users[j], api);
+                                break;
                             case "twitter":
                                 message += GetTwitterUrl(users[j]);
                                 break;
@@ -236,12 +236,10 @@ namespace ChronoBot.Utilities.SocialMedias
         }
 
         //Display text for Twitch.
-        protected virtual string GetStreamerUrlAndGame(SocialMediaUserData ud/*, TwitchAPI api*/)
+        protected virtual async Task<string> GetStreamerUrlAndGame(SocialMediaUserData ud, TwitchAPI api)
         {
-            //var info =
-            //    api.V5.Channels.GetChannelByIDAsync(ud.id).GetAwaiter().GetResult();
-            //return FormatMarkup(ud.name) + " is playing " + info.Game + "\n" + info.Url + "\n\n";
-            return string.Empty;
+            var info = await api.V5.Channels.GetChannelByIDAsync(ud.Id);
+            return $"{ud.Name} is playing {info.Game}\n{info.Url}\n\n";
         }
 
         //Display text for Twitter.
