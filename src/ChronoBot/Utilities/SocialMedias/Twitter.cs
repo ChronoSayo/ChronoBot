@@ -44,8 +44,6 @@ namespace ChronoBot.Utilities.SocialMedias
             };
 
             var tweets = await _service.ListTweetsOnUserTimelineAsync(options);
-            if (tweets.Response.StatusCode != HttpStatusCode.OK)
-                return null;
 
             TwitterStatus[] twitterStatuses;
             try

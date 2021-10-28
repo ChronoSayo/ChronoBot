@@ -68,8 +68,7 @@ namespace ChronoBot.Tests.SocialMedias
 
             return new YouTube(_fakeYouTube, _mockClient.Object, _config.Object, new List<SocialMediaUserData>(), fileSystem);
         }
-
-
+        
         private YouTube LoadCopyYouTubeService(out SocialMediaFileSystem fileSystem)
         {
             string path = Path.Combine(Directory.GetCurrentDirectory(), "Test Files", GetType().Name, "Update");
