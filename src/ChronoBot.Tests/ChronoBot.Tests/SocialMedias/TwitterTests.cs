@@ -61,7 +61,7 @@ namespace ChronoBot.Tests.SocialMedias
 
             string result = twitter.AddSocialMediaUser(123456789, 4, "Tweeter1").GetAwaiter().GetResult();
 
-            Assert.Equal("Already added Tweeter", result);
+            Assert.Equal("Already added Tweeter1", result);
         }
 
         [Fact]
@@ -140,7 +140,7 @@ namespace ChronoBot.Tests.SocialMedias
 
             var result = twitter.GetSocialMediaUser(123456789, false, "Fail").GetAwaiter().GetResult();
 
-            Assert.Equal("Could not find user.", result);
+            Assert.Equal("Could not find Twitter handle.", result);
         }
 
         [Fact]
@@ -213,7 +213,7 @@ namespace ChronoBot.Tests.SocialMedias
 
             var result = twitter.GetUpdatedSocialMediaUsers(123456789).GetAwaiter().GetResult();
 
-            Assert.Equal("No user registered.", result);
+            Assert.Equal("No Twitter handles registered.", result);
 
             File.Delete(Path.Combine(fileSystem.PathToSaveFile, "123456789.xml"));
         }
@@ -247,14 +247,14 @@ namespace ChronoBot.Tests.SocialMedias
         [Fact]
         public void ListSocialMedias_Test_Success()
         {
-            var twitter = CreateNewTwitter(out var fileSystem, "List");
+            var twitter = LoadTwitter(out _);
+            CreateNewTwitter(out var fileSystem, "List");
             
             twitter.AddSocialMediaUser(987654321, 5, "NewGuildTweeter").GetAwaiter().GetResult();
             var result = twitter.ListSavedSocialMediaUsers(123456789, SocialMediaEnum.Twitter).GetAwaiter().GetResult();
 
-            Assert.Equal("■ Tweeter1 \n■ Tweeter2 \n■ Tweeter3", result);
+            Assert.Equal("■ Tweeter1 \n■ Tweeter2 \n■ Tweeter3 \n", result);
             
-            File.Delete(Path.Combine(fileSystem.PathToSaveFile, "123456789.xml"));
             File.Delete(Path.Combine(fileSystem.PathToSaveFile, "987654321.xml"));
         }
 
