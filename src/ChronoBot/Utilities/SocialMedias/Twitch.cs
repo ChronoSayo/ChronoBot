@@ -30,7 +30,7 @@ namespace ChronoBot.Utilities.SocialMedias
         {
             _api = api;
             _api.Settings.ClientId = Config[Statics.TwitchClientId];
-            _api.Settings.AccessToken = Config[Statics.TwitchSecret];
+            _api.Settings.Secret = Config[Statics.TwitchSecret];
 
             OnUpdateTimerAsync(seconds);
 
@@ -42,15 +42,15 @@ namespace ChronoBot.Utilities.SocialMedias
                 _streamers.Add(user, false);
         }
 
-        private string GetStreamId(string name)
+        private async Task<string>GetStreamId(string name)
         {
             string foundStreamer;
             try
             {
-                var user = _api.V5.Users.GetUserByNameAsync(name).GetAwaiter().GetResult();
+                var user = await _api.V5.Users.GetUserByNameAsync(name);
                 foundStreamer = GetStreamer(name).Id;
             }
-            catch(Exception e)
+            catch
             {
                 //LogToFile(LogSeverity.Warning, $"Can't find {name}.", e);
                 foundStreamer = string.Empty;
@@ -108,7 +108,7 @@ namespace ChronoBot.Utilities.SocialMedias
         {
             if (!Duplicate(guildId, username, SocialMediaEnum.Twitch))
             {
-                string streamerId = GetStreamId(username);
+                string streamerId = await GetStreamId(username);
                 if (!string.IsNullOrEmpty(streamerId))
                 {
                     //Use the name displayed from Twitch instead of what the user input.
@@ -116,7 +116,8 @@ namespace ChronoBot.Utilities.SocialMedias
                     if (sendToChannelId == 0)
                         sendToChannelId = Statics.Debug ? Statics.DebugChannelId : channelId;
 
-                    CreateSocialMediaUser(displayName, guildId, channelId, streamerId, SocialMediaEnum.Twitch);
+                    if(!CreateSocialMediaUser(displayName, guildId, sendToChannelId, streamerId, SocialMediaEnum.Twitch))
+                        return await Task.FromResult($"Failed to add {displayName}.");
 
                     return await Task.FromResult($"Successfully added {displayName}");
                 }
