@@ -69,9 +69,21 @@ namespace ChronoBot.Modules.SocialMedias
 
         protected virtual Embed HowToText(string socialMedia)
         {
+            string urlIcon = "";
+            switch (socialMedia)
+            {
+                case "twitter":
+                    urlIcon =
+                        "https://cdn.discordapp.com/attachments/891627208089698384/891627590023000074/Twitter_social_icons_-_circle_-_blue.png";
+                    break;
+                case "youtube":
+                    urlIcon =
+                        "https://cdn.discordapp.com/attachments/891627208089698384/905575565636010074/youtube-logo-transparent-png-pictures-transparent-background-youtube-logo-11562856729oa42buzkng.png";
+                    break;
+            }
             return new EmbedBuilder()
                 .WithTitle($"How to use {socialMedia.ToUpper()}")
-                .WithThumbnailUrl("https://cdn.discordapp.com/attachments/891627208089698384/891627590023000074/Twitter_social_icons_-_circle_-_blue.png")
+                .WithThumbnailUrl(urlIcon)
                 .AddField("Add ", $"{Statics.Prefix}{socialMedia.ToLowerInvariant()}add <name> [channel]", true)
                 .AddField("Delete", $"{Statics.Prefix}{socialMedia.ToLowerInvariant()}delete <name>", true)
                 .AddField("Get", $"{Statics.Prefix}{socialMedia.ToLowerInvariant()}get <name>", true)

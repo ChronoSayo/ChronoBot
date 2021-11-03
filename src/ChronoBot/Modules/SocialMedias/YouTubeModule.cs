@@ -58,7 +58,7 @@ namespace ChronoBot.Modules.SocialMedias
             await base.UpdateAsync();
         }
 
-        [Command(SocialMediaCommand + "?", RunMode = RunMode.Async), Alias(SocialMediaCommand + "howto", SocialMediaCommand)]
+        [Command(SocialMediaCommand + "?", RunMode = RunMode.Async), Alias(SocialMediaCommand + "howto", SocialMediaCommand, AltSocialMediaCommand)]
         public override async Task HowToUseAsync()
         {
             var embed = HowToText(SocialMediaCommand);
