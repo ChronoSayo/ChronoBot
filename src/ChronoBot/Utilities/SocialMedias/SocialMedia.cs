@@ -53,8 +53,6 @@ namespace ChronoBot.Utilities.SocialMedias
                 Users.Remove(temp);
 
             return ok;
-
-            //LogToFile(LogSeverity.Info, $"Saved user: {temp.socialMedia} {temp.name} {temp.guildID} {temp.channelID} {temp.id}");
         }
 
         protected virtual void OnUpdateTimerAsync(int seconds)
@@ -283,11 +281,5 @@ namespace ChronoBot.Utilities.SocialMedias
         {
             return Users.FindIndex(x => x.GuildId == guildId && x.Name == name && x.SocialMedia == socialMedia);
         }
-
-        //protected virtual void LogToFile(LogSeverity severity, string message, Exception e = null, [CallerMemberName] string caller = null)
-        //{
-        //    StackTrace st = new StackTrace();
-        //    Program.Logger(new LogMessage(severity, st.GetFrame(1).GetMethod().ReflectedType + "." + caller, message, e));
-        //}
     }
 }
