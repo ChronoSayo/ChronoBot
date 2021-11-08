@@ -55,7 +55,7 @@ namespace ChronoBot.Services
                 return;
             }
 
-            await commandContext.Channel.SendMessageAsync(result.ErrorReason);
+            await commandContext.Channel.SendMessageAsync("I don't recognize that command...");
 
             embed.WithDescription(result.ErrorReason);
             await _client.GetGuild(Statics.DebugGuildId).GetTextChannel(Statics.DebugLogsChannelId)
