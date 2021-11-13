@@ -9,7 +9,8 @@ namespace ChronoBot.Helpers
     public static class Statics
     {
         private static readonly Random Random = new Random();
-        
+
+        public static string Username => Config["Username"];
         public static IConfiguration Config { get; set; }
         public static bool Debug => bool.TryParse(Config["Debug"], out bool debug) && debug;
         public static string Prefix => Config["Prefix"];

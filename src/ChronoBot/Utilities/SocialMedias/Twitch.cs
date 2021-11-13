@@ -1,29 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text.RegularExpressions;
-using System.Threading;
 using System.Threading.Tasks;
 using ChronoBot.Common.Systems;
 using ChronoBot.Common.UserDatas;
 using ChronoBot.Enums;
 using ChronoBot.Helpers;
-using Discord;
 using Discord.WebSocket;
 using Microsoft.Extensions.Configuration;
 using TwitchLib.Api;
-using TwitchLib.Api.Helix.Models.Users.GetUserFollows;
 
 namespace ChronoBot.Utilities.SocialMedias
 {
     public sealed class Twitch : SocialMedia
     {
         private readonly TwitchAPI _api;
-        private readonly string _mineTwitchCommand;
-        /// <summary>
-        /// bool is to check if the streamer is online.
-        /// </summary>
-        private readonly Dictionary<SocialMediaUserData, bool> _streamers;
 
         public Twitch(TwitchAPI api, DiscordSocketClient client, IConfiguration config,
             IEnumerable<SocialMediaUserData> users, SocialMediaFileSystem fileSystem, int seconds = 120) : base(client, config, users, fileSystem)
@@ -34,71 +24,46 @@ namespace ChronoBot.Utilities.SocialMedias
 
             OnUpdateTimerAsync(seconds);
 
-            _streamers = new Dictionary<SocialMediaUserData, bool>();
-
             LoadOrCreateFromFile();
-
-            foreach (SocialMediaUserData user in Users)
-                _streamers.Add(user, false);
         }
 
-        private async Task<string>GetStreamId(string name)
+        private async Task<string> GetStreamUsernameAsync(string name)
         {
-            string foundStreamer;
             try
             {
-                var user = await _api.V5.Users.GetUserByNameAsync(name);
-                foundStreamer = GetStreamer(name).Id;
+                var users = await _api.Helix.Users.GetUsersAsync(logins: new List<string> { name });
+                return users.Users[0].DisplayName;
             }
             catch
             {
-                //LogToFile(LogSeverity.Warning, $"Can't find {name}.", e);
-                foundStreamer = string.Empty;
+                return string.Empty;
             }
-
-            return foundStreamer;
-        }
-
-        private TwitchLib.Api.V5.Models.Users.User GetStreamer(string name)
-        {
-            return _api.V5.Users.GetUserByNameAsync(name).GetAwaiter().GetResult().Matches.ElementAt(0);
         }
 
         protected override async Task AutoUpdate()
         {
             if (Users.Count == 0)
                 return;
-
-            List<SocialMediaUserData> onlineStreamers = new List<SocialMediaUserData>();
-            for (int i = 0; i < _streamers.Keys.Count; i++)
+            
+            for (int i = 0; i < Users.Count; i++)
             {
-                SocialMediaUserData ud;
+                SocialMediaUserData ud = Users[i];
 
-                //Try-catch in case someone was removing a streamer while posting update.
-                try
-                {
-                    ud = _streamers.Keys.ElementAt(i);
-                    if (ud.SocialMedia != SocialMediaEnum.Twitch)
-                        continue;
-                }
-                catch
-                {
-                    return;
-                }
+                if (ud.SocialMedia != SocialMediaEnum.Twitch)
+                    continue;
 
-                try
-                {
-                    if (_streamers[ud] != await _api.V5.Streams.BroadcasterOnlineAsync(ud.Id))
-                    {
-                        _streamers[ud] = await _api.V5.Streams.BroadcasterOnlineAsync(ud.Id);
-                        if (_streamers[ud] && !onlineStreamers.Contains(ud))
-                            onlineStreamers.Add(ud);
-                    }
-                }
-                catch (Exception e)
-                {
-                    //LogToFile(LogSeverity.Error, $"Unable to get status for {ud.name}.", e);
-                }
+                //if (_streamers[ud] != await _api.V5.Streams.BroadcasterOnlineAsync(ud.Id))
+                //{
+                //    _streamers[ud] = await _api.V5.Streams.BroadcasterOnlineAsync(ud.Id);
+                //    if (_streamers[ud] && !onlineStreamers.Contains(ud))
+                //        onlineStreamers.Add(ud);
+                //}
+
+                var streams = await _api.Helix.Streams.GetStreamsAsync(first: 1, userLogins: new List<string> { ud.Name });
+                if (streams == null)
+                    continue;
+
+                Users[i].Id = streams.Streams[0].Type == "live" ? "live" : string.Empty;
             }
 
             await base.AutoUpdate();
@@ -108,18 +73,18 @@ namespace ChronoBot.Utilities.SocialMedias
         {
             if (!Duplicate(guildId, username, SocialMediaEnum.Twitch))
             {
-                string streamerId = await GetStreamId(username);
-                if (!string.IsNullOrEmpty(streamerId))
+                var displayName = await GetStreamUsernameAsync(username);
+                if (!string.IsNullOrEmpty(displayName))
                 {
-                    //Use the name displayed from Twitch instead of what the user input.
-                    string displayName = GetStreamer(username).DisplayName;
                     if (sendToChannelId == 0)
                         sendToChannelId = Statics.Debug ? Statics.DebugChannelId : channelId;
 
-                    if(!CreateSocialMediaUser(displayName, guildId, sendToChannelId, streamerId, SocialMediaEnum.Twitch))
+                    if(!CreateSocialMediaUser(displayName, guildId, sendToChannelId, string.Empty, SocialMediaEnum.Twitch))
                         return await Task.FromResult($"Failed to add {displayName}.");
 
-                    return await Task.FromResult($"Successfully added {displayName}");
+                    string message = $"Successfully added {displayName}";
+
+                    return await Task.FromResult(message);
                 }
                 
                 return await Task.FromResult($"Can't find {username}");
