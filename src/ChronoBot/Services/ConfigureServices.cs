@@ -33,9 +33,9 @@ namespace ChronoBot.Services
                 .AddSingleton<TwitterService>()
                 .AddSingleton<Twitter>()
                 .AddSingleton<YouTubeService>()
-                .AddSingleton<YouTube>();
-            //.AddSingleton<TwitchAPI>()
-            //.AddSingleton<Twitch>();
+                .AddSingleton<YouTube>()
+                .AddSingleton<TwitchAPI>()
+                .AddSingleton<Twitch>();
         }
 
         private static IServiceCollection AddGamesServiceCollection(this IServiceCollection services)
