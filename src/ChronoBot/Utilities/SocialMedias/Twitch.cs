@@ -121,5 +121,10 @@ namespace ChronoBot.Utilities.SocialMedias
             _streamers.Add(Users[^1], false);
             return true;
         }
+
+        public override Task<string> GetUpdatedSocialMediaUsers(ulong guildId)
+        {
+            return base.GetUpdatedSocialMediaUsers(guildId);
+        }
     }
 }
