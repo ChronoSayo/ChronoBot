@@ -37,4 +37,8 @@
     </None>
   </ItemGroup>
 
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="mkdir &quot;$(SolutionDir)build\&quot;&#xD;&#xA;xcopy &quot;$(TargetDir)*&quot; &quot;$(SolutionDir)build\&quot; /y /i /r" />
+  </Target>
+
 </Project>

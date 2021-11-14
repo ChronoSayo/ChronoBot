@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using ChronoBot.Common.Systems;
 using ChronoBot.Common.UserDatas;
 using ChronoBot.Enums;
@@ -74,9 +73,9 @@ namespace ChronoBot.Tests.SocialMedias
             var socialMedia = new SocialMedia(new Mock<DiscordSocketClient>().Object, new Mock<IConfiguration>().Object,
                 users, new SocialMediaFileSystem(path));
 
-            string result = socialMedia.DeleteSocialMediaUser(123456789, "Test1", SocialMediaEnum.Twitch);
+            string result = socialMedia.DeleteSocialMediaUser(987654321, "Test2", SocialMediaEnum.Twitch);
 
-            Assert.Equal("Successfully deleted Test1", result);
+            Assert.Equal("Successfully deleted Test2", result);
 
             Directory.Delete(Path.Combine(path));
         }

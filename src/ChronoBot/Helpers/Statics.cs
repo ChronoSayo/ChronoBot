@@ -16,6 +16,7 @@ namespace ChronoBot.Helpers
         public static string Prefix => Config["Prefix"];
         public static ulong DebugGuildId => ulong.TryParse(Config["IDs:Guild"], out ulong guildId) ? guildId : 0;
         public static ulong DebugChannelId => ulong.TryParse(Config["IDs:TextChannel"], out ulong channelId) ? channelId : 0;
+        public static ulong DebugLogsChannelId => ulong.TryParse(Config["IDs:LogTextChannel"], out ulong channelId) ? channelId : 0;
         public static readonly string Shrug = @"¯\_(ツ)_/¯";
         
         public static string DiscordToken => "Tokens:Discord";
