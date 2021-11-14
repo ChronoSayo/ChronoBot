@@ -8,6 +8,7 @@ using ChronoBot.Helpers;
 using Discord.WebSocket;
 using Microsoft.Extensions.Configuration;
 using TwitchLib.Api;
+using TwitchLib.Api.V5.Models.Streams;
 
 namespace ChronoBot.Utilities.SocialMedias
 {
@@ -25,19 +26,6 @@ namespace ChronoBot.Utilities.SocialMedias
             OnUpdateTimerAsync(seconds);
 
             LoadOrCreateFromFile();
-        }
-
-        private async Task<string> GetStreamUsernameAsync(string name)
-        {
-            try
-            {
-                var users = await _api.Helix.Users.GetUsersAsync(logins: new List<string> { name });
-                return users.Users[0].DisplayName;
-            }
-            catch
-            {
-                return string.Empty;
-            }
         }
 
         protected override async Task AutoUpdate()
@@ -115,16 +103,56 @@ namespace ChronoBot.Utilities.SocialMedias
             return await base.ListSavedSocialMediaUsers(guildId, SocialMediaEnum.Twitch, channelMention);
         }
 
-        protected override bool CreateSocialMediaUser(string name, ulong guildId, ulong channelId, string id, SocialMediaEnum socialMedia)
+        public override async Task<string> GetUpdatedSocialMediaUsers(ulong guildId)
         {
-            base.CreateSocialMediaUser(name, guildId, channelId, id, SocialMediaEnum.Twitch);
-            _streamers.Add(Users[^1], false);
-            return true;
+            if (Users.Count == 0)
+                return await Task.FromResult("No streamers registered.");
+
+            List<SocialMediaUserData> live = new List<SocialMediaUserData>();
+            for (int i = 0; i < Users.Count; i++)
+            {
+                SocialMediaUserData user = Users[i];
+                if (user.SocialMedia != SocialMediaEnum.Twitch || user.GuildId != guildId)
+                    continue;
+
+                List<string> channelInfo = await SearchForYouTuber(user.Name);
+                if (channelInfo.Count == 0)
+                    continue;
+                if (channelInfo[0] == user.Id)
+                    continue;
+
+                user.Id = channelInfo[0];
+                Users[i] = user;
+                live.Add(Users[i]);
+                FileSystem.UpdateFile(user);
+            }
+
+            if (live.Count > 0)
+                return await UpdateSocialMedia(live);
+
+            return await Task.FromResult("No updates since last time.");
         }
 
-        public override Task<string> GetUpdatedSocialMediaUsers(ulong guildId)
+        private async Task<string> GetStreamUsernameAsync(string name)
         {
-            return base.GetUpdatedSocialMediaUsers(guildId);
+            try
+            {
+                var users = await _api.Helix.Users.GetUsersAsync(logins: new List<string> { name });
+                return users.Users[0].DisplayName;
+            }
+            catch
+            {
+                return string.Empty;
+            }
+        }
+
+        private async Task<TwitchLib.Api.Helix.Models.Streams.GetStreams.Stream> IsLive(string name)
+        {
+            var streams = await _api.Helix.Streams.GetStreamsAsync(first: 1, userLogins: new List<string> { name });
+            if (streams == null || streams.Streams.Length == 0 || streams.Streams[0].Type != "live")
+                return null;
+            
+            return await Task.FromResult(streams.Streams[0]);
         }
     }
 }
