@@ -75,7 +75,7 @@ namespace ChronoBot.Utilities.SocialMedias
             if (sendToChannelId == 0)
                 sendToChannelId = Statics.Debug ? Statics.DebugChannelId : channelId;
 
-            if (!CreateSocialMediaUser(username, guildId, sendToChannelId, "0", SocialMediaEnum.Twitter))
+            if (!CreateSocialMediaUser(username, guildId, sendToChannelId, "0", SocialMediaEnum.YouTube))
                 return await Task.FromResult($"Failed to add {name}.");
 
             return await Task.FromResult($"Successfully added {name} \n{_channelLink + name}");
