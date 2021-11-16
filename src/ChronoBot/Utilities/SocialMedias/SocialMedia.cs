@@ -178,7 +178,7 @@ namespace ChronoBot.Utilities.SocialMedias
                         //Add more cases here if more social media is added.
                         switch(TypeOfSocialMedia)
                         {
-                            case "!twitch":
+                            case "twitch":
                                 message += GetStreamerUrlAndGame(users[j], stream);
                                 break;
                             case "twitter":

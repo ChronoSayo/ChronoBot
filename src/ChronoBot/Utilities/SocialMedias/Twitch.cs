@@ -89,7 +89,7 @@ namespace ChronoBot.Utilities.SocialMedias
                     continue;
 
                 stream = await IsLive(user.Name);
-                user.Id = stream.Type == "live" ? "1" : "0";
+                user.Id = stream is { Type: "live" } ? "1" : "0";
                 Users[i] = user;
                 live.Add(Users[i]);
                 FileSystem.UpdateFile(user);
