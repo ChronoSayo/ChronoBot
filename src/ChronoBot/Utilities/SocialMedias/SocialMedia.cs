@@ -9,6 +9,7 @@ using ChronoBot.Enums;
 using ChronoBot.Helpers;
 using Discord.WebSocket;
 using Microsoft.Extensions.Configuration;
+using TwitchLib.Api.Helix.Models.Streams.GetStreams;
 
 namespace ChronoBot.Utilities.SocialMedias
 {
@@ -146,9 +147,8 @@ namespace ChronoBot.Utilities.SocialMedias
             return await Task.FromResult(string.Empty);
         }
 
-        //If more social media is inheriting from this class, add their clients as parameter if needed.
-        //protected virtual string UpdateSocialMedia(List<UserData> users, TwitchAPI api = null)
-        protected virtual async Task<string> UpdateSocialMedia(IEnumerable<SocialMediaUserData> socialMediaUsers)
+        //gameName is for Twitch.
+        protected virtual async Task<string> UpdateSocialMedia(IEnumerable<SocialMediaUserData> socialMediaUsers, Stream stream = null)
         {
             //Save guild ID's and channel ID's to avoid repetition
             List<ulong> usedGuildIDs = new List<ulong>();
@@ -178,9 +178,9 @@ namespace ChronoBot.Utilities.SocialMedias
                         //Add more cases here if more social media is added.
                         switch(TypeOfSocialMedia)
                         {
-                            //case "!twitch":
-                            //    message += GetStreamerUrlAndGame(users[j], api);
-                            //    break;
+                            case "twitch":
+                                message += GetStreamerUrlAndGame(users[j], stream);
+                                break;
                             case "twitter":
                                 message += GetTwitterUrl(users[j]);
                                 break;
@@ -211,9 +211,6 @@ namespace ChronoBot.Utilities.SocialMedias
                 }
 
                 return await Task.FromResult(message);
-
-                //UserData user = _users[i];
-                //LogToFile($"Updating {user.name} {user.id} {user.channelID} {user.guildID} {user.socialMedia}");
             }
 
             return await Task.FromResult(string.Empty);
@@ -234,12 +231,9 @@ namespace ChronoBot.Utilities.SocialMedias
         }
 
         //Display text for Twitch.
-        protected virtual string GetStreamerUrlAndGame(SocialMediaUserData ud/*, TwitchAPI api*/)
+        protected virtual string GetStreamerUrlAndGame(SocialMediaUserData ud, Stream stream)
         {
-            //var info =
-            //    api.V5.Channels.GetChannelByIDAsync(ud.id).GetAwaiter().GetResult();
-            //return FormatMarkup(ud.name) + " is playing " + info.Game + "\n" + info.Url + "\n\n";
-            return string.Empty;
+            return $"{ud.Name} is playing {stream.GameName}\n{Hyperlink}{stream.UserName}\n\n";
         }
 
         //Display text for Twitter.

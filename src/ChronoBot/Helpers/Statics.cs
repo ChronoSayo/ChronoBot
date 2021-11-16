@@ -9,7 +9,8 @@ namespace ChronoBot.Helpers
     public static class Statics
     {
         private static readonly Random Random = new Random();
-        
+
+        public static string Username => Config["Username"];
         public static IConfiguration Config { get; set; }
         public static bool Debug => bool.TryParse(Config["Debug"], out bool debug) && debug;
         public static string Prefix => Config["Prefix"];
@@ -25,6 +26,9 @@ namespace ChronoBot.Helpers
         public static string TwitterSecret => "Tokens:Twitter:Secret";
 
         public static string YouTubeApiKey => "Tokens:YouTube";
+
+        public static string TwitchClientId => "Tokens:Twitch:ClientID";
+        public static string TwitchSecret => "Tokens:Twitch:Secret";
 
         public static string RpsWinImage => "Images:Rps:Win";
         public static string RpsLoseImage => "Images:Rps:Lose";

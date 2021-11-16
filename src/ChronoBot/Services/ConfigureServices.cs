@@ -5,6 +5,7 @@ using ChronoBot.Utilities.Tools;
 using Google.Apis.YouTube.v3;
 using Microsoft.Extensions.DependencyInjection;
 using TweetSharp;
+using TwitchLib.Api;
 
 namespace ChronoBot.Services
 {
@@ -32,7 +33,9 @@ namespace ChronoBot.Services
                 .AddSingleton<TwitterService>()
                 .AddSingleton<Twitter>()
                 .AddSingleton<YouTubeService>()
-                .AddSingleton<YouTube>();
+                .AddSingleton<YouTube>()
+                .AddSingleton<TwitchAPI>()
+                .AddSingleton<Twitch>();
         }
 
         private static IServiceCollection AddGamesServiceCollection(this IServiceCollection services)
