@@ -1,15 +1,11 @@
 ﻿using System.Collections.Generic;
-using System.Net;
 using System.Threading.Tasks;
-using Hammock;
 using TweetSharp;
 
 namespace ChronoBot.Tests.Fakes
 {
     public class FakeTwitterService : TwitterService
     {
-        public override TwitterResponse Response => base.Response;
-
         public override async Task<TwitterAsyncResult<IEnumerable<TwitterStatus>>> ListTweetsOnUserTimelineAsync(ListTweetsOnUserTimelineOptions options)
         {
             if (options.ScreenName == "Fail")
