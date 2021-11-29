@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using ChronoBot.Common.Systems;
 using ChronoBot.Common.UserDatas;
@@ -6,21 +7,19 @@ using ChronoBot.Enums;
 using ChronoBot.Helpers;
 using Discord.WebSocket;
 using Microsoft.Extensions.Configuration;
-using TwitchLib.Api;
-using TwitchLib.Api.Helix.Models.Streams.GetStreams;
+using ChronoTwitch;
 
 namespace ChronoBot.Utilities.SocialMedias
 {
     public sealed class Twitch : SocialMedia
     {
-        private readonly TwitchAPI _api;
+        private readonly ChronoTwitch.ChronoTwitch _api;
 
-        public Twitch(TwitchAPI api, DiscordSocketClient client, IConfiguration config,
+        public Twitch(ChronoTwitch.ChronoTwitch api, DiscordSocketClient client, IConfiguration config,
             IEnumerable<SocialMediaUserData> users, SocialMediaFileSystem fileSystem, int seconds = 120) : base(client, config, users, fileSystem)
         {
             _api = api;
-            _api.Settings.ClientId = Config[Statics.TwitchClientId];
-            _api.Settings.Secret = Config[Statics.TwitchSecret];
+            _api.Authenticate(Config[Statics.TwitchClientId], Config[Statics.TwitchSecret]);
 
             Hyperlink = "https://www.twitch.com/";
 
@@ -36,7 +35,7 @@ namespace ChronoBot.Utilities.SocialMedias
             if (Duplicate(guildId, username, SocialMediaEnum.Twitch))
                 return await Task.FromResult($"Already added {username}");
 
-            var displayName = await GetStreamUsernameAsync(username);
+            var displayName = await _api.DisplayName(username);
             if (string.IsNullOrEmpty(displayName))
                 return await Task.FromResult("Can't find " + username);
 
@@ -55,10 +54,10 @@ namespace ChronoBot.Utilities.SocialMedias
             if (i > -1)
             {
                 SocialMediaUserData ud = Users[i];
-                var stream = await IsLive(ud.Name);
+                bool isLive = await _api.IsLive(ud.Name);
                 string message;
-                if (stream is { Type: "live" })
-                    message = await UpdateSocialMedia(new List<SocialMediaUserData> { ud }, stream);
+                if (isLive)
+                    message = await UpdateSocialMedia(new List<SocialMediaUserData> { ud }, await GetStreamInfo(ud.Name));
                 else
                     message = Hyperlink + ud.Name;
                 return await Task.FromResult(message);
@@ -81,46 +80,36 @@ namespace ChronoBot.Utilities.SocialMedias
                 return await Task.FromResult("No streamers registered.");
 
             List<SocialMediaUserData> live = new List<SocialMediaUserData>();
-            Stream stream = null;
+            Tuple<string, string> streamerInfo = null;
             for (int i = 0; i < Users.Count; i++)
             {
                 SocialMediaUserData user = Users[i];
                 if (user.SocialMedia != SocialMediaEnum.Twitch || user.GuildId != guildId)
                     continue;
 
-                stream = await IsLive(user.Name);
-                user.Id = stream is { Type: "live" } ? "1" : "0";
+                bool isLive = await _api.IsLive(user.Name);
+                user.Id = "0";
+                if (isLive)
+                {
+                    user.Id = "1";
+                    streamerInfo = await GetStreamInfo(user.Name);
+                }
                 Users[i] = user;
                 live.Add(Users[i]);
                 FileSystem.UpdateFile(user);
             }
 
             if (live.Count > 0)
-                return await UpdateSocialMedia(live, stream);
+                return await UpdateSocialMedia(live, streamerInfo);
 
             return await Task.FromResult("No updates since last time.");
         }
 
-        private async Task<string> GetStreamUsernameAsync(string name)
+        private async Task<Tuple<string, string>> GetStreamInfo(string name)
         {
-            try
-            {
-                var users = await _api.Helix.Users.GetUsersAsync(logins: new List<string> { name });
-                return users.Users[0].DisplayName;
-            }
-            catch
-            {
-                return string.Empty;
-            }
-        }
-
-        private async Task<Stream> IsLive(string name)
-        {
-            var streams = await _api.Helix.Streams.GetStreamsAsync(first: 1, userLogins: new List<string> { name });
-            if (streams == null || streams.Streams.Length == 0 || streams.Streams[0].Type != "live")
-                return null;
-            
-            return await Task.FromResult(streams.Streams[0]);
+            string displayName = await _api.DisplayName(name);
+            string gameName = await _api.GameName(name);
+            return new Tuple<string, string>(displayName, gameName);
         }
     }
 }

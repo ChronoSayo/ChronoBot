@@ -1,13 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using TwitchLib.Api;
 using TwitchLib.Api.Core.Interfaces;
 using TwitchLib.Api.Helix;
 using TwitchLib.Api.Helix.Models.Streams.GetStreams;
 using TwitchLib.Api.Helix.Models.Users.GetUsers;
+using Helix = ChronoTwitch.Helix.Helix;
 
 namespace ChronoBot.Tests.Fakes
 {
@@ -23,17 +21,44 @@ namespace ChronoBot.Tests.Fakes
 
     public class FakeUsers : Users
     {
-        public Task<GetUsersResponse> GetUsersAsync(
+        public Task<FakeGetUsersResponse> GetUsersAsync(
             List<string> ids = null,
             List<string> logins = null,
             string accessToken = null)
         {
-
+            return Task.FromResult(new FakeGetUsersResponse(logins));
         }
 
         public FakeUsers(IApiSettings settings, IRateLimiter rateLimiter, IHttpCallHandler http) : base(settings, rateLimiter, http)
         {
         }
+    }
+
+    public class FakeGetUsersResponse : GetUsersResponse
+    {
+        private readonly string _name;
+        public FakeGetUsersResponse(List<string> names)
+        {
+            _name = names[0];
+        }
+        public FakeUser[] Streams
+        {
+            get
+            {
+                return new[] { new FakeUser(_name) };
+            }
+        }
+    }
+
+    public class FakeUser : User
+    {
+        private readonly string _name;
+        public FakeUser(string name)
+        {
+            _name = name;
+        }
+
+        public string DisplayName => _name;
     }
 
     public class FakeStreams : Streams
@@ -47,7 +72,6 @@ namespace ChronoBot.Tests.Fakes
             List<string> userIds = null,
             List<string> userLogins = null)
         {
-
             return Task.FromResult(new FakeGetStreamsResponse(userLogins));
         }
 
