@@ -39,7 +39,7 @@ namespace ChronoBot.Helpers
         {
             await client.GetGuild(DebugGuildId).GetTextChannel(DebugChannelId).SendMessageAsync(message);
         }
-        //Send message to my test channel.
+        //Send message to your own channel.
         public static async Task DebugSendMessageToChannelAsync(DiscordSocketClient client, Embed message)
         {
             await client.GetGuild(DebugGuildId).GetTextChannel(DebugChannelId).SendMessageAsync(embed: message);
@@ -47,6 +47,11 @@ namespace ChronoBot.Helpers
         public static async Task DebugSendFileToChannelAsync(DiscordSocketClient client, Embed message, string file)
         {
             await client.GetGuild(DebugGuildId).GetTextChannel(DebugChannelId).SendFileAsync(file, null, embed: message);
+        }
+        //Send message to log channel.
+        public static async Task SendMessageToLogChannel(DiscordSocketClient client, string message)
+        {
+            await client.GetGuild(DebugGuildId).GetTextChannel(DebugLogsChannelId).SendMessageAsync(message);
         }
     }
 }

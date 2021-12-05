@@ -7,7 +7,6 @@ using ChronoBot.Enums;
 using ChronoBot.Helpers;
 using Discord.WebSocket;
 using Microsoft.Extensions.Configuration;
-using ChronoTwitch;
 
 namespace ChronoBot.Utilities.SocialMedias
 {
@@ -42,7 +41,7 @@ namespace ChronoBot.Utilities.SocialMedias
             if (sendToChannelId == 0)
                 sendToChannelId = Statics.Debug ? Statics.DebugChannelId : channelId;
 
-            if (!CreateSocialMediaUser(username, guildId, sendToChannelId, "0", SocialMediaEnum.Twitch))
+            if (!CreateSocialMediaUser(displayName, guildId, sendToChannelId, "offline", SocialMediaEnum.Twitch))
                 return await Task.FromResult($"Failed to add {username}.");
 
             return await Task.FromResult($"Successfully added {displayName} \n{Hyperlink}{displayName}");
@@ -88,10 +87,10 @@ namespace ChronoBot.Utilities.SocialMedias
                     continue;
 
                 bool isLive = await _api.IsLive(user.Name);
-                user.Id = "0";
+                user.Id = "offline";
                 if (isLive)
                 {
-                    user.Id = "1";
+                    user.Id = "online";
                     streamerInfo = await GetStreamInfo(user.Name);
                 }
                 Users[i] = user;

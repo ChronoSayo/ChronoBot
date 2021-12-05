@@ -18,7 +18,6 @@ namespace ChronoBot.Tests.SocialMedias
 {
     public class TwitterTests
     {
-        private readonly FakeTwitterService _fakeTwitter;
         private readonly Mock<DiscordSocketClient> _mockClient;
         private readonly Mock<IConfiguration> _config;
 
@@ -34,8 +33,7 @@ namespace ChronoBot.Tests.SocialMedias
             _config.SetupGet(x => x[It.Is<string>(y => y == "IDs:Guild")]).Returns("199");
             _config.SetupGet(x => x[It.Is<string>(y => y == "IDs:TextChannel")]).Returns("1");
             Statics.Config = _config.Object;
-
-            _fakeTwitter = new FakeTwitterService();
+            
             _mockClient = new Mock<DiscordSocketClient>(MockBehavior.Loose);
         }
 
@@ -285,14 +283,14 @@ namespace ChronoBot.Tests.SocialMedias
                 Directory.Delete(path, true);
             fileSystem = new SocialMediaFileSystem(path);
             
-            return new Twitter(_fakeTwitter, _mockClient.Object, _config.Object, new List<SocialMediaUserData>(), fileSystem, seconds);
+            return new Twitter(new FakeTwitterService(), _mockClient.Object, _config.Object, new List<SocialMediaUserData>(), fileSystem, seconds);
         }
 
         private Twitter LoadTwitter(out SocialMediaFileSystem fileSystem)
         {
             fileSystem = new SocialMediaFileSystem(Path.Combine(Directory.GetCurrentDirectory(), "Test Files", GetType().Name, "Load"));
 
-            return new Twitter(_fakeTwitter, _mockClient.Object, _config.Object, new List<SocialMediaUserData>(), fileSystem);
+            return new Twitter(new FakeTwitterService(), _mockClient.Object, _config.Object, new List<SocialMediaUserData>(), fileSystem);
         }
     }
 }

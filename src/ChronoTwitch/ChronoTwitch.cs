@@ -1,38 +1,40 @@
 ﻿using System.Threading.Tasks;
-using ChronoTwitch.Helix;
 using TwitchLib.Api;
 using TwitchLib.Api.Helix.Models.Streams.GetStreams;
 
 namespace ChronoTwitch
 {
-    public class ChronoTwitch
+    public class ChronoTwitch : TwitchAPI
     {
         private readonly TwitchAPI _api;
+
+        public virtual string ClientId => _api.Settings.ClientId;
+        public virtual string Secret => _api.Settings.Secret;
 
         public ChronoTwitch()
         {
             _api = new TwitchAPI();
         }
 
-        public void Authenticate(string clientId, string secret)
+        public virtual void Authenticate(string clientId, string secret)
         {
-            _api.Settings.ClientId = clientId;
-            _api.Settings.Secret = secret;
+            Settings.ClientId = clientId;
+            Settings.Secret = secret;
         }
 
-        public async Task<string> DisplayName(string name)
+        public virtual async Task<string> DisplayName(string name)
         {
             var displayName = await GetDisplayName(name);
             return displayName;
         }
 
-        public async Task<bool> IsLive(string name)
+        public virtual async Task<bool> IsLive(string name)
         {
             var info = await GetStreamInfo(name);
             return info is { Type: "live" };
         }
 
-        public async Task<string> GameName(string name)
+        public virtual async Task<string> GameName(string name)
         {
             var info = await GetStreamInfo(name);
             if (info != null && info.GameName != string.Empty)
@@ -58,5 +60,6 @@ namespace ChronoTwitch
 
             return await Task.FromResult(streams.Streams[0]);
         }
+
     }
 }

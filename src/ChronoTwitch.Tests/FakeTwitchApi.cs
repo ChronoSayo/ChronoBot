@@ -2,21 +2,43 @@
 using System.Threading.Tasks;
 using TwitchLib.Api;
 using TwitchLib.Api.Core.Interfaces;
-using TwitchLib.Api.Helix;
+using TwitchLib.Api.Core.Undocumented;
 using TwitchLib.Api.Helix.Models.Streams.GetStreams;
 using TwitchLib.Api.Helix.Models.Users.GetUsers;
-using Helix = ChronoTwitch.Helix.Helix;
+using TwitchLib.Api.Interfaces;
+using TwitchLib.Api.ThirdParty;
+using TwitchLib.Api.V5;
+using Streams = TwitchLib.Api.Helix.Streams;
+using Users = TwitchLib.Api.Helix.Users;
 
-namespace ChronoBot.Tests.Fakes
+namespace ChronoTwitch.Tests
 {
-    public class FakeTwitchApi : TwitchAPI
+    public class FakeTwitchApi : ITwitchAPI
     {
-        public FakeHelix Helix { get; }
+        private readonly FakeHelix _helix;
+        public FakeTwitchApi()
+        {
+            _helix = new FakeHelix();
+        }
+
+        public IApiSettings Settings { get; }
+        public V5 V5 { get; }
+        TwitchLib.Api.Helix.Helix ITwitchAPI.Helix => _helix;
+
+        public ThirdParty ThirdParty { get; }
+        public Undocumented Undocumented { get; }
     }
 
     public class FakeHelix : Helix
     {
+        private readonly FakeUsers _users;
+        public FakeHelix()
+        {
+            _users = new FakeUsers(null, null, null);
+        }
+
         public FakeStreams Streams { get; }
+        public FakeUsers Users => _users;
     }
 
     public class FakeUsers : Users
@@ -24,10 +46,7 @@ namespace ChronoBot.Tests.Fakes
         public Task<FakeGetUsersResponse> GetUsersAsync(
             List<string> ids = null,
             List<string> logins = null,
-            string accessToken = null)
-        {
-            return Task.FromResult(new FakeGetUsersResponse(logins));
-        }
+            string accessToken = null) => Task.FromResult(new FakeGetUsersResponse(logins));
 
         public FakeUsers(IApiSettings settings, IRateLimiter rateLimiter, IHttpCallHandler http) : base(settings, rateLimiter, http)
         {

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -79,11 +78,7 @@ namespace ChronoBot.Common.Systems
             }
 
             xDoc.Save(guildPath);
-
-            StackTrace st = new StackTrace();
-            MethodBase mb = st.GetFrame(1).GetMethod();
-            //Program.Logger(new LogMessage(LogSeverity.Info, mb.ReflectedType + "." + mb, $"Saved {userData.name} in {userData.guildID}.xml"));
-
+            
             return true;
         }
 
@@ -104,9 +99,7 @@ namespace ChronoBot.Common.Systems
                 catch (Exception e)
                 {
                     Console.WriteLine(e);
-                    StackTrace st = new StackTrace();
-                    MethodBase mb = st.GetFrame(1).GetMethod();
-                    //Program.Logger(new LogMessage(LogSeverity.Info, mb.ReflectedType + "." + mb, "Unable to load users."));
+
                 }
             }
 
@@ -114,9 +107,9 @@ namespace ChronoBot.Common.Systems
                 return new List<IUserData>();
 
             List<SocialMediaUserData> ud = new List<SocialMediaUserData>();
-            ud.AddRange(CollectUserData(xmls, SocialMediaEnum.YouTube).Cast<SocialMediaUserData>());
-            ud.AddRange(CollectUserData(xmls, SocialMediaEnum.Twitter).Cast<SocialMediaUserData>());
-            ud.AddRange(CollectUserData(xmls, SocialMediaEnum.Twitch).Cast<SocialMediaUserData>());
+            ud.AddRange(CollectUserData(xmls, SocialMediaEnum.YouTube));
+            ud.AddRange(CollectUserData(xmls, SocialMediaEnum.Twitter));
+            ud.AddRange(CollectUserData(xmls, SocialMediaEnum.Twitch));
             return ud;
         }
 
@@ -209,11 +202,7 @@ namespace ChronoBot.Common.Systems
                         return false;
                 }
             }
-
-            StackTrace st = new StackTrace();
-            MethodBase mb = st.GetFrame(1).GetMethod();
-            //Program.Logger(new LogMessage(LogSeverity.Info, mb.ReflectedType + "." + mb, $"Deleted {ud.name} in {ud.guildID}.xml"));
-
+            
             return true;
         }
     }

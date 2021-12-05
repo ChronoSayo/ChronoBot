@@ -9,7 +9,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChronoBot", "src\ChronoBot\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChronoBot.Tests", "src\ChronoBot.Tests\ChronoBot.Tests\ChronoBot.Tests.csproj", "{91FB0388-859D-4CE8-8186-DC0CBD728479}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChronoTwitch", "src\ChronoTwitch\ChronoTwitch.csproj", "{6CD39977-61D7-49D4-8A65-DE2525CFE918}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChronoTwitch", "src\ChronoTwitch\ChronoTwitch.csproj", "{6CD39977-61D7-49D4-8A65-DE2525CFE918}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
