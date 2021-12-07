@@ -34,35 +34,38 @@ namespace ChronoBot.Utilities.SocialMedias
             if (Duplicate(guildId, username, SocialMediaEnum.Twitch))
                 return await Task.FromResult($"Already added {username}");
 
-            var displayName = await _api.DisplayName(username);
-            if (string.IsNullOrEmpty(displayName))
+            string loginName = await _api.LoginName(username);
+            if (string.IsNullOrEmpty(loginName))
                 return await Task.FromResult("Can't find " + username);
 
             if (sendToChannelId == 0)
                 sendToChannelId = Statics.Debug ? Statics.DebugChannelId : channelId;
 
-            if (!CreateSocialMediaUser(displayName, guildId, sendToChannelId, "offline", SocialMediaEnum.Twitch))
-                return await Task.FromResult($"Failed to add {username}.");
+            if (!CreateSocialMediaUser(loginName, guildId, sendToChannelId, "offline", SocialMediaEnum.Twitch))
+                return await Task.FromResult($"Failed to add {loginName}.");
 
-            return await Task.FromResult($"Successfully added {displayName} \n{Hyperlink}{displayName}");
+            var displayName = await _api.DisplayName(username);
+            return await Task.FromResult($"Successfully added {displayName} \n{Hyperlink}{loginName}");
         }
 
         public override async Task<string> GetSocialMediaUser(ulong guildId, ulong channelId, string username)
         {
             int i = FindIndexByName(guildId, username, SocialMediaEnum.Twitch);
-            if (i > -1)
-            {
-                SocialMediaUserData ud = Users[i];
-                bool isLive = await _api.IsLive(ud.Name);
-                string message;
-                if (isLive)
-                    message = await UpdateSocialMedia(new List<SocialMediaUserData> { ud }, await GetStreamInfo(ud.Name));
-                else
-                    message = Hyperlink + ud.Name;
-                return await Task.FromResult(message);
-            }
+            if (i <= -1) 
+                return await Task.FromResult("Can't find streamer.");
 
-            return await Task.FromResult("Can't find streamer.");
+            SocialMediaUserData ud = Users[i];
+            bool isLive = await _api.IsLive(ud.Name);
+            string message;
+            if (isLive)
+            {
+                message = await UpdateSocialMedia(new List<SocialMediaUserData> { ud }, await GetStreamInfo(ud.Name));
+            }
+            else
+                message = Hyperlink + ud.Name;
+
+            return await Task.FromResult(message);
+
         }
 
         public override async Task<string> ListSavedSocialMediaUsers(ulong guildId, SocialMediaEnum socialMedia, string channelMention = "")
@@ -87,12 +90,18 @@ namespace ChronoBot.Utilities.SocialMedias
                     continue;
 
                 bool isLive = await _api.IsLive(user.Name);
-                user.Id = "offline";
+                string oldId = user.Id;
                 if (isLive)
                 {
                     user.Id = "online";
                     streamerInfo = await GetStreamInfo(user.Name);
                 }
+                else
+                    user.Id = "offline";
+
+                if (user.Id == oldId) 
+                    continue;
+
                 Users[i] = user;
                 live.Add(Users[i]);
                 FileSystem.UpdateFile(user);
@@ -101,9 +110,9 @@ namespace ChronoBot.Utilities.SocialMedias
             if (live.Count > 0)
                 return await UpdateSocialMedia(live, streamerInfo);
 
-            return await Task.FromResult("No updates since last time.");
+            return await Task.FromResult("No streamers are broadcasting.");
         }
-
+        
         private async Task<Tuple<string, string>> GetStreamInfo(string name)
         {
             string displayName = await _api.DisplayName(name);

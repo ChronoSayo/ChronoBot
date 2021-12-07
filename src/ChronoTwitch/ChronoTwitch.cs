@@ -22,6 +22,12 @@ namespace ChronoTwitch
             Settings.Secret = secret;
         }
 
+        public virtual async Task<string> LoginName(string name)
+        {
+            var loginName = await GetLoginName(name);
+            return loginName;
+        }
+
         public virtual async Task<string> DisplayName(string name)
         {
             var displayName = await GetDisplayName(name);
@@ -50,6 +56,14 @@ namespace ChronoTwitch
                 return null;
 
             return await Task.FromResult(users.Users[0].DisplayName);
+        }
+        private async Task<string> GetLoginName(string name)
+        {
+            var users = await _api.GetUserAsync(name);
+            if (users == null || users.Users.Length == 0)
+                return null;
+
+            return await Task.FromResult(users.Users[0].Login);
         }
 
         private async Task<Stream> GetStreamInfo(string name)

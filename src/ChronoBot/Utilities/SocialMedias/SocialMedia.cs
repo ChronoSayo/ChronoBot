@@ -233,7 +233,7 @@ namespace ChronoBot.Utilities.SocialMedias
         //Display text for Twitch.
         protected virtual string GetStreamerUrlAndGame(SocialMediaUserData ud, Tuple<string, string> streamerInfo)
         {
-            return $"{ud.Name} is playing {streamerInfo.Item2}\n{Hyperlink}{streamerInfo.Item1}\n\n";
+            return $"{streamerInfo.Item1} is playing {streamerInfo.Item2}\n{Hyperlink}{ud.Name}\n\n";
         }
 
         //Display text for Twitter.

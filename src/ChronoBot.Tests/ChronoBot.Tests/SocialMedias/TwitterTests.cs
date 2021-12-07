@@ -73,16 +73,6 @@ namespace ChronoBot.Tests.SocialMedias
         }
 
         [Fact]
-        public void GetTwitter_Test_Success()
-        {
-            var twitter = LoadTwitter(out _);
-
-            var result = twitter.GetSocialMediaUser(123456789, false, "Tweeter1").GetAwaiter().GetResult();
-
-            Assert.Equal("https://twitter.com/Tweeter1/status/chirp\n\n", result);
-        }
-
-        [Fact]
         public void AutoUpdate_Test_Success()
         {
             var twitter = CreateNewTwitter(out var fileSystem, "Post Update", 2);
@@ -103,6 +93,16 @@ namespace ChronoBot.Tests.SocialMedias
             Assert.Equal("chirp", user.Id);
 
             File.Delete(Path.Combine(fileSystem.PathToSaveFile, "123456789.xml"));
+        }
+
+        [Fact]
+        public void GetTwitter_Test_Success()
+        {
+            var twitter = LoadTwitter(out _);
+
+            var result = twitter.GetSocialMediaUser(123456789, false, "Tweeter1").GetAwaiter().GetResult();
+
+            Assert.Equal("https://twitter.com/Tweeter1/status/chirp\n\n", result);
         }
 
         [Fact]

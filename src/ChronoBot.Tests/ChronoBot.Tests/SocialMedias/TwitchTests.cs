@@ -41,10 +41,10 @@ namespace ChronoBot.Tests.SocialMedias
 
             twitch.AddSocialMediaUser(1, 4, "streamer").GetAwaiter().GetResult();
             var users = (List<SocialMediaUserData>)fileSystem.Load();
-            var user = users.Find(x => x.Name == "Streamer");
+            var user = users.Find(x => x.Name == "streamer");
 
             Assert.NotNull(user);
-            Assert.Equal("Streamer", user.Name);
+            Assert.Equal("streamer", user.Name);
 
             File.Delete(Path.Combine(fileSystem.PathToSaveFile, "1.xml"));
         }
@@ -70,13 +70,33 @@ namespace ChronoBot.Tests.SocialMedias
         }
 
         [Fact]
-        public void GetTwitch_Test_Success()
+        public void AddTwitch_Test_Channel0_Success()
         {
             var twitch = LoadTwitch(out _);
 
-            var result = twitch.GetSocialMediaUser(123456789, false, "Streamer1").GetAwaiter().GetResult();
+            string result = twitch.AddSocialMediaUser(123456789, 0, "NotFound").GetAwaiter().GetResult();
 
-            Assert.Equal("https://Twitch.com/Streamer1/status/chirp\n\n", result);
+            Assert.Equal("Can't find NotFound", result);
+        }
+
+        [Fact]
+        public void GetTwitch_Test_Offline_Success()
+        {
+            var twitch = LoadTwitch(out _);
+
+            var result = twitch.GetSocialMediaUser(123456789, 2, "streamer2").GetAwaiter().GetResult();
+
+            Assert.Equal("https://www.twitch.com/streamer2", result);
+        }
+
+        [Fact]
+        public void GetTwitch_Test_Online_Success()
+        {
+            var twitch = LoadTwitch(out _);
+
+            var result = twitch.GetSocialMediaUser(123456789, 3, "streamer3").GetAwaiter().GetResult();
+
+            Assert.Equal("Streamer3 is playing The Game\nhttps://www.twitch.com/streamer3\n\n", result);
         }
 
         [Fact]
@@ -87,30 +107,17 @@ namespace ChronoBot.Tests.SocialMedias
             twitch.AddSocialMediaUser(123456789, 5, "postupdate1").GetAwaiter().GetResult();
             twitch.AddSocialMediaUser(123456789, 5, "postupdate2").GetAwaiter().GetResult();
             var users = (List<SocialMediaUserData>)fileSystem.Load();
-            var user = users.Find(x => x.Name == "PostUpdate1");
+            var user = users.Find(x => x.Name == "postupdate1");
 
             Assert.NotNull(user);
             Assert.Equal("offline", user.Id);
 
             Thread.Sleep(2500);
             users = (List<SocialMediaUserData>)fileSystem.Load();
-            user = users.Find(x => x.Name == "PostUpdate1");
+            user = users.Find(x => x.Name == "postupdate1");
 
             Assert.NotNull(user);
             Assert.Equal("online", user.Id);
-
-            File.Delete(Path.Combine(fileSystem.PathToSaveFile, "123456789.xml"));
-        }
-
-        [Fact]
-        public void GetTwitch_Test_NoId_Fail()
-        {
-            var twitch = CreateNewTwitch(out var fileSystem);
-
-            twitch.AddSocialMediaUser(123456789, 5, "NoId").GetAwaiter().GetResult();
-            var result = twitch.GetSocialMediaUser(123456789, true, "NoId").GetAwaiter().GetResult();
-
-            Assert.Equal("Could not retrieve Tweet.", result);
 
             File.Delete(Path.Combine(fileSystem.PathToSaveFile, "123456789.xml"));
         }
@@ -120,22 +127,9 @@ namespace ChronoBot.Tests.SocialMedias
         {
             var twitch = LoadTwitch(out _);
 
-            var result = twitch.GetSocialMediaUser(123456789, false, "Fail").GetAwaiter().GetResult();
+            var result = twitch.GetSocialMediaUser(123456789, 5, "Fail").GetAwaiter().GetResult();
 
-            Assert.Equal("Could not find Twitch handle.", result);
-        }
-
-        [Fact]
-        public void GetTwitch_Test_CouldNotRetrieve_Fail()
-        {
-            var twitch = CreateNewTwitch(out var fileSystem);
-
-            twitch.AddSocialMediaUser(123456789, 5, "Fail").GetAwaiter().GetResult();
-            var result = twitch.GetSocialMediaUser(123456789, false, "Fail").GetAwaiter().GetResult();
-
-            Assert.Equal("Could not retrieve Tweet.", result);
-
-            File.Delete(Path.Combine(fileSystem.PathToSaveFile, "123456789.xml"));
+            Assert.Equal("Can't find streamer.", result);
         }
 
         [Fact]
@@ -143,35 +137,26 @@ namespace ChronoBot.Tests.SocialMedias
         {
             var twitch = CreateNewTwitch(out var fileSystem);
 
-            twitch.AddSocialMediaUser(123456789, 6, "Updated", 9).GetAwaiter().GetResult();
+            twitch.AddSocialMediaUser(123456789, 6, "updated", 9).GetAwaiter().GetResult();
             var result = twitch.GetUpdatedSocialMediaUsers(123456789).GetAwaiter().GetResult();
 
-            Assert.Equal("https://Twitch.com/Updated/status/kaw-kaw\n\n", result);
+            Assert.Equal("Updated is playing Play\nhttps://www.twitch.com/updated\n\n", result);
 
             File.Delete(Path.Combine(fileSystem.PathToSaveFile, "123456789.xml"));
         }
 
         [Fact]
-        public void GetUpdatedTwitch_Test_MultipleUsers_Success()
+        public void GetUpdatedTwitch_Test_MultipleGuilds_Success()
         {
             var twitch = CreateNewTwitch(out var fileSystem);
 
-            twitch.AddSocialMediaUser(123456789, 8, "Fail").GetAwaiter().GetResult();
+            twitch.AddSocialMediaUser(123456789, 6, "updated", 9).GetAwaiter().GetResult();
+            twitch.AddSocialMediaUser(987654321, 6, "updated", 9).GetAwaiter().GetResult();
             var result = twitch.GetUpdatedSocialMediaUsers(123456789).GetAwaiter().GetResult();
 
-            Assert.Equal("No updates since last time.", result);
+            Assert.Equal("Updated is playing Play\nhttps://www.twitch.com/updated\n\n", result);
 
             File.Delete(Path.Combine(fileSystem.PathToSaveFile, "123456789.xml"));
-        }
-
-        [Fact]
-        public void GetUpdatedTwitch_Test_NoUpdate_Fail()
-        {
-            var twitch = LoadTwitch(out _);
-
-            var result = twitch.GetUpdatedSocialMediaUsers(123456789).GetAwaiter().GetResult();
-
-            Assert.Equal("No updates since last time.", result);
         }
 
         [Fact]
@@ -183,7 +168,7 @@ namespace ChronoBot.Tests.SocialMedias
             twitch.GetUpdatedSocialMediaUsers(123456789).GetAwaiter().GetResult();
             var result = twitch.GetUpdatedSocialMediaUsers(123456789).GetAwaiter().GetResult();
 
-            Assert.Equal("No updates since last time.", result);
+            Assert.Equal("No streamers are broadcasting.", result);
 
             File.Delete(Path.Combine(fileSystem.PathToSaveFile, "123456789.xml"));
         }
@@ -195,33 +180,20 @@ namespace ChronoBot.Tests.SocialMedias
 
             var result = twitch.GetUpdatedSocialMediaUsers(123456789).GetAwaiter().GetResult();
 
-            Assert.Equal("No Twitch handles registered.", result);
+            Assert.Equal("No streamers registered.", result);
 
             File.Delete(Path.Combine(fileSystem.PathToSaveFile, "123456789.xml"));
         }
 
         [Fact]
-        public void GetUpdatedTwitch_Test_NoStatus_Fail()
-        {
-            var Twitch = CreateNewTwitch(out var fileSystem, "Empty");
-
-            Twitch.AddSocialMediaUser(123456789, 12, "NoStatus").GetAwaiter().GetResult();
-            var result = Twitch.GetUpdatedSocialMediaUsers(123456789).GetAwaiter().GetResult();
-
-            Assert.Equal("No updates since last time.", result);
-
-            File.Delete(Path.Combine(fileSystem.PathToSaveFile, "123456789.xml"));
-        }
-
-        [Fact]
-        public void GetUpdatedTwitch_Test_EmptyStatus_Fail()
+        public void GetUpdatedTwitch_Test_NoOnline_Success()
         {
             var twitch = CreateNewTwitch(out var fileSystem, "Empty");
 
             twitch.AddSocialMediaUser(123456789, 12, "EmptyStatus").GetAwaiter().GetResult();
             var result = twitch.GetUpdatedSocialMediaUsers(123456789).GetAwaiter().GetResult();
 
-            Assert.Equal("No updates since last time.", result);
+            Assert.Equal("No streamers are broadcasting.", result);
 
             File.Delete(Path.Combine(fileSystem.PathToSaveFile, "123456789.xml"));
         }
@@ -235,7 +207,19 @@ namespace ChronoBot.Tests.SocialMedias
             twitch.AddSocialMediaUser(987654321, 5, "NewGuildStreamer").GetAwaiter().GetResult();
             var result = twitch.ListSavedSocialMediaUsers(123456789, SocialMediaEnum.Twitch).GetAwaiter().GetResult();
 
-            Assert.Equal("■ Streamer1 \n■ Streamer2 \n■ Streamer3 \n", result);
+            Assert.Equal("■ streamer1 \n■ streamer2 \n■ streamer3 \n", result);
+
+            File.Delete(Path.Combine(fileSystem.PathToSaveFile, "987654321.xml"));
+        }
+
+        [Fact]
+        public void ListSocialMedias_Test_Fail()
+        {
+            var twitch = CreateNewTwitch(out var fileSystem, "EmptyList");
+            
+            var result = twitch.ListSavedSocialMediaUsers(123456789, SocialMediaEnum.Twitch).GetAwaiter().GetResult();
+
+            Assert.Equal("No streamers registered.", result);
 
             File.Delete(Path.Combine(fileSystem.PathToSaveFile, "987654321.xml"));
         }
