@@ -148,7 +148,7 @@ namespace ChronoBot.Utilities.SocialMedias
         }
 
         //gameName is for Twitch.
-        protected virtual async Task<string> UpdateSocialMedia(IEnumerable<SocialMediaUserData> socialMediaUsers, Stream stream = null)
+        protected virtual async Task<string> UpdateSocialMedia(IEnumerable<SocialMediaUserData> socialMediaUsers, Tuple<string, string> streamerInfo = null)
         {
             //Save guild ID's and channel ID's to avoid repetition
             List<ulong> usedGuildIDs = new List<ulong>();
@@ -179,7 +179,7 @@ namespace ChronoBot.Utilities.SocialMedias
                         switch(TypeOfSocialMedia)
                         {
                             case "twitch":
-                                message += GetStreamerUrlAndGame(users[j], stream);
+                                message += GetStreamerUrlAndGame(users[j], streamerInfo);
                                 break;
                             case "twitter":
                                 message += GetTwitterUrl(users[j]);
@@ -231,9 +231,9 @@ namespace ChronoBot.Utilities.SocialMedias
         }
 
         //Display text for Twitch.
-        protected virtual string GetStreamerUrlAndGame(SocialMediaUserData ud, Stream stream)
+        protected virtual string GetStreamerUrlAndGame(SocialMediaUserData ud, Tuple<string, string> streamerInfo)
         {
-            return $"{ud.Name} is playing {stream.GameName}\n{Hyperlink}{stream.UserName}\n\n";
+            return $"{streamerInfo.Item1} is playing {streamerInfo.Item2}\n{Hyperlink}{ud.Name}\n\n";
         }
 
         //Display text for Twitter.

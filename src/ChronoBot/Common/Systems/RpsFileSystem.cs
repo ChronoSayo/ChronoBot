@@ -104,11 +104,7 @@ namespace ChronoBot.Common.Systems
             }
 
             xDoc.Save(guildPath);
-
-            StackTrace st = new StackTrace();
-            MethodBase mb = st.GetFrame(1).GetMethod();
-            //Program.Logger(new LogMessage(LogSeverity.Info, mb.ReflectedType + "." + mb, $"Saved {ud.UserId} in {ud.GuildId}.xml"));
-
+            
             return true;
         }
 
@@ -289,11 +285,6 @@ namespace ChronoBot.Common.Systems
                 return false;
 
             xml.Save(guildPath);
-
-            Console.WriteLine("Deleted {0} in {1}.xml", rpsUserData.UserId, rpsUserData.GuildId);
-            StackTrace st = new StackTrace();
-            MethodBase mb = st.GetFrame(1).GetMethod();
-            //Program.Logger(new LogMessage(LogSeverity.Info, mb.ReflectedType + "." + mb, $"Deleted {ud.UserId} in {ud.GuildId}.xml"));
 
             return true;
         }

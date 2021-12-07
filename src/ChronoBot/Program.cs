@@ -1,19 +1,13 @@
 ﻿using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
-using ChronoBot.Common.Systems;
 using ChronoBot.Helpers;
 using ChronoBot.Services;
-using ChronoBot.Utilities.Games;
-using ChronoBot.Utilities.SocialMedias;
-using ChronoBot.Utilities.Tools;
 using Discord;
 using Discord.Addons.Hosting;
 using Discord.Commands;
 using Discord.WebSocket;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace ChronoBot
