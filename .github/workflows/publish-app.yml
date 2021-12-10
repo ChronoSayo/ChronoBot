@@ -1,0 +1,39 @@
+name: publish
+
+on:
+  push:
+    branches: [ yaml ]
+
+env:
+  DOTNET_VERSION: '3.1' # The .NET SDK version to use
+
+jobs:
+  publish:
+
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Install dependencies
+      run: dotnet restore
+      
+    - name: Build
+      run: |
+        cd src/ChronoBot/ChronoBot.sln
+        dotnet build --configuration Release --no-restore
+        dotnet publish -c Release -o ../dotnet-webapp -r linux-x64 --self-contained true /p:UseAppHost=true
+    - name: Test
+      run: |
+        cd src/ChronoBot.Tests/ChronoBot.Tests.sln
+        dotnet test --no-restore --verbosity normal
+      
+    - uses: actions/upload-artifact@v2
+      name: BuildFiles
+      with:
+        app-name: ChronoBot
+        path: ChronoBot.zip
