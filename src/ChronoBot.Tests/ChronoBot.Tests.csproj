@@ -30,7 +30,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\ChronoBot\ChronoBot.csproj" />
+    <ProjectReference Include="..\ChronoBot\ChronoBot.csproj" />
   </ItemGroup>
 
   <ItemGroup>
