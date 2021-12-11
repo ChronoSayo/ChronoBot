@@ -24,6 +24,7 @@ jobs:
       
     - name: Build
       run: |
+        dir
         cd src\ChronoBot\ChronoBot.csproj
         dotnet build --configuration Release --no-restore
         dotnet publish -c Release -o ../chronobot -r windows-x64 --self-contained true /p:UseAppHost=true
