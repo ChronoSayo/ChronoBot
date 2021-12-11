@@ -419,7 +419,7 @@ namespace ChronoBot.Tests.Games
 
         private RpsPlayData CreatePlayer(string input, string username = "Tester", string mention = "Test123", ulong userId = 345678912)
         {
-            return new()
+            return new RpsPlayData
             {
                 ChannelId = 123456789,
                 GuildId = 234567891,
