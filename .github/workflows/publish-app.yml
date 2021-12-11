@@ -1,9 +1,5 @@
 name: publish
 
-on:
-  push:
-    branches: [ yaml ]
-
 env:
   DOTNET_VERSION: '3.1' # The .NET SDK version to use
 
@@ -31,9 +27,12 @@ jobs:
       run: |
         cd src\ChronoBot.Tests\
         dotnet test --no-restore --verbosity normal
+    - name: Publish
+      run: |
+        dotnet publish src\ChronoBot\ -c Release -o src\build
       
     - uses: actions/upload-artifact@v2
-      name: BuildFiles
+      name: Build
       with:
         app-name: ChronoBot
-        path: ChronoBot.zip
+        path: src/build/**
