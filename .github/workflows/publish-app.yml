@@ -24,12 +24,12 @@ jobs:
       
     - name: Build
       run: |
-        cd src/ChronoBot/ChronoBot.csproj
+        cd src\ChronoBot\ChronoBot.csproj
         dotnet build --configuration Release --no-restore
-        dotnet publish -c Release -o ../dotnet-webapp -r linux-x64 --self-contained true /p:UseAppHost=true
+        dotnet publish -c Release -o ../chronobot -r windows-x64 --self-contained true /p:UseAppHost=true
     - name: Test
       run: |
-        cd src/ChronoBot.Tests/ChronoBot.Tests.csproj
+        cd src\ChronoBot.Tests\ChronoBot.Tests.csproj
         dotnet test --no-restore --verbosity normal
       
     - uses: actions/upload-artifact@v2
