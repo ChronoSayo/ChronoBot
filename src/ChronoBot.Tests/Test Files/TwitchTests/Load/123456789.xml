@@ -1,0 +1,21 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Service>
+  <YouTube>
+    <User Name="YouTuber" ChannelID="1" ID="wecylinder" />>
+  </YouTube>
+  <Twitch>
+    <User Name="streamer1" ChannelID="1" ID="online" />
+    <User Name="streamer2" ChannelID="2" ID="offline" />
+    <User Name="streamer3" ChannelID="3" ID="online" />
+  </Twitch>
+  <Twitter>
+    <User Name="Tweeter" ChannelID="3" ID="chirp" />
+  </Twitter>
+  <RockPaperScissors>
+    <User UserID="69" ChannelID="4" Plays="10" TotalPlays="10" Wins="5" Losses="4" Draws="1" Ratio="50" Resets="0" Rocks="2" Papers="5" Scissors="3" CurrentStreak="0" BestStreak="2" Coins="1" UserIDOpponent="420" Actor="Rock" Deadline="08/28/2021 19:34:39" />
+    <User UserID="420" ChannelID="4" Plays="100" TotalPlays="15" Wins="55" Losses="44" Draws="11" Ratio="10" Resets="2" Rocks="22" Papers="55" Scissors="33" CurrentStreak="44" BestStreak="25" Coins="15" UserIDOpponent="69" Actor="Paper" Deadline="08/28/2021 19:34:39" />
+  </RockPaperScissors>
+  <Music>
+    <Music Title="Pumpkin Hill" ChannelID="5" ID="" />
+  </Music>
+</Service>

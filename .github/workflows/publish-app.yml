@@ -1,0 +1,40 @@
+name: publish
+
+on: [push, pull_request]
+
+env:
+  DOTNET_VERSION: '3.1' # The .NET SDK version to use
+
+jobs:
+  publish:
+
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Install dependencies
+      run: dotnet restore
+      
+    - name: Build
+      run: |
+        cd src\ChronoBot\
+        dotnet build --configuration Release --no-restore
+        dotnet publish -r win10-x64 --self-contained false
+    - name: Test
+      run: |
+        cd src\ChronoBot.Tests\
+        dotnet test --no-restore --verbosity normal || dotnet test --no-restore --verbosity normal
+    - name: Publish
+      run: |
+        dotnet publish src\ChronoBot\ -c Release -o src\build
+      
+    - uses: actions/upload-artifact@v2
+      name: Build
+      with:
+        app-name: ChronoBot
+        path: src/build/**
