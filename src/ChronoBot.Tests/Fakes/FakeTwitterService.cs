@@ -32,7 +32,7 @@ namespace ChronoBot.Tests.Fakes
             {
                 Media = new List<TwitterExtendedEntity>
                 {
-                    new() { ExtendedEntityType = TwitterMediaType.Photo }
+                    new TwitterExtendedEntity { ExtendedEntityType = TwitterMediaType.Photo }
                 }
             };
             if (options.ScreenName == "NotNsfw")

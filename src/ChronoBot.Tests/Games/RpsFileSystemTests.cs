@@ -110,7 +110,7 @@ namespace ChronoBot.Tests.Games
             var file = tuple.Item2;
             List<RpsUserData> saveUsers = new List<RpsUserData>()
             {
-                new()
+                new RpsUserData
                 {
                     UserId = 690,
                     ChannelId = 41,
@@ -132,7 +132,7 @@ namespace ChronoBot.Tests.Games
                     Actor = RpsActors.Rock
                 },
 
-                new()
+                new RpsUserData
                 {
                     UserId = 42,
                     ChannelId = 41,

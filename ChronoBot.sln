@@ -3,11 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.31025.194
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChronoBotOld", "src\ChronoBotOld\ChronoBotOld.csproj", "{CE13E7D2-BBC8-481D-982F-80853AE592FD}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChronoBot", "src\ChronoBot\ChronoBot.csproj", "{7AE9F3D5-C151-4003-B639-E93D53A96797}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChronoBot.Tests", "src\ChronoBot.Tests\ChronoBot.Tests\ChronoBot.Tests.csproj", "{91FB0388-859D-4CE8-8186-DC0CBD728479}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChronoBot.Tests", "src\ChronoBot.Tests\ChronoBot.Tests.csproj", "{91FB0388-859D-4CE8-8186-DC0CBD728479}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChronoTwitch", "src\ChronoTwitch\ChronoTwitch.csproj", "{6CD39977-61D7-49D4-8A65-DE2525CFE918}"
 EndProject

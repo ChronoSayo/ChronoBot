@@ -115,7 +115,7 @@ namespace ChronoBot.Tests.SocialMedias
             var file = tuple.Item2;
             List<SocialMediaUserData> saveUsers = new List<SocialMediaUserData>()
             {
-                new()
+                new SocialMediaUserData
                 {
                     Name = "Test",
                     SocialMedia = SocialMediaEnum.Twitter,
@@ -124,7 +124,7 @@ namespace ChronoBot.Tests.SocialMedias
                     Id = "134679258"
                 },
 
-                new()
+                new SocialMediaUserData
                 {
                     Name = "Testing",
                     SocialMedia = SocialMediaEnum.Twitch,
@@ -133,7 +133,7 @@ namespace ChronoBot.Tests.SocialMedias
                     Id = "33333"
                 },
 
-                new()
+                new SocialMediaUserData
                 {
                     Name = "Testies",
                     SocialMedia = SocialMediaEnum.YouTube,
