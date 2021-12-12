@@ -4,8 +4,6 @@ Discord bot with multiple helpful tools. Mostly for personal use.
 ## Features
 - Tools
   - Calculator
-  - Plays music from YouTube and Soundcloud in voice channel.
-  - Selfie of profile picture with Snapchat's dogfilter.
 - Social Media
   - Supports Twitter, YouTube, and Twitch.
   - Registers users to gather latest updated contents.
@@ -17,11 +15,6 @@ Discord bot with multiple helpful tools. Mostly for personal use.
 ## Commands
 - Tools
   - Calculator: ``!calc <calculation>``
-  - Music:
-    - Let bot join channel: ``<!channel | !join | !c | !j> <[insert channel mention]>``
-    - Play: ``<!play | !p> <(insert link to YouTube)>``
-    - Leave channel: ``<!leave | !l>``
-  - Selfie: ``<!selfie>``
 - Social Media
   - Add user: ``<!twitteradd | !twitchadd | !youtubeadd> <(insert Twitter handle) | ( insert Twitch channel name) | (insert Youtube ID/name)> [(insert channel name)]``
   - Add your following channels from Twitch: ``<!mine>``
@@ -37,11 +30,12 @@ Discord bot with multiple helpful tools. Mostly for personal use.
 
 ## Planned features
 - Tools
-  - A function to set reminders.
+  - Play music.
+  - Reminders.
+  - Selfies.
 - Social Media
-  - Instagram support.
+  - Instagram.
 - Games
-  - Rock-Paper-Scissors against other players.
   - Casino slots.
   - Tic-tac-toe.
 - Others
