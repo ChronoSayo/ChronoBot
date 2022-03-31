@@ -29,6 +29,7 @@ namespace ChronoBot.Helpers
 
         public static string TwitchClientId => "Tokens:Twitch:ClientID";
         public static string TwitchSecret => "Tokens:Twitch:Secret";
+        public static string TwitchAccessToken => "Tokens:Twitch:AccessToken";
 
         public static string RpsWinImage => "Images:Rps:Win";
         public static string RpsLoseImage => "Images:Rps:Lose";
