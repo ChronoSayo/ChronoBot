@@ -1,25 +1,26 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using TwitchLib.Api;
+using TwitchLib.Api.Core.Enums;
 using TwitchLib.Api.Helix.Models.Streams.GetStreams;
 
 namespace ChronoTwitch
 {
     public class ChronoTwitch : TwitchAPI
     {
-        private readonly TwitchAPI _api;
-
-        public virtual string ClientId => _api.Settings.ClientId;
-        public virtual string Secret => _api.Settings.Secret;
+        public virtual string ClientId => Settings.ClientId;
+        public virtual string Secret => Settings.Secret;
+        public virtual string AccessToken => Settings.AccessToken;
 
         public ChronoTwitch()
         {
-            _api = new TwitchAPI();
         }
 
-        public virtual void Authenticate(string clientId, string secret)
+        public virtual void Authenticate(string clientId, string secret, string accessToken)
         {
             Settings.ClientId = clientId;
             Settings.Secret = secret;
+            Settings.AccessToken = accessToken;
         }
 
         public virtual async Task<string> LoginName(string name)
@@ -51,7 +52,7 @@ namespace ChronoTwitch
 
         private async Task<string> GetDisplayName(string name)
         {
-            var users = await _api.GetUserAsync(name);
+            var users = await this.GetUserAsync(name);
             if (users == null || users.Users.Length == 0)
                 return null;
 
@@ -59,7 +60,7 @@ namespace ChronoTwitch
         }
         private async Task<string> GetLoginName(string name)
         {
-            var users = await _api.GetUserAsync(name);
+            var users = await this.GetUserAsync(name);
             if (users == null || users.Users.Length == 0)
                 return null;
 
@@ -68,12 +69,11 @@ namespace ChronoTwitch
 
         private async Task<Stream> GetStreamInfo(string name)
         {
-            var streams = await _api.GetStreamAsync(name);
+            var streams = await this.GetStreamAsync(name);
             if (streams == null || streams.Streams.Length == 0)
                 return null;
 
             return await Task.FromResult(streams.Streams[0]);
         }
-
     }
 }

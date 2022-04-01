@@ -18,7 +18,7 @@ namespace ChronoBot.Utilities.SocialMedias
             IEnumerable<SocialMediaUserData> users, SocialMediaFileSystem fileSystem, int seconds = 120) : base(client, config, users, fileSystem)
         {
             _api = api;
-            _api.Authenticate(Config[Statics.TwitchClientId], Config[Statics.TwitchSecret]);
+            _api.Authenticate(Config[Statics.TwitchClientId], Config[Statics.TwitchSecret], Config[Statics.TwitchAccessToken]);
 
             Hyperlink = "https://www.twitch.com/";
 
