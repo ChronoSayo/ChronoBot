@@ -26,6 +26,7 @@ namespace ChronoBot.Tests.SocialMedias
             _config.SetupGet(x => x[It.Is<string>(y => y == "Tokens:Discord")]).Returns("DiscordToken");
             _config.SetupGet(x => x[It.Is<string>(y => y == "Tokens:Twitch:ClientID")]).Returns("ConsumerKey");
             _config.SetupGet(x => x[It.Is<string>(y => y == "Tokens:Twitch:Secret")]).Returns("Secret");
+            _config.SetupGet(x => x[It.Is<string>(y => y == "Tokens:Twitch:AccessToken")]).Returns("AccessToken");
             _config.SetupGet(x => x[It.Is<string>(y => y == "Debug")]).Returns("false");
             _config.SetupGet(x => x[It.Is<string>(y => y == "IDs:Guild")]).Returns("199");
             _config.SetupGet(x => x[It.Is<string>(y => y == "IDs:TextChannel")]).Returns("1");

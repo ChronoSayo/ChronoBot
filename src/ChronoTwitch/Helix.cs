@@ -3,7 +3,6 @@ using System.Threading.Tasks;
 using TwitchLib.Api;
 using TwitchLib.Api.Helix.Models.Streams.GetStreams;
 using TwitchLib.Api.Helix.Models.Users.GetUsers;
-using TwitchLib.Api.Interfaces;
 
 namespace ChronoTwitch
 {
