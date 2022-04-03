@@ -100,7 +100,7 @@ namespace ChronoBot.Tests.SocialMedias
         {
             var twitter = LoadTwitter(out _);
 
-            var result = twitter.GetSocialMediaUser(123456789, false, "Tweeter1").GetAwaiter().GetResult();
+            var result = twitter.GetSocialMediaUser(123456789, "Tweeter1").GetAwaiter().GetResult();
 
             Assert.Equal("https://twitter.com/Tweeter1/status/chirp\n\n", result);
         }
@@ -111,7 +111,7 @@ namespace ChronoBot.Tests.SocialMedias
             var twitter = CreateNewTwitter(out var fileSystem);
 
             twitter.AddSocialMediaUser(123456789, 5, "NotNsfw").GetAwaiter().GetResult();
-            var result = twitter.GetSocialMediaUser(123456789, true, "NotNsfw").GetAwaiter().GetResult();
+            var result = twitter.GetSocialMediaUser(123456789, "NotNsfw").GetAwaiter().GetResult();
 
             Assert.Equal("https://twitter.com/NotNsfw/status/chirp\n\n", result);
 
@@ -124,7 +124,7 @@ namespace ChronoBot.Tests.SocialMedias
             var twitter = CreateNewTwitter(out var fileSystem);
 
             twitter.AddSocialMediaUser(123456789, 5, "NoId").GetAwaiter().GetResult();
-            var result = twitter.GetSocialMediaUser(123456789, true, "NoId").GetAwaiter().GetResult();
+            var result = twitter.GetSocialMediaUser(123456789, "NoId").GetAwaiter().GetResult();
 
             Assert.Equal("Could not retrieve Tweet.", result);
 
@@ -136,7 +136,7 @@ namespace ChronoBot.Tests.SocialMedias
         {
             var twitter = LoadTwitter(out _);
 
-            var result = twitter.GetSocialMediaUser(123456789, false, "Fail").GetAwaiter().GetResult();
+            var result = twitter.GetSocialMediaUser(123456789, "Fail").GetAwaiter().GetResult();
 
             Assert.Equal("Could not find Twitter handle.", result);
         }
@@ -147,7 +147,7 @@ namespace ChronoBot.Tests.SocialMedias
             var twitter = CreateNewTwitter(out var fileSystem);
 
             twitter.AddSocialMediaUser(123456789, 5, "Fail").GetAwaiter().GetResult();
-            var result = twitter.GetSocialMediaUser(123456789, false, "Fail").GetAwaiter().GetResult();
+            var result = twitter.GetSocialMediaUser(123456789, "Fail").GetAwaiter().GetResult();
 
             Assert.Equal("Could not retrieve Tweet.", result);
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.Eventing.Reader;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -26,11 +27,12 @@ namespace ChronoBot.Modules.SocialMedias
             SocialMedia = socialMedia;
         }
 
-        public virtual async Task AddAsync(string user, ulong channel = 0)
+        public virtual async Task AddAsync(string user, [Remainder] string option = "")
         {
             ulong guildId = Context.Guild.Id;
             ulong channelId = Context.Channel.Id;
-            string result = await SocialMedia.AddSocialMediaUser(guildId, channelId, user, channel);
+            ulong sendToChannel = Context.Message.MentionedChannels.Count > 0 ? Context.Message.MentionedChannels.FirstOrDefault()!.Id : 0;
+            string result = await SocialMedia.AddSocialMediaUser(guildId, channelId, user, sendToChannel, option);
             await SendMessage(result);
         }
 

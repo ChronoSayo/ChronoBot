@@ -40,7 +40,7 @@ namespace ChronoBot.Tests.SocialMedias
         [Fact]
         public void GetSocialMediaUsers_Test_Nsfw_Success()
         {
-            var result = _socialMedia.GetSocialMediaUser(123456789, false, "Test").GetAwaiter().GetResult();
+            var result = _socialMedia.GetSocialMediaUser(123456789, "Test").GetAwaiter().GetResult();
             Assert.Equal(string.Empty, result);
         }
 

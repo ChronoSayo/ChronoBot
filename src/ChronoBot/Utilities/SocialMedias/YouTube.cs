@@ -62,7 +62,7 @@ namespace ChronoBot.Utilities.SocialMedias
             return await Task.FromResult(channelInfo);
         }
 
-        public override async Task<string> AddSocialMediaUser(ulong guildId, ulong channelId, string username, ulong sendToChannelId = 0)
+        public override async Task<string> AddSocialMediaUser(ulong guildId, ulong channelId, string username, ulong sendToChannelId = 0, string options = "")
         {
             if (Duplicate(guildId, username, SocialMediaEnum.YouTube))
                 return await Task.FromResult($"Already added {username}");

@@ -29,7 +29,8 @@ namespace ChronoBot.Utilities.SocialMedias
             TypeOfSocialMedia = SocialMediaEnum.Twitch.ToString().ToLowerInvariant();
         }
 
-        public override async Task<string> AddSocialMediaUser(ulong guildId, ulong channelId, string username, ulong sendToChannelId = 0)
+        public override async Task<string> AddSocialMediaUser(ulong guildId, ulong channelId, string username,
+            ulong sendToChannelId = 0, string options = "")
         {
             if (Duplicate(guildId, username, SocialMediaEnum.Twitch))
                 return await Task.FromResult($"Already added {username}");

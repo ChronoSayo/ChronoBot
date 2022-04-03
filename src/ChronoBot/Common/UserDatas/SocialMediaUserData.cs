@@ -13,5 +13,6 @@ namespace ChronoBot.Common.UserDatas
         public ulong ChannelId { get; set; }
         public string Id { get; set; }
         public SocialMediaEnum SocialMedia { get; set; }
+        public string Options { get; set; }
     }
 }
