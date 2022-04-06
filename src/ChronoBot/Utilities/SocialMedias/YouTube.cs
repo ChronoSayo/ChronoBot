@@ -20,8 +20,8 @@ namespace ChronoBot.Utilities.SocialMedias
         private readonly string _channelLink;
 
         public YouTube(YouTubeService service, DiscordSocketClient client, IConfiguration config,
-        IEnumerable<SocialMediaUserData> users, SocialMediaFileSystem fileSystem, int seconds = 90) :
-            base(client, config, users, fileSystem, seconds)
+        IEnumerable<SocialMediaUserData> users, IEnumerable<string> availableOptions, SocialMediaFileSystem fileSystem, int seconds = 90) :
+            base(client, config, users, availableOptions, fileSystem, seconds)
         {
             _service = service;
             if (string.IsNullOrEmpty(_service.ApiKey))

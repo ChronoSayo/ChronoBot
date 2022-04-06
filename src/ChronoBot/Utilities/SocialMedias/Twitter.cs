@@ -57,8 +57,9 @@ namespace ChronoBot.Utilities.SocialMedias
             var options = new ListTweetsOnUserTimelineOptions
             {
                 ScreenName = name,
-                IncludeRts = option == OnlyRetweets,
-                Count = 100
+                IncludeRts = true,
+                Count = 100,
+                ExcludeReplies = false
             };
 
             var tweets = await _service.ListTweetsOnUserTimelineAsync(options);
@@ -95,7 +96,7 @@ namespace ChronoBot.Utilities.SocialMedias
         private async Task<TwitterStatus> ConfirmFetchedTweet(
             TwitterAsyncResult<IEnumerable<TwitterStatus>> tweets, bool media)
         {
-            if (tweets.Value == null)
+            if (tweets == null)
                 return null;
 
             TwitterStatus[] twitterStatuses;
@@ -135,6 +136,7 @@ namespace ChronoBot.Utilities.SocialMedias
                 {
                     case OnlyPosts:
                     case OnlyRetweets:
+                    case OnlyQuoteTweets:
                     case OnlyMedia:
                         tweets.Add(await GetLatestTweet(ud, option));
                         break;
