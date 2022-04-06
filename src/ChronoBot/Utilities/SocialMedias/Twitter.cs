@@ -17,11 +17,12 @@ namespace ChronoBot.Utilities.SocialMedias
     public sealed class Twitter : SocialMedia
     {
         private readonly TwitterService _service;
-        private const string IncludePosts = "p";
-        private const string IncludeRetweets = "r";
-        private const string IncludeLikes = "l";
-        private const string IncludeQuoteTweets = "q";
-        private const string IncludeMedia = "m";
+        private readonly IEnumerable<string> _availableOptions;
+        private const string OnlyPosts = "p";
+        private const string OnlyRetweets = "r";
+        private const string OnlyLikes = "l";
+        private const string OnlyQuoteTweets = "q";
+        private const string OnlyMedia = "m";
 
         public Twitter(TwitterService service, DiscordSocketClient client, IConfiguration config,
             IEnumerable<SocialMediaUserData> users, SocialMediaFileSystem fileSystem, int seconds = 60) :
@@ -38,23 +39,45 @@ namespace ChronoBot.Utilities.SocialMedias
             LoadOrCreateFromFile();
 
             TypeOfSocialMedia = SocialMediaEnum.Twitter.ToString().ToLowerInvariant();
+
+            _availableOptions = new List<string>
+            {
+                OnlyPosts, OnlyRetweets, OnlyQuoteTweets, OnlyLikes, OnlyMedia
+            };
         }
 
-        private async Task<TwitterStatus> GetLatestTweet(SocialMediaUserData ud, bool includeRetweets = false, bool media = false)
+        private async Task<TwitterStatus> GetLatestTweet(SocialMediaUserData ud, string option)
         {
-            var options = await TimelineOptionsAsync(ud.Name, includeRetweets);
-            return await ConfirmFetchedTweet(options, media);
+            var timelineOptions = await TimelineOptionsAsync(ud.Name, option);
+            if (timelineOptions == null)
+                return null;
+            return await ConfirmFetchedTweet(timelineOptions, option == OnlyMedia);
         }
 
-        private async Task<TwitterAsyncResult<IEnumerable<TwitterStatus>>> TimelineOptionsAsync(string name, bool includeRetweets)
+        private async Task<TwitterAsyncResult<IEnumerable<TwitterStatus>>> TimelineOptionsAsync(string name, string option)
         {
             var options = new ListTweetsOnUserTimelineOptions
             {
                 ScreenName = name,
-                IncludeRts = includeRetweets,
+                IncludeRts = option == OnlyRetweets,
                 Count = 100
             };
-            return await _service.ListTweetsOnUserTimelineAsync(options);
+
+            var tweets = await _service.ListTweetsOnUserTimelineAsync(options);
+            if (tweets.Value == null)
+                return null;
+            
+            switch (option)
+            {
+                case OnlyRetweets:
+                    tweets.Value.ToList().RemoveAll(x => !x.IsRetweeted);
+                    break;
+                case OnlyQuoteTweets:
+                    tweets.Value.ToList().RemoveAll(x => !x.IsQuoteStatus);
+                    break;
+            }
+
+            return tweets;
         }
 
         private async Task<TwitterStatus> GetLatestLike(SocialMediaUserData ud)
@@ -68,6 +91,8 @@ namespace ChronoBot.Utilities.SocialMedias
             };
 
             var tweets = await _service.ListFavoriteTweetsAsync(options);
+            if (tweets == null)
+                return null;
             return await ConfirmFetchedTweet(tweets, false);
         }
 
@@ -101,17 +126,42 @@ namespace ChronoBot.Utilities.SocialMedias
             return await Task.FromResult(tweet);
         }
 
-        private async Task<TwitterStatus> CheckOptionsForLatestTweet(SocialMediaUserData ud, string option)
+        private async Task<TwitterStatus> CheckOptionsForLatestTweet(SocialMediaUserData ud)
         {
+            List<TwitterStatus> tweets = new List<TwitterStatus>();
+            List<string> options = GetLegitOptions(ud.Options).ToList();
+            foreach (string option in options)
+            {
+                switch (option)
+                {
+                    case OnlyPosts:
+                    case OnlyRetweets:
+                    case OnlyMedia:
+                        tweets.Add(await GetLatestTweet(ud, option));
+                        break;
+                    case OnlyLikes:
+                        tweets.Add(await GetLatestLike(ud));
+                        break;
+                }
+            }
+
+            tweets.RemoveAll(x => x == null);
+            
+            if (tweets.Count == 0)
+                return null;
+            if (tweets.Count == 1)
+                return tweets.First();
+
+            DateTime latest = DateTime.MinValue;
             TwitterStatus tweet = null;
-            if (option == IncludePosts)
-                tweet = await GetLatestTweet(ud);
-            else if (option == IncludeRetweets)
-                tweet = await GetLatestTweet(ud, true);
-            else if (option == IncludeMedia)
-                tweet = await GetLatestTweet(ud, media: true);
-            else if (option == IncludeLikes)
-                tweet = await GetLatestLike(ud);
+            foreach (TwitterStatus twitterStatus in tweets)
+            {
+                if (latest >= twitterStatus.RetrievedAt) 
+                    continue;
+
+                latest = twitterStatus.RetrievedAt;
+                tweet = twitterStatus;
+            }
 
             return tweet;
         }
@@ -152,7 +202,7 @@ namespace ChronoBot.Utilities.SocialMedias
             List<string> options = GetLegitOptions(Users[i].Options).ToList();
             foreach (string option in options)
             {
-                TwitterStatus tweet = await CheckOptionsForLatestTweet(Users[i], option);
+                TwitterStatus tweet = await CheckOptionsForLatestTweet(Users[i]);
                 if (tweet != null)
                 {
                     SocialMediaUserData temp = Users[i];
@@ -185,17 +235,10 @@ namespace ChronoBot.Utilities.SocialMedias
                 if (user.SocialMedia != SocialMediaEnum.Twitter || user.GuildId != guildId)
                     continue;
 
-                TwitterStatus tweet = null;
-                List<string> options = GetLegitOptions(Users[i].Options).ToList();
-                foreach (string option in options)
-                {
-                    tweet = await CheckOptionsForLatestTweet(Users[i], option);
-                    if (tweet == null || tweet.Id == -1)
-                        continue;
-                    if (MessageDisplayed(tweet.IdStr, user.GuildId))
-                        continue;
-                }
-                if(tweet == null)
+                TwitterStatus tweet = await CheckOptionsForLatestTweet(user);
+                if (tweet == null || tweet.Id <= -1)
+                    continue;
+                if(MessageDisplayed(tweet.IdStr, user.GuildId))
                     continue;
 
                 user.Id = tweet.IdStr;
@@ -252,18 +295,14 @@ namespace ChronoBot.Utilities.SocialMedias
         private IEnumerable<string> GetLegitOptions(string options)
         {
             if (string.IsNullOrWhiteSpace(options))
-                return new List<string>();
+                return _availableOptions;
 
             IEnumerable<string> optionsList = options.Split(" ").ToList();
-            IEnumerable<string> legit = new List<string>
-            {
-                IncludePosts, IncludeRetweets, IncludeQuoteTweets, IncludeLikes, IncludeMedia
-            };
-
             List<string> legitOptions = new List<string>();
+
             foreach (string option in optionsList)
             {
-                if(legit.Any(x => x == option))
+                if(_availableOptions.Any(x => x == option))
                     legitOptions.Add(option);
             }
 
