@@ -17,7 +17,6 @@ namespace ChronoBot.Utilities.SocialMedias
     public sealed class Twitter : SocialMedia
     {
         private readonly TwitterService _service;
-        private readonly IEnumerable<string> _availableOptions;
         private const string OnlyPosts = "p";
         private const string OnlyRetweets = "r";
         private const string OnlyLikes = "l";
@@ -25,8 +24,9 @@ namespace ChronoBot.Utilities.SocialMedias
         private const string OnlyMedia = "m";
 
         public Twitter(TwitterService service, DiscordSocketClient client, IConfiguration config,
-            IEnumerable<SocialMediaUserData> users, SocialMediaFileSystem fileSystem, int seconds = 60) :
-            base(client, config, users, fileSystem, seconds)
+            IEnumerable<SocialMediaUserData> users, IEnumerable<string> availableOptions, 
+            SocialMediaFileSystem fileSystem, int seconds = 60) :
+            base(client, config, users, availableOptions, fileSystem, seconds)
         {
             _service = service;
 
@@ -40,7 +40,7 @@ namespace ChronoBot.Utilities.SocialMedias
 
             TypeOfSocialMedia = SocialMediaEnum.Twitter.ToString().ToLowerInvariant();
 
-            _availableOptions = new List<string>
+            AvailableOptions = new List<string>
             {
                 OnlyPosts, OnlyRetweets, OnlyQuoteTweets, OnlyLikes, OnlyMedia
             };
@@ -49,8 +49,6 @@ namespace ChronoBot.Utilities.SocialMedias
         private async Task<TwitterStatus> GetLatestTweet(SocialMediaUserData ud, string option)
         {
             var timelineOptions = await TimelineOptionsAsync(ud.Name, option);
-            if (timelineOptions == null)
-                return null;
             return await ConfirmFetchedTweet(timelineOptions, option == OnlyMedia);
         }
 
@@ -91,14 +89,15 @@ namespace ChronoBot.Utilities.SocialMedias
             };
 
             var tweets = await _service.ListFavoriteTweetsAsync(options);
-            if (tweets == null)
-                return null;
             return await ConfirmFetchedTweet(tweets, false);
         }
 
         private async Task<TwitterStatus> ConfirmFetchedTweet(
             TwitterAsyncResult<IEnumerable<TwitterStatus>> tweets, bool media)
         {
+            if (tweets.Value == null)
+                return null;
+
             TwitterStatus[] twitterStatuses;
             try
             {
@@ -295,14 +294,14 @@ namespace ChronoBot.Utilities.SocialMedias
         private IEnumerable<string> GetLegitOptions(string options)
         {
             if (string.IsNullOrWhiteSpace(options))
-                return _availableOptions;
+                return AvailableOptions;
 
             IEnumerable<string> optionsList = options.Split(" ").ToList();
             List<string> legitOptions = new List<string>();
 
             foreach (string option in optionsList)
             {
-                if(_availableOptions.Any(x => x == option))
+                if(AvailableOptions.Any(x => x == option))
                     legitOptions.Add(option);
             }
 

@@ -21,13 +21,15 @@ namespace ChronoBot.Utilities.SocialMedias
         protected string Hyperlink;
         protected string TypeOfSocialMedia;
         protected List<SocialMediaUserData> Users;
+        protected List<string> AvailableOptions;
 
-        public SocialMedia(DiscordSocketClient client, IConfiguration config, IEnumerable<SocialMediaUserData> users,
-            SocialMediaFileSystem fileSystem, int seconds = 60)
+        public SocialMedia(DiscordSocketClient client, IConfiguration config, IEnumerable<SocialMediaUserData> users, 
+            IEnumerable<string> availableOptions, SocialMediaFileSystem fileSystem, int seconds = 60)
         {
             Client = client;
             Config = config;
             Users = users.ToList();
+            AvailableOptions = availableOptions.ToList();
             FileSystem = fileSystem;
         }
 
