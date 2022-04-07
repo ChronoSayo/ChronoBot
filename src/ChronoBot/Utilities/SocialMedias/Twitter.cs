@@ -46,58 +46,33 @@ namespace ChronoBot.Utilities.SocialMedias
             };
         }
 
-        private async Task<TwitterStatus> GetLatestTweet(SocialMediaUserData ud, string option)
+        private async Task<TwitterStatus> GetLatestTweet(SocialMediaUserData ud)
         {
-            var timelineOptions = await TimelineOptionsAsync(ud.Name, option);
-            return await ConfirmFetchedTweet(timelineOptions, option == OnlyMedia);
-        }
-
-        private async Task<TwitterAsyncResult<IEnumerable<TwitterStatus>>> TimelineOptionsAsync(string name, string option)
-        {
-            var options = new ListTweetsOnUserTimelineOptions
+            var timeLineOptions = new ListTweetsOnUserTimelineOptions
             {
-                ScreenName = name,
+                ScreenName = ud.Name,
                 IncludeRts = true,
                 Count = 100,
                 ExcludeReplies = false
             };
 
-            var tweets = await _service.ListTweetsOnUserTimelineAsync(options);
-            if (tweets.Value == null)
+            var tweets = await _service.ListTweetsOnUserTimelineAsync(timeLineOptions);
+            if (tweets?.Value == null)
                 return null;
-            
-            switch (option)
+
+            List<string> options = GetLegitOptions(ud.Options).ToList();
+            foreach (string option in options)
             {
-                case OnlyRetweets:
-                    tweets.Value.ToList().RemoveAll(x => !x.IsRetweeted);
-                    break;
-                case OnlyQuoteTweets:
-                    tweets.Value.ToList().RemoveAll(x => !x.IsQuoteStatus);
-                    break;
+                switch (option)
+                {
+                    case OnlyRetweets:
+                        tweets.Value.ToList().RemoveAll(x => !x.IsRetweeted);
+                        break;
+                    case OnlyQuoteTweets:
+                        tweets.Value.ToList().RemoveAll(x => !x.IsQuoteStatus);
+                        break;
+                }
             }
-
-            return tweets;
-        }
-
-        private async Task<TwitterStatus> GetLatestLike(SocialMediaUserData ud)
-        {
-            ListFavoriteTweetsOptions options = new ListFavoriteTweetsOptions
-            {
-                ScreenName = ud.Name,
-                Count = 100,
-                TweetMode = "extended",
-                UserId = long.Parse(ud.Id)
-            };
-
-            var tweets = await _service.ListFavoriteTweetsAsync(options);
-            return await ConfirmFetchedTweet(tweets, false);
-        }
-
-        private async Task<TwitterStatus> ConfirmFetchedTweet(
-            TwitterAsyncResult<IEnumerable<TwitterStatus>> tweets, bool media)
-        {
-            if (tweets == null)
-                return null;
 
             TwitterStatus[] twitterStatuses;
             try
@@ -112,7 +87,7 @@ namespace ChronoBot.Utilities.SocialMedias
             }
 
             TwitterStatus tweet = twitterStatuses.ElementAt(0);
-            if (media)
+            if (options.Any())
             {
                 if (tweet.ExtendedEntities == null || !tweet.ExtendedEntities.Any() ||
                     !tweet.ExtendedEntities.Media.Any() ||
@@ -124,6 +99,21 @@ namespace ChronoBot.Utilities.SocialMedias
                 return null;
 
             return await Task.FromResult(tweet);
+
+            return tweets;
+        }
+
+        private async Task<TwitterStatus> GetLatestLike(SocialMediaUserData ud)
+        {
+            ListFavoriteTweetsOptions options = new ListFavoriteTweetsOptions
+            {
+                ScreenName = ud.Name,
+                Count = 100,
+                UserId = long.Parse(ud.Id)
+            };
+
+            var tweets = await _service.ListFavoriteTweetsAsync(options);
+            return await ConfirmFetchedTweet(tweets, false);
         }
 
         private async Task<TwitterStatus> CheckOptionsForLatestTweet(SocialMediaUserData ud)
