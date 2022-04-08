@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 using ChronoBot.Common.Systems;
 using ChronoBot.Common.UserDatas;
@@ -22,10 +23,11 @@ namespace ChronoBot.Utilities.SocialMedias
         private const string OnlyLikes = "l";
         private const string OnlyQuoteTweets = "q";
         private const string OnlyMedia = "m";
+        private bool _rateLimitReached;
 
         public Twitter(TwitterService service, DiscordSocketClient client, IConfiguration config,
             IEnumerable<SocialMediaUserData> users, IEnumerable<string> availableOptions, 
-            SocialMediaFileSystem fileSystem, int seconds = 120) :
+            SocialMediaFileSystem fileSystem, int seconds = 10) :
             base(client, config, users, availableOptions, fileSystem, seconds)
         {
             _service = service;
@@ -44,6 +46,8 @@ namespace ChronoBot.Utilities.SocialMedias
             {
                 OnlyPosts, OnlyRetweets, OnlyQuoteTweets, OnlyLikes, OnlyMedia
             };
+
+            _rateLimitReached = false;
         }
 
         private async Task<TwitterStatus> GetLatestTweet(SocialMediaUserData ud)
@@ -61,7 +65,14 @@ namespace ChronoBot.Utilities.SocialMedias
                 TweetMode = "extended"
             };
 
-            var tweets = await _service.ListTweetsOnUserTimelineAsync(timeLineOptions);
+            var tweets = await _service.ListTweetsOnUserTimelineAsync(timeLineOptions); 
+            if (tweets.Response.RateLimitStatus.RemainingHits <= 0)
+            {
+                var wait = tweets.Response.RateLimitStatus.ResetTime.ToUniversalTime() - DateTime.UtcNow;
+                await Statics.SendMessageToLogChannel(Client,
+                    $"Twitter rate limit exceeded. Reset in {tweets.Response.RateLimitStatus.ResetTime}");
+                Thread.Sleep(wait);
+            }
             if (tweets?.Value == null)
                 return null;
 
@@ -200,11 +211,10 @@ namespace ChronoBot.Utilities.SocialMedias
                 return await Task.FromResult("No Twitter handles registered.");
 
             List<SocialMediaUserData> newTweets = new List<SocialMediaUserData>();
-            for (int i = 0; i < Users.Count; i++)
+            List<SocialMediaUserData> twitterHandles = Users.FindAll(x => x.SocialMedia != SocialMediaEnum.Twitter);
+            for (int i = 0; i < twitterHandles.Count; i++)
             {
-                SocialMediaUserData user = Users[i];
-                if (user.SocialMedia != SocialMediaEnum.Twitter || user.GuildId != guildId)
-                    continue;
+                SocialMediaUserData user = twitterHandles[i];
 
                 TwitterStatus tweet = await GetLatestTweet(user);
                 if (tweet == null || tweet.Id <= -1)
