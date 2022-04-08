@@ -53,23 +53,49 @@ namespace ChronoBot.Utilities.SocialMedias
                 ScreenName = ud.Name,
                 IncludeRts = true,
                 Count = 100,
-                ExcludeReplies = false
+                ExcludeReplies = false,
+                TweetMode = "extended"
             };
 
             var tweets = await _service.ListTweetsOnUserTimelineAsync(timeLineOptions);
             if (tweets?.Value == null)
                 return null;
 
+            tweets.Value.ToList().RemoveAll(x => x == null);
+            if (tweets.Value.ToList().Count == 0)
+                return null;
+
             List<string> options = GetLegitOptions(ud.Options).ToList();
+            TwitterAsyncResult<IEnumerable<TwitterStatus>> postingTweets =
+                new TwitterAsyncResult<IEnumerable<TwitterStatus>>(new List<TwitterStatus>(), null);
             foreach (string option in options)
             {
+                TwitterStatus found;
                 switch (option)
                 {
+                    case OnlyPosts:
+                        found = tweets.Value.ToList()
+                            .FirstOrDefault(x => !x.IsRetweeted && !x.IsQuoteStatus && !x.IsFavorited);
+                        if(found != null)
+                            postingTweets.Value.ToList().Add(found);
+                        break;
                     case OnlyRetweets:
-                        tweets.Value.ToList().RemoveAll(x => !x.IsRetweeted);
+                        found = tweets.Value.ToList().FirstOrDefault(x => x.IsRetweeted);
+                        if (found != null)
+                            postingTweets.Value.ToList().Add(found);
                         break;
                     case OnlyQuoteTweets:
-                        tweets.Value.ToList().RemoveAll(x => !x.IsQuoteStatus);
+                        found = tweets.Value.ToList().FirstOrDefault(x => x.IsQuoteStatus);
+                        if (found != null)
+                            postingTweets.Value.ToList().Add(found);
+                        break;
+                    case OnlyMedia:
+                        found = tweets.Value.ToList().FirstOrDefault(x =>
+                            x.ExtendedEntities != null && x.ExtendedEntities.Any() &&
+                            x.ExtendedEntities.Media.Any() &&
+                            x.ExtendedEntities.Media.ElementAt(0).ExtendedEntityType == TwitterMediaType.Photo);
+                        if (found != null)
+                            postingTweets.Value.ToList().Add(found);
                         break;
                 }
             }
@@ -77,7 +103,7 @@ namespace ChronoBot.Utilities.SocialMedias
             TwitterStatus[] twitterStatuses;
             try
             {
-                twitterStatuses = tweets.Value as TwitterStatus[] ?? tweets.Value.ToArray();
+                twitterStatuses = postingTweets.Value as TwitterStatus[] ?? postingTweets.Value.ToArray();
                 if (!twitterStatuses.Any())
                     return null;
             }
@@ -87,20 +113,10 @@ namespace ChronoBot.Utilities.SocialMedias
             }
 
             TwitterStatus tweet = twitterStatuses.ElementAt(0);
-            if (options.Any())
-            {
-                if (tweet.ExtendedEntities == null || !tweet.ExtendedEntities.Any() ||
-                    !tweet.ExtendedEntities.Media.Any() ||
-                    tweet.ExtendedEntities.Media.ElementAt(0).ExtendedEntityType != TwitterMediaType.Photo)
-                    tweet.Id = -1;
-            }
-
             if (tweet.Id == 0 || tweet.IdStr == "" || tweet.IdStr == null)
                 return null;
 
             return await Task.FromResult(tweet);
-
-            return tweets;
         }
 
         private async Task<TwitterStatus> GetLatestLike(SocialMediaUserData ud)
