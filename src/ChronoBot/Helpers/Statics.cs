@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using ChronoBot.Common;
 using Discord;
 using Discord.WebSocket;
 using Microsoft.Extensions.Configuration;
@@ -53,6 +54,12 @@ namespace ChronoBot.Helpers
         public static async Task SendMessageToLogChannel(DiscordSocketClient client, string message)
         {
             await client.GetGuild(DebugGuildId).GetTextChannel(DebugLogsChannelId).SendMessageAsync(message);
+        }
+        //Send embedded message to log channel.
+        public static async Task SendEmbedMessageToLogChannel(DiscordSocketClient client, string message, Color color)
+        {
+            var embed = new ChronoBotEmbedBuilder(message).WithColor(color);
+            await client.GetGuild(DebugGuildId).GetTextChannel(DebugLogsChannelId).SendMessageAsync(embed: embed.Build());
         }
     }
 }
