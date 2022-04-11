@@ -23,11 +23,14 @@ namespace ChronoBot.Utilities.SocialMedias
         private const string OnlyRetweets = "r";
         private const string OnlyLikes = "l";
         private const string OnlyQuoteTweets = "q";
-        private const string OnlyMedia = "m";
+        private const string OnlyAllMedia = "m";
+        private const string OnlyPicMedia = "mp";
+        private const string OnlyGifMedia = "mg";
+        private const string OnlyVidMedia = "mv";
         private DateTime _rateLimitResetTime;
 
         public Twitter(TwitterService service, DiscordSocketClient client, IConfiguration config,
-            IEnumerable<SocialMediaUserData> users, IEnumerable<string> availableOptions, 
+            IEnumerable<SocialMediaUserData> users, IEnumerable<string> availableOptions,
             SocialMediaFileSystem fileSystem, int seconds = 10) :
             base(client, config, users, availableOptions, fileSystem, seconds)
         {
@@ -45,7 +48,7 @@ namespace ChronoBot.Utilities.SocialMedias
 
             AvailableOptions = new List<string>
             {
-                OnlyPosts, OnlyRetweets, OnlyQuoteTweets, OnlyLikes, OnlyMedia
+                OnlyPosts, OnlyRetweets, OnlyQuoteTweets, OnlyLikes, OnlyAllMedia, OnlyGifMedia, OnlyVidMedia, OnlyPicMedia
             };
 
             _rateLimitResetTime = DateTime.Now;
@@ -66,7 +69,7 @@ namespace ChronoBot.Utilities.SocialMedias
                 TweetMode = "extended"
             };
 
-            var tweets = await _service.ListTweetsOnUserTimelineAsync(timeLineOptions); 
+            var tweets = await _service.ListTweetsOnUserTimelineAsync(timeLineOptions);
             if (tweets.Response.RateLimitStatus.RemainingHits <= 0)
             {
                 _rateLimitResetTime = tweets.Response.RateLimitStatus.ResetTime;
@@ -75,7 +78,7 @@ namespace ChronoBot.Utilities.SocialMedias
                     $"Twitter rate limit exceeded. Reset in {tweets.Response.RateLimitStatus.ResetTime}", Color.Gold);
                 Thread.Sleep(wait);
             }
-            
+
             if (tweets.Value == null)
                 return null;
 
@@ -92,7 +95,7 @@ namespace ChronoBot.Utilities.SocialMedias
                     case OnlyPosts:
                         found = tweets.Value.ToList()
                             .FirstOrDefault(x => !x.IsRetweeted && !x.IsQuoteStatus && !x.IsFavorited);
-                        if(found != null)
+                        if (found != null)
                             postingTweets.Add(found);
                         break;
                     case OnlyRetweets:
@@ -105,11 +108,22 @@ namespace ChronoBot.Utilities.SocialMedias
                         if (found != null)
                             postingTweets.Add(found);
                         break;
-                    case OnlyMedia:
+                    case OnlyPicMedia:
+                    case OnlyGifMedia:
+                    case OnlyVidMedia:
+                        TwitterMediaType media = option == OnlyPicMedia ? TwitterMediaType.Photo :
+                            option == OnlyGifMedia ? TwitterMediaType.AnimatedGif : TwitterMediaType.Video;
                         found = tweets.Value.ToList().FirstOrDefault(x =>
                             x.ExtendedEntities != null && x.ExtendedEntities.Any() &&
                             x.ExtendedEntities.Media.Any() &&
-                            x.ExtendedEntities.Media.ElementAt(0).ExtendedEntityType == TwitterMediaType.Photo);
+                            x.ExtendedEntities.Media.ElementAt(0).ExtendedEntityType == media);
+                        if (found != null)
+                            postingTweets.Add(found);
+                        break;
+                    case OnlyAllMedia:
+                        found = tweets.Value.ToList().FirstOrDefault(x =>
+                            x.ExtendedEntities != null && x.ExtendedEntities.Any() &&
+                            x.ExtendedEntities.Media.Any());
                         if (found != null)
                             postingTweets.Add(found);
                         break;
@@ -150,7 +164,7 @@ namespace ChronoBot.Utilities.SocialMedias
             var tweets = await _service.ListFavoriteTweetsAsync(options);
             if (tweets?.Value == null || !tweets.Value.Any())
                 return null;
-            
+
             return await Task.FromResult(tweets.Value.ElementAt(0));
         }
 
@@ -165,7 +179,7 @@ namespace ChronoBot.Utilities.SocialMedias
                 bool isLegit = legit.Item2;
                 if (!isLegit)
                     return await Task.FromResult("Can't find " + username);
-                if(!GetLegitOptions(options).Any())
+                if (!GetLegitOptions(options).Any())
                     return await Task.FromResult($"Unrecognizable option: \"{options}\"" + username);
                 if (sendToChannelId == 0)
                     sendToChannelId = Statics.Debug ? Statics.DebugChannelId : channelId;
@@ -184,7 +198,7 @@ namespace ChronoBot.Utilities.SocialMedias
         public override async Task<string> GetSocialMediaUser(ulong guildId, string username)
         {
             int i = FindIndexByName(guildId, username, SocialMediaEnum.Twitter);
-            if (i == -1) 
+            if (i == -1)
                 return await Task.FromResult("Could not find Twitter handle.");
 
             if (DateTime.Now < _rateLimitResetTime)
@@ -229,7 +243,7 @@ namespace ChronoBot.Utilities.SocialMedias
                 TwitterStatus tweet = await GetLatestTweet(user);
                 if (tweet == null || tweet.Id <= -1)
                     continue;
-                if(MessageDisplayed(tweet.IdStr, user.GuildId))
+                if (MessageDisplayed(tweet.IdStr, user.GuildId))
                     continue;
 
                 user.Id = tweet.IdStr;
@@ -286,14 +300,18 @@ namespace ChronoBot.Utilities.SocialMedias
         private IEnumerable<string> GetLegitOptions(string options)
         {
             if (string.IsNullOrWhiteSpace(options))
-                return AvailableOptions;
+            {
+                List<string> returnDefaults = AvailableOptions;
+                returnDefaults.RemoveRange(returnDefaults.FindIndex(x => x == OnlyAllMedia), 3);
+                return returnDefaults;
+            }
 
             IEnumerable<string> optionsList = options.Split(" ").ToList();
             List<string> legitOptions = new List<string>();
 
             foreach (string option in optionsList)
             {
-                if(AvailableOptions.Any(x => x == option))
+                if (AvailableOptions.Any(x => x == option))
                     legitOptions.Add(option);
             }
 
