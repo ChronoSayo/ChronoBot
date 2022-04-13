@@ -84,11 +84,12 @@ namespace ChronoBot.Utilities.SocialMedias
                 return await Task.FromResult("No streamers registered.");
 
             List<SocialMediaUserData> live = new List<SocialMediaUserData>();
-            List<SocialMediaUserData> streamers = Users.FindAll(x => x.SocialMedia == SocialMediaEnum.Twitch);
             Tuple<string, string> streamerInfo = null;
-            for (int i = 0; i < streamers.Count; i++)
+            for (int i = 0; i < Users.Count; i++)
             {
                 SocialMediaUserData user = Users[i];
+                if (user.SocialMedia != SocialMediaEnum.Twitch || user.GuildId != guildId)
+                    continue;
 
                 bool isLive = await _api.IsLive(user.Name);
                 string oldId = user.Id;

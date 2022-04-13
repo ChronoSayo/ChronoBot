@@ -109,10 +109,11 @@ namespace ChronoBot.Utilities.SocialMedias
                 return await Task.FromResult("No YouTuber registered.");
 
             List<SocialMediaUserData> newVideos = new List<SocialMediaUserData>();
-            List<SocialMediaUserData> youtubers = Users.FindAll(x => x.SocialMedia == SocialMediaEnum.YouTube);
-            for (int i = 0; i < youtubers.Count; i++)
+            for (int i = 0; i < Users.Count; i++)
             {
                 SocialMediaUserData user = Users[i];
+                if (user.SocialMedia != SocialMediaEnum.YouTube || user.GuildId != guildId)
+                    continue;
 
                 List<string> channelInfo = await SearchForYouTuber(user.Name);
                 if (channelInfo.Count == 0)

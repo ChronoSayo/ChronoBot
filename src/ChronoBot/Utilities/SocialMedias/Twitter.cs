@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using ChronoBot.Common.Systems;
@@ -12,6 +11,7 @@ using Discord;
 using Discord.WebSocket;
 using Microsoft.Extensions.Configuration;
 using TweetSharp;
+using Timer = System.Threading.Timer;
 
 
 namespace ChronoBot.Utilities.SocialMedias
@@ -37,7 +37,7 @@ namespace ChronoBot.Utilities.SocialMedias
             _service = service;
 
             Authenticate();
-
+            
             OnUpdateTimerAsync(seconds);
 
             Hyperlink = "https://twitter.com/@name/status/@id";
@@ -68,7 +68,6 @@ namespace ChronoBot.Utilities.SocialMedias
                 ExcludeReplies = false,
                 TweetMode = "extended"
             };
-
             var tweets = await _service.ListTweetsOnUserTimelineAsync(timeLineOptions);
             if (tweets.Response.RateLimitStatus.RemainingHits <= 0)
             {
@@ -235,10 +234,11 @@ namespace ChronoBot.Utilities.SocialMedias
                                              $"{_rateLimitResetTime}");
 
             List<SocialMediaUserData> newTweets = new List<SocialMediaUserData>();
-            List<SocialMediaUserData> twitterHandles = Users.FindAll(x => x.SocialMedia == SocialMediaEnum.Twitter);
-            for (int i = 0; i < twitterHandles.Count; i++)
+            for (int i = 0; i < Users.Count; i++)
             {
-                SocialMediaUserData user = twitterHandles[i];
+                SocialMediaUserData user = Users[i];
+                if (user.SocialMedia != SocialMediaEnum.Twitter || user.GuildId != guildId)
+                    continue;
 
                 TwitterStatus tweet = await GetLatestTweet(user);
                 if (tweet == null || tweet.Id <= -1)
@@ -301,8 +301,10 @@ namespace ChronoBot.Utilities.SocialMedias
         {
             if (string.IsNullOrWhiteSpace(options))
             {
-                List<string> returnDefaults = AvailableOptions;
-                returnDefaults.RemoveRange(returnDefaults.FindIndex(x => x == OnlyAllMedia), 3);
+                List<string> returnDefaults = new List<string>();
+                returnDefaults.AddRange(AvailableOptions);
+                int i = returnDefaults.FindIndex(x => x == OnlyAllMedia);
+                returnDefaults.RemoveRange(i + 1, 3);
                 return returnDefaults;
             }
 
