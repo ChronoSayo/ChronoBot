@@ -69,7 +69,9 @@ namespace ChronoBot.Utilities.SocialMedias
                 TweetMode = "extended"
             };
             var tweets = await _service.ListTweetsOnUserTimelineAsync(timeLineOptions);
-            if (tweets.Response.RateLimitStatus.RemainingHits <= 0)
+            if (tweets == null)
+                return null;
+            if (tweets.Response != null && tweets.Response.RateLimitStatus.RemainingHits <= 0)
             {
                 _rateLimitResetTime = tweets.Response.RateLimitStatus.ResetTime;
                 var wait = _rateLimitResetTime - DateTime.Now;
@@ -141,23 +143,28 @@ namespace ChronoBot.Utilities.SocialMedias
             TwitterStatus tweet = null;
             foreach (TwitterStatus twitterStatus in postingTweets)
             {
-                if (latest >= twitterStatus.CreatedDate)
+                if (twitterStatus == null || latest >= twitterStatus.CreatedDate)
                     continue;
 
                 latest = twitterStatus.CreatedDate;
                 tweet = twitterStatus;
             }
 
+            if(tweet == null && postingTweets.Count > 0)
+                return postingTweets[0];
+
             return await Task.FromResult(tweet);
         }
 
         private async Task<TwitterStatus> GetLatestLike(SocialMediaUserData ud)
         {
+            if (!long.TryParse(ud.Id, out long userId))
+                userId = 0;
             ListFavoriteTweetsOptions options = new ListFavoriteTweetsOptions
             {
                 ScreenName = ud.Name,
                 Count = 100,
-                UserId = long.Parse(ud.Id)
+                UserId = userId
             };
 
             var tweets = await _service.ListFavoriteTweetsAsync(options);
@@ -179,7 +186,7 @@ namespace ChronoBot.Utilities.SocialMedias
                 if (!isLegit)
                     return await Task.FromResult("Can't find " + username);
                 if (!GetLegitOptions(options).Any())
-                    return await Task.FromResult($"Unrecognizable option: \"{options}\"" + username);
+                    return await Task.FromResult($"Unrecognizable option: \"{options}\"");
                 if (sendToChannelId == 0)
                     sendToChannelId = Statics.Debug ? Statics.DebugChannelId : channelId;
 
@@ -205,7 +212,7 @@ namespace ChronoBot.Utilities.SocialMedias
                                              $"{_rateLimitResetTime}");
 
             TwitterStatus tweet = await GetLatestTweet(Users[i]);
-            if (tweet != null)
+            if (tweet != null && tweet.Id != 0 && !string.IsNullOrEmpty(tweet.IdStr))
             {
                 SocialMediaUserData temp = Users[i];
                 temp.Id = tweet.IdStr;

@@ -15,11 +15,13 @@ namespace ChronoBot.Utilities.SocialMedias
         private readonly ChronoTwitch.ChronoTwitch _api;
 
         public Twitch(ChronoTwitch.ChronoTwitch api, DiscordSocketClient client, IConfiguration config,
-            IEnumerable<string> availableOptions, IEnumerable<SocialMediaUserData> users, SocialMediaFileSystem fileSystem, int seconds = 120) :
+            IEnumerable<SocialMediaUserData> users, IEnumerable<string> availableOptions,
+            SocialMediaFileSystem fileSystem, int seconds = 120) :
             base(client, config, users, availableOptions, fileSystem)
         {
             _api = api;
-            _api.Authenticate(Config[Statics.TwitchClientId], Config[Statics.TwitchSecret], Config[Statics.TwitchAccessToken]);
+            _api.Authenticate(Config[Statics.TwitchClientId], Config[Statics.TwitchSecret],
+                Config[Statics.TwitchAccessToken]);
 
             Hyperlink = "https://www.twitch.com/";
 

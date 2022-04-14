@@ -20,7 +20,7 @@ namespace ChronoBot.Tests.SocialMedias
             var mockClient = new Mock<DiscordSocketClient>(MockBehavior.Loose);
             var config = new Mock<IConfiguration>();
             _socialMedia = new SocialMedia(mockClient.Object, config.Object,
-                new List<SocialMediaUserData>(), new SocialMediaFileSystem());
+                new List<SocialMediaUserData>(), new List<string>(), new SocialMediaFileSystem());
         }
 
         [Fact]
@@ -71,7 +71,7 @@ namespace ChronoBot.Tests.SocialMedias
                 }
             };
             var socialMedia = new SocialMedia(new Mock<DiscordSocketClient>().Object, new Mock<IConfiguration>().Object,
-                users, new SocialMediaFileSystem(path));
+                users, new List<string>(), new SocialMediaFileSystem(path));
 
             string result = socialMedia.DeleteSocialMediaUser(987654321, "Test2", SocialMediaEnum.Twitch);
 
