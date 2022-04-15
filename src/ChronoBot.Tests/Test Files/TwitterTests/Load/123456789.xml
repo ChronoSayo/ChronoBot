@@ -10,6 +10,10 @@
     <User Name="Tweeter1" ChannelID="1" ID="chirp" />
     <User Name="Tweeter2" ChannelID="2" ID="chirps" />
     <User Name="Tweeter3" ChannelID="3" ID="chirpf" />
+	<User Name="Tweeter4" ChannelID="4" ID="chirp" Options="p" />
+    <User Name="Tweeter5" ChannelID="5" ID="chirp" Options="q r" />
+    <User Name="Tweeter6" ChannelID="6" ID="789" Options="l"/>
+    <User Name="Tweeter7" ChannelID="7" ID="chirp" Options="mg"/>
   </Twitter>
   <RockPaperScissors>
     <User UserID="69" ChannelID="4" Plays="10" TotalPlays="10" Wins="5" Losses="4" Draws="1" Ratio="50" Resets="0" Rocks="2" Papers="5" Scissors="3" CurrentStreak="0" BestStreak="2" Coins="1" UserIDOpponent="420" Actor="Rock" Deadline="08/28/2021 19:34:39" />

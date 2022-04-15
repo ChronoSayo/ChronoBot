@@ -252,14 +252,16 @@ namespace ChronoBot.Tests.SocialMedias
                 Directory.Delete(path, true);
             fileSystem = new SocialMediaFileSystem(path);
 
-            return new Twitch(new FakeChronoTwitch(), _mockClient.Object, _config.Object, new List<SocialMediaUserData>(), fileSystem, seconds);
+            return new Twitch(new FakeChronoTwitch(), _mockClient.Object, _config.Object,
+                new List<SocialMediaUserData>(), new List<string>(), fileSystem, seconds);
         }
 
         private Twitch LoadTwitch(out SocialMediaFileSystem fileSystem)
         {
             fileSystem = new SocialMediaFileSystem(Path.Combine(Directory.GetCurrentDirectory(), "Test Files", GetType().Name, "Load"));
 
-            return new Twitch(new FakeChronoTwitch(), _mockClient.Object, _config.Object, new List<SocialMediaUserData>(), fileSystem);
+            return new Twitch(new FakeChronoTwitch(), _mockClient.Object, _config.Object,
+                new List<SocialMediaUserData>(), new List<string>(), fileSystem);
         }
     }
 }

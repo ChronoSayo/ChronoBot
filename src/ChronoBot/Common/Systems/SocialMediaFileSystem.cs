@@ -38,12 +38,14 @@ namespace ChronoBot.Common.Systems
             string channelId = socialMediaUserData.ChannelId.ToString();
             string id = socialMediaUserData.Id ?? string.Empty;
             string socialMedia = socialMediaUserData.SocialMedia.ToString();
+            string options = socialMediaUserData.Options ?? string.Empty;
 
             XElement user = new XElement("User");
             XAttribute newName = new XAttribute("Name", name);
             XAttribute newChannelId = new XAttribute("ChannelID", channelId);
             XAttribute newId = new XAttribute("ID", id);
-            user.Add(newName, newChannelId, newId);
+            XAttribute newOptions = new XAttribute("Options", options);
+            user.Add(newName, newChannelId, newId, newOptions);
 
             XDocument xDoc;
             string guildPath = Path.Combine(PathToSaveFile, guildId + ".xml");
@@ -99,7 +101,6 @@ namespace ChronoBot.Common.Systems
                 catch (Exception e)
                 {
                     Console.WriteLine(e);
-
                 }
             }
 
@@ -127,6 +128,7 @@ namespace ChronoBot.Common.Systems
                     user.ChannelId = ulong.Parse(e.Attribute("ChannelID")?.Value ?? string.Empty);
                     user.Id = e.Attribute("ID")?.Value;
                     user.SocialMedia = socialMedia;
+                    user.Options = e.Attribute("Options")?.Value;
                     ud.Add(user);
                 }
             }
@@ -156,6 +158,8 @@ namespace ChronoBot.Common.Systems
                     found.Attributes("Name").First().Value = socialMediaUserData.Name;
                     found.Attributes("ChannelID").First().Value = socialMediaUserData.ChannelId.ToString();
                     found.Attributes("ID").First().Value = socialMediaUserData.Id;
+                    if(!string.IsNullOrEmpty(socialMediaUserData.Options))
+                        found.Attributes("Options").First().Value = socialMediaUserData.Options;
                     updated = true;
                     break;
                 }

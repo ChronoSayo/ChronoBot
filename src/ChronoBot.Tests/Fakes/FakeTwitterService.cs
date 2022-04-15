@@ -1,11 +1,28 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
+using Hammock;
 using TweetSharp;
 
 namespace ChronoBot.Tests.Fakes
 {
     public class FakeTwitterService : TwitterService
     {
+        public override async Task<TwitterAsyncResult<IEnumerable<TwitterStatus>>> ListFavoriteTweetsAsync(ListFavoriteTweetsOptions options)
+        {
+            if(options.ScreenName != "Tweeter6")
+                return null;
+
+            var status = new TwitterStatus
+            {
+                User = new TwitterUser { ScreenName = options.ScreenName },
+                Id = 123456789,
+                IdStr = "123"
+            };
+            var statuses = new TwitterAsyncResult<IEnumerable<TwitterStatus>>(new[] { status }, null);
+            return await Task.FromResult(statuses);
+        }
+
         public override async Task<TwitterAsyncResult<IEnumerable<TwitterStatus>>> ListTweetsOnUserTimelineAsync(ListTweetsOnUserTimelineOptions options)
         {
             if (options.ScreenName == "Fail")
@@ -32,18 +49,19 @@ namespace ChronoBot.Tests.Fakes
             {
                 Media = new List<TwitterExtendedEntity>
                 {
-                    new TwitterExtendedEntity { ExtendedEntityType = TwitterMediaType.Photo }
+                    new TwitterExtendedEntity { ExtendedEntityType = TwitterMediaType.AnimatedGif }
                 }
             };
-            if (options.ScreenName == "NotNsfw")
-                extended = null;
 
             var status = new TwitterStatus
             {
                 User = new TwitterUser{ScreenName = options.ScreenName},
                 ExtendedEntities = extended,
                 Id = id,
-                IdStr = idStr
+                IdStr = idStr,
+                IsRetweeted = options.ScreenName == "Tweeter5",
+                IsQuoteStatus = options.ScreenName == "Tweeter5",
+                CreatedDate = DateTime.Now
             };
             var statuses = new TwitterAsyncResult<IEnumerable<TwitterStatus>>(new[] { status }, null);
             return await Task.FromResult(statuses);

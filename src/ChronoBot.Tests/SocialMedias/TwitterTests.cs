@@ -11,7 +11,6 @@ using ChronoBot.Utilities.SocialMedias;
 using Discord.WebSocket;
 using Microsoft.Extensions.Configuration;
 using Moq;
-using TweetSharp;
 using Xunit;
 
 namespace ChronoBot.Tests.SocialMedias
@@ -85,7 +84,7 @@ namespace ChronoBot.Tests.SocialMedias
             Assert.NotNull(user);
             Assert.Equal("0", user.Id);
 
-            Thread.Sleep(2500);
+            Thread.Sleep(2600);
             users = (List<SocialMediaUserData>)fileSystem.Load();
             user = users.Find(x => x.Name == "PostUpdate");
 
@@ -100,22 +99,59 @@ namespace ChronoBot.Tests.SocialMedias
         {
             var twitter = LoadTwitter(out _);
 
-            var result = twitter.GetSocialMediaUser(123456789, false, "Tweeter1").GetAwaiter().GetResult();
+            var result = twitter.GetSocialMediaUser(123456789, "Tweeter1").GetAwaiter().GetResult();
 
             Assert.Equal("https://twitter.com/Tweeter1/status/chirp\n\n", result);
         }
 
         [Fact]
-        public void GetTwitter_Test_NotNsfw_Success()
+        public void GetTwitter_IncludingLikes_Success()
         {
-            var twitter = CreateNewTwitter(out var fileSystem);
+            var twitter = LoadTwitter(out _);
 
-            twitter.AddSocialMediaUser(123456789, 5, "NotNsfw").GetAwaiter().GetResult();
-            var result = twitter.GetSocialMediaUser(123456789, true, "NotNsfw").GetAwaiter().GetResult();
+            var result = twitter.GetSocialMediaUser(123456789, "Tweeter1").GetAwaiter().GetResult();
 
-            Assert.Equal("https://twitter.com/NotNsfw/status/chirp\n\n", result);
+            Assert.Equal("https://twitter.com/Tweeter1/status/chirp\n\n", result);
+        }
 
-            File.Delete(Path.Combine(fileSystem.PathToSaveFile, "123456789.xml"));
+        [Fact]
+        public void GetTwitter_OnlyPosts_Success()
+        {
+            var twitter = LoadTwitter(out _);
+
+            var result = twitter.GetSocialMediaUser(123456789, "Tweeter4").GetAwaiter().GetResult();
+
+            Assert.Equal("https://twitter.com/Tweeter4/status/chirp\n\n", result);
+        }
+
+        [Fact]
+        public void GetTwitter_MultipleOptions_Success()
+        {
+            var twitter = LoadTwitter(out _);
+
+            var result = twitter.GetSocialMediaUser(123456789, "Tweeter5").GetAwaiter().GetResult();
+
+            Assert.Equal("https://twitter.com/Tweeter5/status/chirp\n\n", result);
+        }
+
+        [Fact]
+        public void GetTwitter_OnlyLikes_Success()
+        {
+            var twitter = LoadTwitter(out _);
+
+            var result = twitter.GetSocialMediaUser(123456789, "Tweeter6").GetAwaiter().GetResult();
+
+            Assert.Equal("https://twitter.com/Tweeter6/status/123\n\n", result);
+        }
+
+        [Fact]
+        public void GetTwitter_OnlyGifs_Success()
+        {
+            var twitter = LoadTwitter(out _);
+
+            var result = twitter.GetSocialMediaUser(123456789, "Tweeter7").GetAwaiter().GetResult();
+
+            Assert.Equal("https://twitter.com/Tweeter7/status/chirp\n\n", result);
         }
 
         [Fact]
@@ -123,8 +159,8 @@ namespace ChronoBot.Tests.SocialMedias
         {
             var twitter = CreateNewTwitter(out var fileSystem);
 
-            twitter.AddSocialMediaUser(123456789, 5, "NoId").GetAwaiter().GetResult();
-            var result = twitter.GetSocialMediaUser(123456789, true, "NoId").GetAwaiter().GetResult();
+            twitter.AddSocialMediaUser(123456789, 5, "NoId", options: "p").GetAwaiter().GetResult();
+            var result = twitter.GetSocialMediaUser(123456789, "NoId").GetAwaiter().GetResult();
 
             Assert.Equal("Could not retrieve Tweet.", result);
 
@@ -136,7 +172,7 @@ namespace ChronoBot.Tests.SocialMedias
         {
             var twitter = LoadTwitter(out _);
 
-            var result = twitter.GetSocialMediaUser(123456789, false, "Fail").GetAwaiter().GetResult();
+            var result = twitter.GetSocialMediaUser(123456789, "Fail").GetAwaiter().GetResult();
 
             Assert.Equal("Could not find Twitter handle.", result);
         }
@@ -147,9 +183,21 @@ namespace ChronoBot.Tests.SocialMedias
             var twitter = CreateNewTwitter(out var fileSystem);
 
             twitter.AddSocialMediaUser(123456789, 5, "Fail").GetAwaiter().GetResult();
-            var result = twitter.GetSocialMediaUser(123456789, false, "Fail").GetAwaiter().GetResult();
+            var result = twitter.GetSocialMediaUser(123456789, "Fail").GetAwaiter().GetResult();
 
             Assert.Equal("Could not retrieve Tweet.", result);
+
+            File.Delete(Path.Combine(fileSystem.PathToSaveFile, "123456789.xml"));
+        }
+
+        [Fact]
+        public void GetTwitter_Test_UnavailableOption_Fail()
+        {
+            var twitter = CreateNewTwitter(out var fileSystem);
+
+            var result = twitter.AddSocialMediaUser(123456789, 5, "Fail", options:"f").GetAwaiter().GetResult();
+
+            Assert.Equal($"Unrecognizable option: \"f\"", result);
 
             File.Delete(Path.Combine(fileSystem.PathToSaveFile, "123456789.xml"));
         }
@@ -251,8 +299,20 @@ namespace ChronoBot.Tests.SocialMedias
             twitter.AddSocialMediaUser(987654321, 5, "NewGuildTweeter").GetAwaiter().GetResult();
             var result = twitter.ListSavedSocialMediaUsers(123456789, SocialMediaEnum.Twitter).GetAwaiter().GetResult();
 
-            Assert.Equal("■ Tweeter1 \n■ Tweeter2 \n■ Tweeter3 \n", result);
+            Assert.Equal("■ Tweeter1 \n■ Tweeter2 \n■ Tweeter3 \n■ Tweeter4 \n■ Tweeter5 \n■ Tweeter6 \n■ Tweeter7 \n", result);
             
+            File.Delete(Path.Combine(fileSystem.PathToSaveFile, "987654321.xml"));
+        }
+
+        [Fact]
+        public void ListSocialMedias_Test_Fail()
+        {
+            var twitter = CreateNewTwitter(out var fileSystem, "List");
+            
+            var result = twitter.ListSavedSocialMediaUsers(123456789, SocialMediaEnum.Twitter).GetAwaiter().GetResult();
+
+            Assert.Equal("No Twitter handles registered.", result);
+
             File.Delete(Path.Combine(fileSystem.PathToSaveFile, "987654321.xml"));
         }
 
@@ -282,15 +342,17 @@ namespace ChronoBot.Tests.SocialMedias
             if(Directory.Exists(path))
                 Directory.Delete(path, true);
             fileSystem = new SocialMediaFileSystem(path);
-            
-            return new Twitter(new FakeTwitterService(), _mockClient.Object, _config.Object, new List<SocialMediaUserData>(), fileSystem, seconds);
+
+            return new Twitter(new FakeTwitterService(), _mockClient.Object, _config.Object,
+                new List<SocialMediaUserData>(), new List<string>(), fileSystem, seconds);
         }
 
         private Twitter LoadTwitter(out SocialMediaFileSystem fileSystem)
         {
             fileSystem = new SocialMediaFileSystem(Path.Combine(Directory.GetCurrentDirectory(), "Test Files", GetType().Name, "Load"));
 
-            return new Twitter(new FakeTwitterService(), _mockClient.Object, _config.Object, new List<SocialMediaUserData>(), fileSystem);
+            return new Twitter(new FakeTwitterService(), _mockClient.Object, _config.Object,
+                new List<SocialMediaUserData>(), new List<string>(), fileSystem);
         }
     }
 }
