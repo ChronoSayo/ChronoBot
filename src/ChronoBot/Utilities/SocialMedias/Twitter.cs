@@ -31,7 +31,7 @@ namespace ChronoBot.Utilities.SocialMedias
 
         public Twitter(TwitterService service, DiscordSocketClient client, IConfiguration config,
             IEnumerable<SocialMediaUserData> users, IEnumerable<string> availableOptions,
-            SocialMediaFileSystem fileSystem, int seconds = 10) :
+            SocialMediaFileSystem fileSystem, int seconds = 60) :
             base(client, config, users, availableOptions, fileSystem, seconds)
         {
             _service = service;
@@ -149,9 +149,6 @@ namespace ChronoBot.Utilities.SocialMedias
                 latest = twitterStatus.CreatedDate;
                 tweet = twitterStatus;
             }
-
-            if(tweet == null && postingTweets.Count > 0)
-                return postingTweets[0];
 
             return await Task.FromResult(tweet);
         }

@@ -11,7 +11,6 @@ using ChronoBot.Utilities.SocialMedias;
 using Discord.WebSocket;
 using Microsoft.Extensions.Configuration;
 using Moq;
-using TweetSharp;
 using Xunit;
 
 namespace ChronoBot.Tests.SocialMedias
@@ -116,13 +115,43 @@ namespace ChronoBot.Tests.SocialMedias
         }
 
         [Fact]
-        public void GetTwitter_OnlyLikes_Success()
+        public void GetTwitter_OnlyPosts_Success()
+        {
+            var twitter = LoadTwitter(out _);
+
+            var result = twitter.GetSocialMediaUser(123456789, "Tweeter4").GetAwaiter().GetResult();
+
+            Assert.Equal("https://twitter.com/Tweeter4/status/chirp\n\n", result);
+        }
+
+        [Fact]
+        public void GetTwitter_MultipleOptions_Success()
         {
             var twitter = LoadTwitter(out _);
 
             var result = twitter.GetSocialMediaUser(123456789, "Tweeter5").GetAwaiter().GetResult();
 
-            Assert.Equal("https://twitter.com/Tweeter1/status/chirp\n\n", result);
+            Assert.Equal("https://twitter.com/Tweeter5/status/chirp\n\n", result);
+        }
+
+        [Fact]
+        public void GetTwitter_OnlyLikes_Success()
+        {
+            var twitter = LoadTwitter(out _);
+
+            var result = twitter.GetSocialMediaUser(123456789, "Tweeter6").GetAwaiter().GetResult();
+
+            Assert.Equal("https://twitter.com/Tweeter6/status/123\n\n", result);
+        }
+
+        [Fact]
+        public void GetTwitter_OnlyGifs_Success()
+        {
+            var twitter = LoadTwitter(out _);
+
+            var result = twitter.GetSocialMediaUser(123456789, "Tweeter7").GetAwaiter().GetResult();
+
+            Assert.Equal("https://twitter.com/Tweeter7/status/chirp\n\n", result);
         }
 
         [Fact]
@@ -270,8 +299,20 @@ namespace ChronoBot.Tests.SocialMedias
             twitter.AddSocialMediaUser(987654321, 5, "NewGuildTweeter").GetAwaiter().GetResult();
             var result = twitter.ListSavedSocialMediaUsers(123456789, SocialMediaEnum.Twitter).GetAwaiter().GetResult();
 
-            Assert.Equal("■ Tweeter1 \n■ Tweeter2 \n■ Tweeter3 \n■ Tweeter4 \n■ Tweeter5 \n■ Tweeter6 \n", result);
+            Assert.Equal("■ Tweeter1 \n■ Tweeter2 \n■ Tweeter3 \n■ Tweeter4 \n■ Tweeter5 \n■ Tweeter6 \n■ Tweeter7 \n", result);
             
+            File.Delete(Path.Combine(fileSystem.PathToSaveFile, "987654321.xml"));
+        }
+
+        [Fact]
+        public void ListSocialMedias_Test_Fail()
+        {
+            var twitter = CreateNewTwitter(out var fileSystem, "List");
+            
+            var result = twitter.ListSavedSocialMediaUsers(123456789, SocialMediaEnum.Twitter).GetAwaiter().GetResult();
+
+            Assert.Equal("No Twitter handles registered.", result);
+
             File.Delete(Path.Combine(fileSystem.PathToSaveFile, "987654321.xml"));
         }
 
