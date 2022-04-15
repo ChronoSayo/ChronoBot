@@ -9,7 +9,6 @@ using ChronoBot.Enums;
 using ChronoBot.Helpers;
 using Discord.WebSocket;
 using Microsoft.Extensions.Configuration;
-using TwitchLib.Api.Helix.Models.Streams.GetStreams;
 
 namespace ChronoBot.Utilities.SocialMedias
 {
@@ -22,13 +21,15 @@ namespace ChronoBot.Utilities.SocialMedias
         protected string Hyperlink;
         protected string TypeOfSocialMedia;
         protected List<SocialMediaUserData> Users;
+        protected List<string> AvailableOptions;
 
-        public SocialMedia(DiscordSocketClient client, IConfiguration config, IEnumerable<SocialMediaUserData> users,
-            SocialMediaFileSystem fileSystem, int seconds = 60)
+        public SocialMedia(DiscordSocketClient client, IConfiguration config, IEnumerable<SocialMediaUserData> users, 
+            IEnumerable<string> availableOptions, SocialMediaFileSystem fileSystem, int seconds = 60)
         {
             Client = client;
             Config = config;
             Users = users.ToList();
+            AvailableOptions = availableOptions.ToList();
             FileSystem = fileSystem;
         }
 
@@ -36,16 +37,18 @@ namespace ChronoBot.Utilities.SocialMedias
         {
             Users = FileSystem.Load().Cast<SocialMediaUserData>().ToList();
         }
-        
-        protected virtual bool CreateSocialMediaUser(string name, ulong guildId, ulong channelId, string id, SocialMediaEnum socialMedia)
+
+        protected virtual bool CreateSocialMediaUser(string name, ulong guildId, ulong channelId, string id,
+            SocialMediaEnum socialMedia, string options = "")
         {
-            SocialMediaUserData temp = new SocialMediaUserData()
+            SocialMediaUserData temp = new SocialMediaUserData
             {
                 Name = name,
                 GuildId = guildId,
                 ChannelId = channelId,
                 Id = id,
-                SocialMedia = socialMedia
+                SocialMedia = socialMedia,
+                Options = options
             };
             Users.Add(temp);
 
@@ -91,7 +94,8 @@ namespace ChronoBot.Utilities.SocialMedias
             }
         }
 
-        public virtual async Task<string> AddSocialMediaUser(ulong guildId, ulong channelId, string username, ulong sendToChannelId = 0)
+        public virtual async Task<string> AddSocialMediaUser(ulong guildId, ulong channelId, string username,
+            ulong sendToChannelId = 0, string options = "")
         {
             return await Task.FromResult(string.Empty);
         }
@@ -113,7 +117,7 @@ namespace ChronoBot.Utilities.SocialMedias
         {
             return await Task.FromResult(string.Empty);
         }
-        public virtual async Task<string> GetSocialMediaUser(ulong guildId, bool isNsfw, string username)
+        public virtual async Task<string> GetSocialMediaUser(ulong guildId, string username)
         {
             return await Task.FromResult(string.Empty);
         }
@@ -146,8 +150,7 @@ namespace ChronoBot.Utilities.SocialMedias
         {
             return await Task.FromResult(string.Empty);
         }
-
-        //gameName is for Twitch.
+        
         protected virtual async Task<string> UpdateSocialMedia(IEnumerable<SocialMediaUserData> socialMediaUsers, Tuple<string, string> streamerInfo = null)
         {
             //Save guild ID's and channel ID's to avoid repetition
@@ -233,6 +236,8 @@ namespace ChronoBot.Utilities.SocialMedias
         //Display text for Twitch.
         protected virtual string GetStreamerUrlAndGame(SocialMediaUserData ud, Tuple<string, string> streamerInfo)
         {
+            if (streamerInfo?.Item1 == null || streamerInfo.Item2 == null)
+                return $"{Hyperlink}{ud.Name}\n\n";
             return $"{streamerInfo.Item1} is playing {streamerInfo.Item2}\n{Hyperlink}{ud.Name}\n\n";
         }
 
@@ -273,7 +278,9 @@ namespace ChronoBot.Utilities.SocialMedias
 
         protected virtual int FindIndexByName(ulong guildId, string name, SocialMediaEnum socialMedia)
         {
-            return Users.FindIndex(x => x.GuildId == guildId && x.Name == name && x.SocialMedia == socialMedia);
+            return Users.FindIndex(x =>
+                x.GuildId == guildId && string.Equals(x.Name, name, StringComparison.InvariantCultureIgnoreCase) &&
+                x.SocialMedia == socialMedia);
         }
     }
 }

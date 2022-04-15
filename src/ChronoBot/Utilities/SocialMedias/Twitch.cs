@@ -15,10 +15,13 @@ namespace ChronoBot.Utilities.SocialMedias
         private readonly ChronoTwitch.ChronoTwitch _api;
 
         public Twitch(ChronoTwitch.ChronoTwitch api, DiscordSocketClient client, IConfiguration config,
-            IEnumerable<SocialMediaUserData> users, SocialMediaFileSystem fileSystem, int seconds = 120) : base(client, config, users, fileSystem)
+            IEnumerable<SocialMediaUserData> users, IEnumerable<string> availableOptions,
+            SocialMediaFileSystem fileSystem, int seconds = 120) :
+            base(client, config, users, availableOptions, fileSystem)
         {
             _api = api;
-            _api.Authenticate(Config[Statics.TwitchClientId], Config[Statics.TwitchSecret], Config[Statics.TwitchAccessToken]);
+            _api.Authenticate(Config[Statics.TwitchClientId], Config[Statics.TwitchSecret],
+                Config[Statics.TwitchAccessToken]);
 
             Hyperlink = "https://www.twitch.com/";
 
@@ -29,7 +32,8 @@ namespace ChronoBot.Utilities.SocialMedias
             TypeOfSocialMedia = SocialMediaEnum.Twitch.ToString().ToLowerInvariant();
         }
 
-        public override async Task<string> AddSocialMediaUser(ulong guildId, ulong channelId, string username, ulong sendToChannelId = 0)
+        public override async Task<string> AddSocialMediaUser(ulong guildId, ulong channelId, string username,
+            ulong sendToChannelId = 0, string options = "")
         {
             if (Duplicate(guildId, username, SocialMediaEnum.Twitch))
                 return await Task.FromResult($"Already added {username}");
@@ -51,7 +55,7 @@ namespace ChronoBot.Utilities.SocialMedias
         public override async Task<string> GetSocialMediaUser(ulong guildId, ulong channelId, string username)
         {
             int i = FindIndexByName(guildId, username, SocialMediaEnum.Twitch);
-            if (i <= -1) 
+            if (i <= -1)
                 return await Task.FromResult("Can't find streamer.");
 
             SocialMediaUserData ud = Users[i];
@@ -99,7 +103,7 @@ namespace ChronoBot.Utilities.SocialMedias
                 else
                     user.Id = "offline";
 
-                if (user.Id == oldId) 
+                if (user.Id == oldId)
                     continue;
 
                 Users[i] = user;
@@ -112,7 +116,7 @@ namespace ChronoBot.Utilities.SocialMedias
 
             return await Task.FromResult("No streamers are broadcasting.");
         }
-        
+
         private async Task<Tuple<string, string>> GetStreamInfo(string name)
         {
             string displayName = await _api.DisplayName(name);

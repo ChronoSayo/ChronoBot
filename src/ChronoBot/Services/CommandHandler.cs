@@ -2,6 +2,7 @@
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using ChronoBot.Common;
 using ChronoBot.Helpers;
 using Discord;
 using Discord.Addons.Hosting;
@@ -39,14 +40,7 @@ namespace ChronoBot.Services
 
         private async Task CommandExecuted(Optional<CommandInfo> commandInfo, ICommandContext commandContext, IResult result)
         {
-            var embed = new EmbedBuilder()
-                .WithAuthor(commandContext.User.Username)
-                .WithTitle($"Channel {commandContext.Channel.Name} in Guild {commandContext.Guild.Name}")
-                .WithDescription(commandContext.Message.Content)
-                .AddField("User Id", commandContext.User.Id, true)
-                .AddField("User Discr.", commandContext.User.Discriminator, true)
-                .AddField("Channel Id", commandContext.Channel.Id, true)
-                .AddField("Guild ID", commandContext.Guild.Id, true);
+            var embed = new ChronoBotEmbedBuilder(commandContext);
 
             if (result.IsSuccess)
             {
@@ -57,7 +51,7 @@ namespace ChronoBot.Services
 
             await commandContext.Channel.SendMessageAsync("I don't recognize that command...");
 
-            embed.WithDescription(result.ErrorReason);
+            embed.WithDescription(result.ErrorReason).WithColor(Color.Red);
             await _client.GetGuild(Statics.DebugGuildId).GetTextChannel(Statics.DebugLogsChannelId)
                 .SendMessageAsync(embed: embed.Build());
         }

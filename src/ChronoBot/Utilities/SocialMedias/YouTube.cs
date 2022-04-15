@@ -9,7 +9,6 @@ using ChronoBot.Helpers;
 using Discord.WebSocket;
 using Google.Apis.Services;
 using Google.Apis.YouTube.v3;
-using Google.Apis.YouTube.v3.Data;
 using Microsoft.Extensions.Configuration;
 
 namespace ChronoBot.Utilities.SocialMedias
@@ -20,24 +19,24 @@ namespace ChronoBot.Utilities.SocialMedias
         private readonly string _channelLink;
 
         public YouTube(YouTubeService service, DiscordSocketClient client, IConfiguration config,
-        IEnumerable<SocialMediaUserData> users, SocialMediaFileSystem fileSystem, int seconds = 90) :
-            base(client, config, users, fileSystem, seconds)
+        IEnumerable<SocialMediaUserData> users, IEnumerable<string> availableOptions, SocialMediaFileSystem fileSystem, int seconds = 90) :
+            base(client, config, users, availableOptions, fileSystem, seconds)
         {
             _service = service;
             if (string.IsNullOrEmpty(_service.ApiKey))
                 _service = new YouTubeService(new BaseClientService.Initializer
-                    { ApiKey = Config[Statics.YouTubeApiKey], ApplicationName = "ChronoBot" });
+                { ApiKey = Config[Statics.YouTubeApiKey], ApplicationName = "ChronoBot" });
 
             Hyperlink = "https://www.youtube.com/watch?v=";
 
             _channelLink = "https://www.youtube.com/user/";
-            
+
             OnUpdateTimerAsync(seconds);
 
             LoadOrCreateFromFile();
 
             TypeOfSocialMedia = SocialMediaEnum.YouTube.ToString().ToLowerInvariant();
-        } 
+        }
 
         private async Task<List<string>> SearchForYouTuber(string user)
         {
@@ -47,7 +46,7 @@ namespace ChronoBot.Utilities.SocialMedias
             searchListRequest.Q = user;
             searchListRequest.MaxResults = 5;
 
-            var searchListResponse = await searchListRequest.ExecuteAsync(); 
+            var searchListResponse = await searchListRequest.ExecuteAsync();
             foreach (var searchResult in searchListResponse.Items)
             {
                 switch (searchResult.Id.Kind)
@@ -62,13 +61,13 @@ namespace ChronoBot.Utilities.SocialMedias
             return await Task.FromResult(channelInfo);
         }
 
-        public override async Task<string> AddSocialMediaUser(ulong guildId, ulong channelId, string username, ulong sendToChannelId = 0)
+        public override async Task<string> AddSocialMediaUser(ulong guildId, ulong channelId, string username, ulong sendToChannelId = 0, string options = "")
         {
             if (Duplicate(guildId, username, SocialMediaEnum.YouTube))
                 return await Task.FromResult($"Already added {username}");
 
             var ytChannelInfo = await SearchForYouTuber(username);
-            if (ytChannelInfo.Count <= 0) 
+            if (ytChannelInfo.Count <= 0)
                 return await Task.FromResult("Can't find " + username);
 
             string name = ytChannelInfo[0];
@@ -128,7 +127,7 @@ namespace ChronoBot.Utilities.SocialMedias
                 FileSystem.UpdateFile(user);
             }
 
-            if(newVideos.Count > 0)
+            if (newVideos.Count > 0)
                 return await UpdateSocialMedia(newVideos);
 
             return await Task.FromResult("No updates since last time.");

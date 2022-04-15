@@ -23,9 +23,9 @@ namespace ChronoBot.Modules.SocialMedias
         }
 
         [Command(SocialMediaCommand + "add", RunMode = RunMode.Async), Alias(AltSocialMediaCommand + "add")]
-        public override async Task AddAsync(string user, ulong channel = 0)
+        public override async Task AddAsync(string user, [Remainder] string option = "")
         {
-            await base.AddAsync(user, channel);
+            await base.AddAsync(user, option);
         }
 
         [Command(SocialMediaCommand + "delete", RunMode = RunMode.Async),
