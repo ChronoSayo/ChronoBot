@@ -16,7 +16,17 @@ Discord bot with multiple helpful tools. Mostly for personal use.
 - Tools
   - Calculator: ``!calc <calculation>``
 - Social Media
-  - Add user: ``<!twitteradd | !twitchadd | !youtubeadd> <(insert Twitter handle) | ( insert Twitch channel name) | (insert Youtube ID/name)> [(insert channel name)]``
+  - Add user: ``<!twitteradd | !twitchadd | !youtubeadd> <(insert Twitter handle) | (insert Twitch channel name) | (insert Youtube ID/name)> [(insert channel name)] [(options, Twitter only)]``
+    - Twitter options (can have multiple): 
+      - Only posts: p
+      - Only retweets: r
+      - Only quote retweets: q
+      - Only likes: l
+      - Only pictures: mp
+      - Only animated GIF: mg
+      - Only videos: mv
+      - Only any media: m
+      - All of the above: no input
   - Add your following channels from Twitch: ``<!mine>``
     - This only works if your Discord name is the same as your Twitch.
   - Remove user: ``<!twitteradd | !twitchadd | !youtubeadddelete> <(insert Twitter handle) | ( insert Twitch channel name) | (insert Youtube ID/name)>``
