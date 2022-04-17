@@ -52,6 +52,33 @@ namespace ChronoBot.Tests.SocialMedias
         }
 
         [Fact]
+        public void AddTwitter_AnotherChannel_Success()
+        {
+            var twitter = CreateNewTwitter(out var fileSystem);
+
+            twitter.AddSocialMediaUser(123456789, 5, "AnotherChannel", 6).GetAwaiter().GetResult();
+            var result = twitter.GetSocialMediaUser(123456789, "AnotherChannel").GetAwaiter().GetResult();
+
+            Assert.Equal("https://twitter.com/AnotherChannel/status/chirp\n\n", result);
+
+            File.Delete(Path.Combine(fileSystem.PathToSaveFile, "123456789.xml"));
+        }
+
+
+        [Fact]
+        public void AddTwitter_AnotherChannelAndOption_Success()
+        {
+            var twitter = CreateNewTwitter(out var fileSystem);
+
+            twitter.AddSocialMediaUser(123456789, 5, "AnotherChannelAndPost", 6, "p").GetAwaiter().GetResult();
+            var result = twitter.GetSocialMediaUser(123456789, "AnotherChannelAndPost").GetAwaiter().GetResult();
+
+            Assert.Equal("https://twitter.com/AnotherChannelAndPost/status/chirp\n\n", result);
+
+            File.Delete(Path.Combine(fileSystem.PathToSaveFile, "123456789.xml"));
+        }
+
+        [Fact]
         public void AddTwitter_Test_Duplicate_Fail()
         {
             var twitter = LoadTwitter(out _);

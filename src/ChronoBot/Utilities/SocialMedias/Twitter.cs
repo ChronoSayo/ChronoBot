@@ -182,12 +182,13 @@ namespace ChronoBot.Utilities.SocialMedias
                 bool isLegit = legit.Item2;
                 if (!isLegit)
                     return await Task.FromResult("Can't find " + username);
-                if (!GetLegitOptions(options).Any())
+                List<string> legitOptions = GetLegitOptions(options).ToList();
+                if (!legitOptions.Any())
                     return await Task.FromResult($"Unrecognizable option: \"{options}\"");
                 if (sendToChannelId == 0)
                     sendToChannelId = Statics.Debug ? Statics.DebugChannelId : channelId;
-
-                if (!CreateSocialMediaUser(legitUsername, guildId, sendToChannelId, "0", SocialMediaEnum.Twitter, options))
+                
+                if (!CreateSocialMediaUser(legitUsername, guildId, sendToChannelId, "0", SocialMediaEnum.Twitter, legitOptions))
                     return await Task.FromResult($"Failed to add {legitUsername}.");
 
                 return await Task.FromResult("Successfully added " + legitUsername + "\n" + "https://twitter.com/" +
