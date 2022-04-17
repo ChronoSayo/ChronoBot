@@ -59,6 +59,13 @@ namespace ChronoBot.Utilities.SocialMedias
             return ok;
         }
 
+        protected virtual bool CreateSocialMediaUser(string name, ulong guildId, ulong channelId, string id,
+            SocialMediaEnum socialMedia, IEnumerable<string> options)
+        {
+            string legitOptions = string.Join(" ", options);
+            return CreateSocialMediaUser(name, guildId, channelId, id, socialMedia, legitOptions);
+        }
+
         protected virtual void OnUpdateTimerAsync(int seconds)
         {
             const int toSeconds = 1000;
