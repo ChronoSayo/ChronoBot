@@ -33,7 +33,7 @@ namespace ChronoBot.Modules.SocialMedias
             ulong channelId = Context.Channel.Id;
             ulong sendToChannel = Context.Message.MentionedChannels.Count > 0 ? Context.Message.MentionedChannels.FirstOrDefault()!.Id : 0;
             string result = await SocialMedia.AddSocialMediaUser(guildId, channelId, user, sendToChannel, option);
-            await SendMessage(result);
+            await SendMessage(result, sendToChannel);
         }
 
         public virtual async Task DeleteAsync(string user)
@@ -93,17 +93,21 @@ namespace ChronoBot.Modules.SocialMedias
                 .Build();
         }
 
-        protected virtual async Task SendMessage(string result)
+        protected virtual async Task SendMessage(string result, ulong sendToChannel = 0)
         {
             if (Statics.Debug)
                 await Statics.DebugSendMessageToChannelAsync(Client, result);
+            else if (sendToChannel != 0)
+                await Client.GetGuild(Context.Guild.Id).GetTextChannel(sendToChannel).SendMessageAsync(result);
             else
                 await ReplyAsync(result);
         }
-        protected virtual async Task SendMessage(Embed result)
+        protected virtual async Task SendMessage(Embed result, ulong sendToChannel = 0)
         {
             if (Statics.Debug)
                 await Statics.DebugSendMessageToChannelAsync(Client, result);
+            else if (sendToChannel != 0)
+                await Client.GetGuild(Context.Guild.Id).GetTextChannel(sendToChannel).SendMessageAsync(embed: result);
             else
                 await ReplyAsync(embed: result);
         }
