@@ -28,6 +28,7 @@ namespace ChronoBot.Utilities.SocialMedias
         private const string OnlyGifMedia = "mg";
         private const string OnlyVidMedia = "mv";
         private DateTime _rateLimitResetTime;
+        private SocialMediaUserData _currentUser;
 
         public Twitter(TwitterService service, DiscordSocketClient client, IConfiguration config,
             IEnumerable<SocialMediaUserData> users, IEnumerable<string> availableOptions,
@@ -71,13 +72,20 @@ namespace ChronoBot.Utilities.SocialMedias
             var tweets = await _service.ListTweetsOnUserTimelineAsync(timeLineOptions);
             if (tweets == null)
                 return null;
-            if (tweets.Response != null && tweets.Response.RateLimitStatus.RemainingHits <= 0)
+            try
             {
-                _rateLimitResetTime = tweets.Response.RateLimitStatus.ResetTime;
-                var wait = _rateLimitResetTime - DateTime.Now;
-                await Statics.SendEmbedMessageToLogChannel(Client,
-                    $"Twitter rate limit exceeded. Reset in {tweets.Response.RateLimitStatus.ResetTime}", Color.Gold);
-                Thread.Sleep(wait);
+                if (tweets.Response != null && tweets.Response.RateLimitStatus.RemainingHits <= 0)
+                {
+                    _rateLimitResetTime = tweets.Response.RateLimitStatus.ResetTime;
+                    var wait = _rateLimitResetTime - DateTime.Now;
+                    await Statics.SendEmbedMessageToLogChannel(Client,
+                        $"Twitter rate limit exceeded. Reset in {tweets.Response.RateLimitStatus.ResetTime}", Color.Gold);
+                    Thread.Sleep(wait);
+                }
+            }
+            catch
+            {
+                return null;
             }
 
             if (tweets.Value == null)
@@ -275,6 +283,11 @@ namespace ChronoBot.Utilities.SocialMedias
 
         private async Task<Tuple<string, bool>> IsLegitTwitterHandle(string name)
         {
+            if (name.Contains("https://twitter.com/"))
+            {
+                string[] split = name.Split("/");
+                name = split[^1];
+            }
             TwitterUser tu = await SearchTwitterUser(name);
             bool found = tu != null;
             string screenName = found ? tu.ScreenName : string.Empty;
@@ -288,13 +301,27 @@ namespace ChronoBot.Utilities.SocialMedias
             SearchForUserOptions options = new SearchForUserOptions
             {
                 Q = name,
-                Count = 1
+                Count = 10
             };
             try
             {
                 var tu = await _service.SearchForUserAsync(options);
                 var twitterUsers = tu.Value as TwitterUser[] ?? tu.Value.ToArray();
-                return await Task.FromResult(twitterUsers.Any() ? twitterUsers.ElementAt(0) : null);
+                TwitterUser foundTwitterUser = null;
+                if (twitterUsers.Length > 1)
+                {
+                    foreach (TwitterUser twitterUser in twitterUsers)
+                    {
+                        if (!string.Equals(name, twitterUser.ScreenName, StringComparison.InvariantCultureIgnoreCase))
+                            continue;
+                        foundTwitterUser = twitterUser;
+                        break;
+                    }
+                }
+                else if (twitterUsers.Length == 1)
+                    foundTwitterUser = twitterUsers.ElementAt(0);
+
+                return await Task.FromResult(foundTwitterUser);
             }
             catch
             {
