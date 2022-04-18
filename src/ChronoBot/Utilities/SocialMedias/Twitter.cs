@@ -11,7 +11,6 @@ using Discord;
 using Discord.WebSocket;
 using Microsoft.Extensions.Configuration;
 using TweetSharp;
-using Timer = System.Threading.Timer;
 
 
 namespace ChronoBot.Utilities.SocialMedias
@@ -28,7 +27,6 @@ namespace ChronoBot.Utilities.SocialMedias
         private const string OnlyGifMedia = "mg";
         private const string OnlyVidMedia = "mv";
         private DateTime _rateLimitResetTime;
-        private SocialMediaUserData _currentUser;
 
         public Twitter(TwitterService service, DiscordSocketClient client, IConfiguration config,
             IEnumerable<SocialMediaUserData> users, IEnumerable<string> availableOptions,
@@ -72,20 +70,14 @@ namespace ChronoBot.Utilities.SocialMedias
             var tweets = await _service.ListTweetsOnUserTimelineAsync(timeLineOptions);
             if (tweets == null)
                 return null;
-            try
+
+            if (tweets.Response != null && tweets.Response.RateLimitStatus.RemainingHits <= 0)
             {
-                if (tweets.Response != null && tweets.Response.RateLimitStatus.RemainingHits <= 0)
-                {
-                    _rateLimitResetTime = tweets.Response.RateLimitStatus.ResetTime;
-                    var wait = _rateLimitResetTime - DateTime.Now;
-                    await Statics.SendEmbedMessageToLogChannel(Client,
-                        $"Twitter rate limit exceeded. Reset in {tweets.Response.RateLimitStatus.ResetTime}", Color.Gold);
-                    Thread.Sleep(wait);
-                }
-            }
-            catch
-            {
-                return null;
+                _rateLimitResetTime = tweets.Response.RateLimitStatus.ResetTime;
+                var wait = _rateLimitResetTime - DateTime.Now;
+                await Statics.SendEmbedMessageToLogChannel(Client,
+                    $"Twitter rate limit exceeded. Reset in {tweets.Response.RateLimitStatus.ResetTime}", Color.Gold);
+                Thread.Sleep(wait);
             }
 
             if (tweets.Value == null)
