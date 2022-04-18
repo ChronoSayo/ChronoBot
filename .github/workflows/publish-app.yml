@@ -24,7 +24,7 @@ jobs:
       run: |
         cd src\ChronoBot\
         dotnet build --configuration Release --no-restore
-        dotnet publish -r win10-x64 --self-contained true
+        dotnet publish -r win10-x64 --self-contained false
     - name: Test
       run: |
         cd src\ChronoBot.Tests\
