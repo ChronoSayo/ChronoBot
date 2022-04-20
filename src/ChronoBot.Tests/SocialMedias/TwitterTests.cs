@@ -182,7 +182,7 @@ namespace ChronoBot.Tests.SocialMedias
                         break;
                 }
 
-                Thread.Sleep(1000);
+                Thread.Sleep(1600);
             }
         }
 
