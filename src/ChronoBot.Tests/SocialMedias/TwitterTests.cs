@@ -137,7 +137,7 @@ namespace ChronoBot.Tests.SocialMedias
         [Fact]
         public void AutoUpdate_LoopCurrentUser_Success()
         {
-            LoadTwitter(out var fileSystem, 1);
+            LoadTwitter(out var fileSystem, 2);
             
             var users = (List<SocialMediaUserData>)fileSystem.Load();
             users = users.FindAll(x => x.SocialMedia == SocialMediaEnum.Twitter);
@@ -182,7 +182,7 @@ namespace ChronoBot.Tests.SocialMedias
                         break;
                 }
 
-                Thread.Sleep(1600);
+                Thread.Sleep(2600);
             }
         }
 
