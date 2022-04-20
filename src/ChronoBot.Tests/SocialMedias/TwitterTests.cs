@@ -122,6 +122,71 @@ namespace ChronoBot.Tests.SocialMedias
         }
 
         [Fact]
+        public void AutoUpdate_Test_NoTwitterUsers_Fail()
+        {
+            var twitter = CreateNewTwitter(out var fileSystem, "Empty", 2);
+
+            Thread.Sleep(2600);
+            var result = twitter.GetUpdatedSocialMediaUsers(123456789).GetAwaiter().GetResult();
+
+            Assert.Equal("No Twitter handles registered.", result);
+
+            File.Delete(Path.Combine(fileSystem.PathToSaveFile, "123456789.xml"));
+        }
+
+        [Fact]
+        public void AutoUpdate_LoopCurrentUser_Success()
+        {
+            LoadTwitter(out var fileSystem, 1);
+            
+            var users = (List<SocialMediaUserData>)fileSystem.Load();
+            users = users.FindAll(x => x.SocialMedia == SocialMediaEnum.Twitter);
+
+            for (int i = 0; i < users.Count + 1; i++)
+            {
+                int index = i;
+                if (i == users.Count)
+                    index = 0;
+
+                var user = users[index];
+
+                Assert.NotNull(user);
+
+                switch (i)
+                {
+                    case 7:
+                    case 0:
+                        Assert.Equal("chirp", user.Id);
+                        break;
+                    case 1:
+                        Assert.Equal("chirps", user.Id);
+                        break;
+                    case 2:
+                        Assert.Equal("chirpf", user.Id);
+                        break;
+                    case 3:
+                        Assert.Equal("chirp", user.Id);
+                        Assert.Equal("p", user.Options);
+                        break;
+                    case 4:
+                        Assert.Equal("chirp", user.Id);
+                        Assert.Equal("q r", user.Options);
+                        break;
+                    case 5:
+                        Assert.Equal("123", user.Id);
+                        Assert.Equal("l", user.Options);
+                        break;
+                    case 6:
+                        Assert.Equal("chirp", user.Id);
+                        Assert.Equal("mg", user.Options);
+                        break;
+                }
+
+                Thread.Sleep(1000);
+            }
+        }
+
+        [Fact]
         public void GetTwitter_Test_Success()
         {
             var twitter = LoadTwitter(out _);
@@ -374,12 +439,12 @@ namespace ChronoBot.Tests.SocialMedias
                 new List<SocialMediaUserData>(), new List<string>(), fileSystem, seconds);
         }
 
-        private Twitter LoadTwitter(out SocialMediaFileSystem fileSystem)
+        private Twitter LoadTwitter(out SocialMediaFileSystem fileSystem, int seconds = 10)
         {
             fileSystem = new SocialMediaFileSystem(Path.Combine(Directory.GetCurrentDirectory(), "Test Files", GetType().Name, "Load"));
 
             return new Twitter(new FakeTwitterService(), _mockClient.Object, _config.Object,
-                new List<SocialMediaUserData>(), new List<string>(), fileSystem);
+                new List<SocialMediaUserData>(), new List<string>(), fileSystem, seconds);
         }
     }
 }

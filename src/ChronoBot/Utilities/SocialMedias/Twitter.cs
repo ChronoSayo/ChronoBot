@@ -101,7 +101,7 @@ namespace ChronoBot.Utilities.SocialMedias
             List<TwitterStatus> postingTweets = new List<TwitterStatus>();
             foreach (string option in options)
             {
-                TwitterStatus found;
+                TwitterStatus found = null;
                 switch (option)
                 {
                     case OnlyPosts:
@@ -109,18 +109,12 @@ namespace ChronoBot.Utilities.SocialMedias
                             .FirstOrDefault(x =>
                                 !x.IsRetweeted && !x.IsQuoteStatus && !x.IsFavorited && x.RetweetedStatus == null &&
                                 x.QuotedStatus == null);
-                        if (found != null)
-                            postingTweets.Add(found);
                         break;
                     case OnlyRetweets:
                         found = tweets.Value.ToList().FirstOrDefault(x => x.IsRetweeted || x.RetweetedStatus != null);
-                        if (found != null)
-                            postingTweets.Add(found);
                         break;
                     case OnlyQuoteTweets:
                         found = tweets.Value.ToList().FirstOrDefault(x => x.IsQuoteStatus || x.QuotedStatus != null);
-                        if (found != null)
-                            postingTweets.Add(found);
                         break;
                     case OnlyPicMedia:
                     case OnlyGifMedia:
@@ -130,28 +124,26 @@ namespace ChronoBot.Utilities.SocialMedias
                         found = tweets.Value.ToList().FirstOrDefault(x =>
                             x.ExtendedEntities != null && x.ExtendedEntities.Any() &&
                             x.ExtendedEntities.Media.Any() &&
-                            x.ExtendedEntities.Media.ElementAt(0).ExtendedEntityType == media);
-                        if (found != null)
-                            postingTweets.Add(found);
+                            x.ExtendedEntities.Media.ElementAt(0).ExtendedEntityType == media);;
                         break;
                     case OnlyAllMedia:
                         found = tweets.Value.ToList().FirstOrDefault(x =>
                             x.ExtendedEntities != null && x.ExtendedEntities.Any() &&
                             x.ExtendedEntities.Media.Any());
-                        if (found != null)
-                            postingTweets.Add(found);
                         break;
                     case OnlyLikes:
-                        postingTweets.Add(await GetLatestLike(ud));
+                        found = await GetLatestLike(ud);
                         break;
                 }
+                if (found != null)
+                    postingTweets.Add(found);
             }
 
             if (postingTweets.Count == 0)
                 return null;
             if (postingTweets.Count == 1)
                 return postingTweets[0];
-
+            
             postingTweets = postingTweets.OrderByDescending(x => x.CreatedDate).ToList();
 
             return postingTweets[0];
@@ -194,7 +186,6 @@ namespace ChronoBot.Utilities.SocialMedias
                     Users[userIndex] = user;
                     newTweets.Add(user);
                     FileSystem.UpdateFile(user);
-                    await Statics.SendMessageToLogChannel(Client, user.Name + " " + tweet.IdStr + " " + userIndex);
                 }
 
                 _groupedUsers[_groupedUsers.Keys.ElementAt(i)] += 1;

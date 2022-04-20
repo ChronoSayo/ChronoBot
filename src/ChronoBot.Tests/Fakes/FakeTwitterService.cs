@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Hammock;
 using TweetSharp;
 
 namespace ChronoBot.Tests.Fakes
@@ -10,9 +9,6 @@ namespace ChronoBot.Tests.Fakes
     {
         public override async Task<TwitterAsyncResult<IEnumerable<TwitterStatus>>> ListFavoriteTweetsAsync(ListFavoriteTweetsOptions options)
         {
-            if(options.ScreenName != "Tweeter6")
-                return null;
-
             var status = new TwitterStatus
             {
                 User = new TwitterUser { ScreenName = options.ScreenName },
