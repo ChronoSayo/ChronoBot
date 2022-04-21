@@ -399,11 +399,11 @@ namespace ChronoBot.Tests.SocialMedias
         [Fact]
         public void ListSocialMedias_Test_Success()
         {
-            var twitter = LoadTwitter(out _);
-            CreateNewTwitter(out var fileSystem, "List");
+            var twitter1 = LoadTwitter(out _);
+            var twitter2 = CreateNewTwitter(out var fileSystem, "List");
             
-            twitter.AddSocialMediaUser(987654321, 5, "NewGuildTweeter").GetAwaiter().GetResult();
-            var result = twitter.ListSavedSocialMediaUsers(123456789, SocialMediaEnum.Twitter).GetAwaiter().GetResult();
+            twitter2.AddSocialMediaUser(987654321, 5, "NewGuildTweeter").GetAwaiter().GetResult();
+            var result = twitter1.ListSavedSocialMediaUsers(123456789, SocialMediaEnum.Twitter).GetAwaiter().GetResult();
 
             Assert.Equal("■ Tweeter1 \n■ Tweeter2 \n■ Tweeter3 \n■ Tweeter4 \n■ Tweeter5 \n■ Tweeter6 \n■ Tweeter7 \n", result);
             
