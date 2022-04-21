@@ -137,7 +137,7 @@ namespace ChronoBot.Tests.SocialMedias
         [Fact]
         public void AutoUpdate_LoopCurrentUser_Success()
         {
-            LoadTwitter(out var fileSystem, 2);
+            LoadTwitter(out var fileSystem, 1);
             
             var users = (List<SocialMediaUserData>)fileSystem.Load();
             users = users.FindAll(x => x.SocialMedia == SocialMediaEnum.Twitter);
@@ -156,33 +156,47 @@ namespace ChronoBot.Tests.SocialMedias
                 {
                     case 7:
                     case 0:
+                        Assert.Equal("Tweeter1", user.Name);
+                        Assert.Equal("1", user.ChannelId.ToString());
                         Assert.Equal("chirp", user.Id);
                         break;
                     case 1:
+                        Assert.Equal("Tweeter2", user.Name);
+                        Assert.Equal("2", user.ChannelId.ToString());
                         Assert.Equal("chirps", user.Id);
                         break;
                     case 2:
+                        Assert.Equal("Tweeter3", user.Name);
+                        Assert.Equal("3", user.ChannelId.ToString());
                         Assert.Equal("chirpf", user.Id);
                         break;
                     case 3:
+                        Assert.Equal("Tweeter4", user.Name);
+                        Assert.Equal("4", user.ChannelId.ToString());
                         Assert.Equal("chirp", user.Id);
                         Assert.Equal("p", user.Options);
                         break;
                     case 4:
+                        Assert.Equal("Tweeter5", user.Name);
+                        Assert.Equal("5", user.ChannelId.ToString());
                         Assert.Equal("chirp", user.Id);
                         Assert.Equal("q r", user.Options);
                         break;
                     case 5:
+                        Assert.Equal("Tweeter6", user.Name);
+                        Assert.Equal("6", user.ChannelId.ToString());
                         Assert.Equal("123", user.Id);
                         Assert.Equal("l", user.Options);
                         break;
                     case 6:
+                        Assert.Equal("Tweeter7", user.Name);
+                        Assert.Equal("7", user.ChannelId.ToString());
                         Assert.Equal("chirp", user.Id);
                         Assert.Equal("mg", user.Options);
                         break;
                 }
 
-                Thread.Sleep(2600);
+                Thread.Sleep(1000);
             }
         }
 
