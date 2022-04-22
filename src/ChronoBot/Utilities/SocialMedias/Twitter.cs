@@ -20,6 +20,7 @@ namespace ChronoBot.Utilities.SocialMedias
     {
         private readonly TwitterService _service;
         private readonly Dictionary<List<SocialMediaUserData>, int> _groupedUsers;
+        private readonly Dictionary<string, List<TwitterStatus>> _history;
         private const string OnlyPosts = "p";
         private const string OnlyRetweets = "r";
         private const string OnlyLikes = "l";
@@ -54,6 +55,8 @@ namespace ChronoBot.Utilities.SocialMedias
 
             _groupedUsers = new Dictionary<List<SocialMediaUserData>, int>();
             GroupTwitterUsers();
+
+            _history = new Dictionary<string, List<TwitterStatus>>();
 
             _rateLimitResetTime = DateTime.Now;
         }
@@ -124,12 +127,16 @@ namespace ChronoBot.Utilities.SocialMedias
                         found = tweets.Value.ToList().FirstOrDefault(x =>
                             x.ExtendedEntities != null && x.ExtendedEntities.Any() &&
                             x.ExtendedEntities.Media.Any() &&
-                            x.ExtendedEntities.Media.ElementAt(0).ExtendedEntityType == media);;
+                            x.ExtendedEntities.Media.ElementAt(0).ExtendedEntityType == media && !x.IsRetweeted &&
+                            !x.IsQuoteStatus && !x.IsFavorited && x.RetweetedStatus == null &&
+                            x.QuotedStatus == null);
                         break;
                     case OnlyAllMedia:
                         found = tweets.Value.ToList().FirstOrDefault(x =>
                             x.ExtendedEntities != null && x.ExtendedEntities.Any() &&
-                            x.ExtendedEntities.Media.Any());
+                            x.ExtendedEntities.Media.Any() && !x.IsRetweeted && !x.IsQuoteStatus && !x.IsFavorited &&
+                            x.RetweetedStatus == null &&
+                            x.QuotedStatus == null);
                         break;
                     case OnlyLikes:
                         found = await GetLatestLike(ud);
@@ -157,14 +164,26 @@ namespace ChronoBot.Utilities.SocialMedias
             {
                 ScreenName = ud.Name,
                 Count = 100,
-                UserId = userId
+                UserId = userId,
+                //SinceId = long.Parse(ud.Id),
+                IncludeEntities = true,
+                TweetMode = "extended"
             };
 
             var tweets = await _service.ListFavoriteTweetsAsync(options);
             if (tweets?.Value == null || !tweets.Value.Any())
                 return null;
 
-            return await Task.FromResult(tweets.Value.ElementAt(0));
+            if(!_history.ToList().Exists(x => x.Key == ud.Name))
+                _history.Add(ud.Name, tweets.Value.ToList());
+            else
+            {
+                var newTweets = tweets.Value.Except(_history[ud.Name]).ToList();
+                if (newTweets.Any())
+                    _history[ud.Name].Insert(0, newTweets.ElementAt(0));
+            }
+
+            return await Task.FromResult(_history[ud.Name].ElementAt(0));
         }
 
         protected override async Task AutoUpdate()
