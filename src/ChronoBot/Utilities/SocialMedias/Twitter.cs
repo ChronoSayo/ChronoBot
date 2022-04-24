@@ -11,7 +11,6 @@ using Discord;
 using Discord.WebSocket;
 using Microsoft.Extensions.Configuration;
 using TweetSharp;
-using TwitchLib.Api.Core.Models.Undocumented.CSStreams;
 
 
 namespace ChronoBot.Utilities.SocialMedias
@@ -165,7 +164,6 @@ namespace ChronoBot.Utilities.SocialMedias
                 ScreenName = ud.Name,
                 Count = 100,
                 UserId = userId,
-                //SinceId = long.Parse(ud.Id),
                 IncludeEntities = true,
                 TweetMode = "extended"
             };
@@ -178,11 +176,16 @@ namespace ChronoBot.Utilities.SocialMedias
                 _history.Add(ud.Name, tweets.Value.ToList());
             else
             {
-                var newTweets = tweets.Value.Except(_history[ud.Name]).ToList();
-                if (newTweets.Any())
-                    _history[ud.Name].Insert(0, newTweets.ElementAt(0));
-            }
+                var newTweets = tweets.Value.
+                   Where(x => _history[ud.Name].All(y => x.IdStr != y.IdStr)).ToList();
 
+                if (!newTweets.Any()) 
+                    return await Task.FromResult(_history[ud.Name].ElementAt(0));
+
+                _history[ud.Name].Insert(0, newTweets.ElementAt(0));
+                _history[ud.Name] = _history[ud.Name].Distinct().ToList();
+            }
+            
             return await Task.FromResult(_history[ud.Name].ElementAt(0));
         }
 

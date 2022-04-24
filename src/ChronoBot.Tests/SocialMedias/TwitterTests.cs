@@ -37,6 +37,36 @@ namespace ChronoBot.Tests.SocialMedias
         }
 
         [Fact]
+        public void SearchTwitter_Multiple_Success()
+        {
+            var twitter = CreateNewTwitter(out var fileSystem);
+
+            twitter.AddSocialMediaUser(1, 4, "Multiple").GetAwaiter().GetResult();
+            var users = (List<SocialMediaUserData>)fileSystem.Load();
+            var user = users.Find(x => x.Name == "Multiple");
+
+            Assert.NotNull(user);
+            Assert.Equal("Multiple", user.Name);
+
+            File.Delete(Path.Combine(fileSystem.PathToSaveFile, "1.xml"));
+        }
+
+        [Fact]
+        public void SearchTwitter_MultipleSlightlyDifferent_Success()
+        {
+            var twitter = CreateNewTwitter(out var fileSystem);
+
+            twitter.AddSocialMediaUser(1, 4, "MultipleSlightlyDifferent").GetAwaiter().GetResult();
+            var users = (List<SocialMediaUserData>)fileSystem.Load();
+            var user = users.Find(x => x.Name == "MultipleSlightlyDifferent");
+
+            Assert.NotNull(user);
+            Assert.Equal("MultipleSlightlyDifferent", user.Name);
+
+            File.Delete(Path.Combine(fileSystem.PathToSaveFile, "1.xml"));
+        }
+
+        [Fact]
         public void AddTwitter_Test_Success()
         {
             var twitter = CreateNewTwitter(out var fileSystem);
@@ -47,6 +77,21 @@ namespace ChronoBot.Tests.SocialMedias
 
             Assert.NotNull(user);
             Assert.Equal("Tweeter", user.Name);
+
+            File.Delete(Path.Combine(fileSystem.PathToSaveFile, "1.xml"));
+        }
+
+        [Fact]
+        public void AddTwitter_WithUrl_Success()
+        {
+            var twitter = CreateNewTwitter(out var fileSystem);
+
+            twitter.AddSocialMediaUser(1, 4, "https://twitter.com/TwitterUrl").GetAwaiter().GetResult();
+            var users = (List<SocialMediaUserData>)fileSystem.Load();
+            var user = users.Find(x => x.Name == "TwitterUrl");
+
+            Assert.NotNull(user);
+            Assert.Equal("TwitterUrl", user.Name);
 
             File.Delete(Path.Combine(fileSystem.PathToSaveFile, "1.xml"));
         }
@@ -218,6 +263,39 @@ namespace ChronoBot.Tests.SocialMedias
             var result = twitter.GetSocialMediaUser(123456789, "Tweeter1").GetAwaiter().GetResult();
 
             Assert.Equal("https://twitter.com/Tweeter1/status/chirp\n\n", result);
+        }
+
+        [Fact]
+        public void GetTwitter_AddLikeHistory_Success()
+        {
+            var twitter = CreateNewTwitter(out var fileSystem, "AddLike", 1);
+
+            twitter.AddSocialMediaUser(123456789, 5, "AddLike", options: "l").GetAwaiter().GetResult();
+            var result = twitter.GetSocialMediaUser(123456789, "AddLike").GetAwaiter().GetResult();
+
+            Assert.Equal("https://twitter.com/AddLike/status/123\n\n", result);
+
+            Thread.Sleep(1500);
+            var users = (List<SocialMediaUserData>)fileSystem.Load();
+            var user = users.Find(x => x.Name == "AddLike");
+
+            Assert.NotNull(user);
+            Assert.Equal("987", user.Id);
+
+            File.Delete(Path.Combine(fileSystem.PathToSaveFile, "123456789.xml"));
+        }
+
+        [Fact]
+        public void GetTwitter_NoLike_Fail()
+        {
+            var twitter = CreateNewTwitter(out var fileSystem, "NoLike");
+
+            twitter.AddSocialMediaUser(123456789, 5, "NoLike", options: "l").GetAwaiter().GetResult();
+            var result = twitter.GetSocialMediaUser(123456789, "NoLike").GetAwaiter().GetResult();
+
+            Assert.Equal("Could not retrieve Tweet.", result);
+
+            File.Delete(Path.Combine(fileSystem.PathToSaveFile, "123456789.xml"));
         }
 
         [Fact]
