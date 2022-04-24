@@ -11,7 +11,6 @@ using Discord;
 using Discord.WebSocket;
 using Microsoft.Extensions.Configuration;
 using TweetSharp;
-using Timer = System.Threading.Timer;
 
 
 namespace ChronoBot.Utilities.SocialMedias
@@ -19,6 +18,8 @@ namespace ChronoBot.Utilities.SocialMedias
     public sealed class Twitter : SocialMedia
     {
         private readonly TwitterService _service;
+        private readonly Dictionary<List<SocialMediaUserData>, int> _groupedUsers;
+        private readonly Dictionary<string, List<TwitterStatus>> _history;
         private const string OnlyPosts = "p";
         private const string OnlyRetweets = "r";
         private const string OnlyLikes = "l";
@@ -28,11 +29,10 @@ namespace ChronoBot.Utilities.SocialMedias
         private const string OnlyGifMedia = "mg";
         private const string OnlyVidMedia = "mv";
         private DateTime _rateLimitResetTime;
-        private SocialMediaUserData _currentUser;
 
         public Twitter(TwitterService service, DiscordSocketClient client, IConfiguration config,
             IEnumerable<SocialMediaUserData> users, IEnumerable<string> availableOptions,
-            SocialMediaFileSystem fileSystem, int seconds = 60) :
+            SocialMediaFileSystem fileSystem, int seconds = 10) :
             base(client, config, users, availableOptions, fileSystem, seconds)
         {
             _service = service;
@@ -51,6 +51,11 @@ namespace ChronoBot.Utilities.SocialMedias
             {
                 OnlyPosts, OnlyRetweets, OnlyQuoteTweets, OnlyLikes, OnlyAllMedia, OnlyGifMedia, OnlyVidMedia, OnlyPicMedia
             };
+
+            _groupedUsers = new Dictionary<List<SocialMediaUserData>, int>();
+            GroupTwitterUsers();
+
+            _history = new Dictionary<string, List<TwitterStatus>>();
 
             _rateLimitResetTime = DateTime.Now;
         }
@@ -98,24 +103,20 @@ namespace ChronoBot.Utilities.SocialMedias
             List<TwitterStatus> postingTweets = new List<TwitterStatus>();
             foreach (string option in options)
             {
-                TwitterStatus found;
+                TwitterStatus found = null;
                 switch (option)
                 {
                     case OnlyPosts:
                         found = tweets.Value.ToList()
-                            .FirstOrDefault(x => !x.IsRetweeted && !x.IsQuoteStatus && !x.IsFavorited);
-                        if (found != null)
-                            postingTweets.Add(found);
+                            .FirstOrDefault(x =>
+                                !x.IsRetweeted && !x.IsQuoteStatus && !x.IsFavorited && x.RetweetedStatus == null &&
+                                x.QuotedStatus == null);
                         break;
                     case OnlyRetweets:
-                        found = tweets.Value.ToList().FirstOrDefault(x => x.IsRetweeted);
-                        if (found != null)
-                            postingTweets.Add(found);
+                        found = tweets.Value.ToList().FirstOrDefault(x => x.IsRetweeted || x.RetweetedStatus != null);
                         break;
                     case OnlyQuoteTweets:
-                        found = tweets.Value.ToList().FirstOrDefault(x => x.IsQuoteStatus);
-                        if (found != null)
-                            postingTweets.Add(found);
+                        found = tweets.Value.ToList().FirstOrDefault(x => x.IsQuoteStatus || x.QuotedStatus != null);
                         break;
                     case OnlyPicMedia:
                     case OnlyGifMedia:
@@ -125,40 +126,33 @@ namespace ChronoBot.Utilities.SocialMedias
                         found = tweets.Value.ToList().FirstOrDefault(x =>
                             x.ExtendedEntities != null && x.ExtendedEntities.Any() &&
                             x.ExtendedEntities.Media.Any() &&
-                            x.ExtendedEntities.Media.ElementAt(0).ExtendedEntityType == media);
-                        if (found != null)
-                            postingTweets.Add(found);
+                            x.ExtendedEntities.Media.ElementAt(0).ExtendedEntityType == media && !x.IsRetweeted &&
+                            !x.IsQuoteStatus && !x.IsFavorited && x.RetweetedStatus == null &&
+                            x.QuotedStatus == null);
                         break;
                     case OnlyAllMedia:
                         found = tweets.Value.ToList().FirstOrDefault(x =>
                             x.ExtendedEntities != null && x.ExtendedEntities.Any() &&
-                            x.ExtendedEntities.Media.Any());
-                        if (found != null)
-                            postingTweets.Add(found);
+                            x.ExtendedEntities.Media.Any() && !x.IsRetweeted && !x.IsQuoteStatus && !x.IsFavorited &&
+                            x.RetweetedStatus == null &&
+                            x.QuotedStatus == null);
                         break;
                     case OnlyLikes:
-                        postingTweets.Add(await GetLatestLike(ud));
+                        found = await GetLatestLike(ud);
                         break;
                 }
+                if (found != null)
+                    postingTweets.Add(found);
             }
 
             if (postingTweets.Count == 0)
                 return null;
             if (postingTweets.Count == 1)
                 return postingTweets[0];
+            
+            postingTweets = postingTweets.OrderByDescending(x => x.CreatedDate).ToList();
 
-            DateTime latest = DateTime.MinValue;
-            TwitterStatus tweet = null;
-            foreach (TwitterStatus twitterStatus in postingTweets)
-            {
-                if (twitterStatus == null || latest >= twitterStatus.CreatedDate)
-                    continue;
-
-                latest = twitterStatus.CreatedDate;
-                tweet = twitterStatus;
-            }
-
-            return await Task.FromResult(tweet);
+            return postingTweets[0];
         }
 
         private async Task<TwitterStatus> GetLatestLike(SocialMediaUserData ud)
@@ -169,14 +163,60 @@ namespace ChronoBot.Utilities.SocialMedias
             {
                 ScreenName = ud.Name,
                 Count = 100,
-                UserId = userId
+                UserId = userId,
+                IncludeEntities = true,
+                TweetMode = "extended"
             };
 
             var tweets = await _service.ListFavoriteTweetsAsync(options);
             if (tweets?.Value == null || !tweets.Value.Any())
                 return null;
 
-            return await Task.FromResult(tweets.Value.ElementAt(0));
+            if(!_history.ToList().Exists(x => x.Key == ud.Name))
+                _history.Add(ud.Name, tweets.Value.ToList());
+            else
+            {
+                var newTweets = tweets.Value.
+                   Where(x => _history[ud.Name].All(y => x.IdStr != y.IdStr)).ToList();
+
+                if (!newTweets.Any()) 
+                    return await Task.FromResult(_history[ud.Name].ElementAt(0));
+
+                _history[ud.Name].Insert(0, newTweets.ElementAt(0));
+                _history[ud.Name] = _history[ud.Name].Distinct().ToList();
+            }
+            
+            return await Task.FromResult(_history[ud.Name].ElementAt(0));
+        }
+
+        protected override async Task AutoUpdate()
+        {
+            GroupTwitterUsers();
+            if (_groupedUsers.Count == 0)
+                return;
+
+            List<SocialMediaUserData> newTweets = new List<SocialMediaUserData>();
+            for (int i = 0; i < _groupedUsers.Count; i++)
+            {
+                int currentUser = _groupedUsers.Values.ElementAt(i);
+                var user = _groupedUsers.Keys.ElementAt(i)[currentUser];
+                TwitterStatus tweet = await GetLatestTweet(user);
+                if (tweet != null && tweet.Id != 0 && !string.IsNullOrEmpty(tweet.IdStr) && !MessageDisplayed(tweet.IdStr, user.GuildId))
+                {
+                    user.Id = tweet.IdStr;
+                    int userIndex = FindIndexByName(user.GuildId, user.Name, SocialMediaEnum.Twitter);
+                    Users[userIndex] = user;
+                    newTweets.Add(user);
+                    FileSystem.UpdateFile(user);
+                }
+
+                _groupedUsers[_groupedUsers.Keys.ElementAt(i)] += 1;
+                if(_groupedUsers[_groupedUsers.Keys.ElementAt(i)] == _groupedUsers.Keys.ElementAt(i).Count)
+                    _groupedUsers[_groupedUsers.Keys.ElementAt(i)] = 0;
+            }
+
+            if (newTweets.Any())
+                await UpdateSocialMedia(newTweets);
         }
 
         public override async Task<string> AddSocialMediaUser(ulong guildId, ulong channelId, string username,
@@ -195,9 +235,14 @@ namespace ChronoBot.Utilities.SocialMedias
                     return await Task.FromResult($"Unrecognizable option: \"{options}\"");
                 if (sendToChannelId == 0)
                     sendToChannelId = Statics.Debug ? Statics.DebugChannelId : channelId;
-                
+
+                bool newEntry = Users.Exists(x => x.GuildId == guildId);
+
                 if (!CreateSocialMediaUser(legitUsername, guildId, sendToChannelId, "0", SocialMediaEnum.Twitter, legitOptions))
                     return await Task.FromResult($"Failed to add {legitUsername}.");
+
+                if (newEntry)
+                    GroupTwitterUsers();
 
                 return await Task.FromResult("Successfully added " + legitUsername + "\n" + "https://twitter.com/" +
                                              legitUsername);
@@ -270,6 +315,84 @@ namespace ChronoBot.Utilities.SocialMedias
 
             return await Task.FromResult("No updates since last time.");
         }
+
+        public override string DeleteSocialMediaUser(ulong guildId, string user, SocialMediaEnum socialMedia)
+        {
+            string result = base.DeleteSocialMediaUser(guildId, user, socialMedia);
+
+            if (result.Contains("Successfully"))
+                GroupTwitterUsers();
+
+            return result;
+        }
+
+        //private async Task PostVideo(SocketMessage socketMessage)
+        //{
+        //    if (!socketMessage.Embeds.Any(x => x.Url.ToLowerInvariant().Contains("https://twitter.com/")))
+        //    {
+        //        if (!socketMessage.Content.Contains("https://twitter.com/") && !socketMessage.Content.Contains("/status/"))
+        //            return;
+        //    }
+
+        //    Embed embed =
+        //        socketMessage.Embeds.FirstOrDefault(x => x.Url.ToLowerInvariant().Contains("https://twitter.com/"));
+        //    string id;
+        //    if (embed == null)
+        //        GetTweetFromPost(socketMessage.Content.Split('/'), out id);
+        //    else
+        //        GetTweetFromPost(embed.Url.Split('/'), out id);
+
+        //    if (id == string.Empty)
+        //        return;
+
+        //    GetTweetOptions options = new GetTweetOptions
+        //    {
+        //        Id = long.Parse(id),
+        //        IncludeEntities = true
+        //    };
+        //    var tweet = _service.GetTweet(options);
+        //    if (tweet == null || tweet.ExtendedEntities == null || tweet.ExtendedEntities.Media.Count != 1)
+        //        return;
+
+        //    TwitterExtendedEntity tee = tweet.ExtendedEntities.Media.ElementAt(0);
+        //    if (tee.ExtendedEntityType != TwitterMediaType.Video)
+        //        return;
+
+        //    int highest = 0;
+        //    int j = -1;
+        //    for (int i = 0; i < tee.VideoInfo.Variants.Count; i++)
+        //    {
+        //        TwitterMediaVariant variant = tee.VideoInfo.Variants[i];
+        //        string res = string.Empty;
+        //        string[] segments = tee.VideoInfo.Variants[i].Url.Segments;
+        //        foreach (var s in segments)
+        //        {
+        //            if (!int.TryParse(s[0].ToString(), out _))
+        //                continue;
+        //            if (s.Length <= 5)
+        //                continue;
+        //            if (s[2] != 'x' && s[3] != 'x' && s[4] != 'x')
+        //                continue;
+
+        //            res = s.TrimEnd('/');
+        //            break;
+        //        }
+
+        //        string[] split = res.Split('x');
+        //        if (!int.TryParse(split[0], out int x))
+        //            continue;
+        //        if (!int.TryParse(split[0], out int y))
+        //            continue;
+
+        //        int multiplyRes = x * y;
+        //        if (multiplyRes <= highest)
+        //            continue;
+
+        //        highest = multiplyRes;
+        //        j = i;
+        //    }
+        //    Info.SendMessageToChannel(socketMessage, tee.VideoInfo.Variants[j].Url.ToString());
+        //}
 
         private bool MessageDisplayed(string id, ulong guildId)
         {
@@ -350,6 +473,28 @@ namespace ChronoBot.Utilities.SocialMedias
             }
 
             return legitOptions;
+        }
+
+        private void GroupTwitterUsers()
+        {
+            List<Tuple<ulong, int>> currentUsersPerGuild = new List<Tuple<ulong, int>>();
+            foreach (var group in _groupedUsers)
+            {
+                var currentUsers = group.Key;
+                currentUsersPerGuild.Add(new Tuple<ulong, int>(currentUsers[0].GuildId, group.Value));
+            }
+
+            _groupedUsers.Clear();
+
+            foreach (var group in Users.FindAll(x => x.SocialMedia == SocialMediaEnum.Twitter)
+                         .GroupBy(x => x.GuildId))
+            {
+                var currentUsers = group.ToList();
+                int currentIndex = 0;
+                if (currentUsersPerGuild.Exists(x => x.Item1 == currentUsers[0].GuildId))
+                    currentIndex = currentUsersPerGuild.Find(x => x.Item1 == currentUsers[0].GuildId)!.Item2;
+                _groupedUsers.Add(currentUsers, currentIndex);
+            }
         }
 
         private void Authenticate()

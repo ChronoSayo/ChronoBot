@@ -29,11 +29,21 @@ namespace ChronoBot.Modules.SocialMedias
 
         public virtual async Task AddAsync(string user, [Remainder] string option = "")
         {
-            ulong guildId = Context.Guild.Id;
-            ulong channelId = Context.Channel.Id;
-            ulong sendToChannel = Context.Message.MentionedChannels.Count > 0 ? Context.Message.MentionedChannels.FirstOrDefault()!.Id : 0;
-            string result = await SocialMedia.AddSocialMediaUser(guildId, channelId, user, sendToChannel, option);
-            await SendMessage(result, sendToChannel);
+            try
+            {
+                ulong guildId = Context.Guild.Id;
+                ulong channelId = Context.Channel.Id;
+                ulong sendToChannel = Context.Message.MentionedChannels.Count > 0 ? Context.Message.MentionedChannels.FirstOrDefault()!.Id : 0;
+                if (option.Contains(sendToChannel.ToString()))
+                    option = option.Remove(option.IndexOf('<'), option.IndexOf('>') - option.IndexOf('<') + 1);
+                string result = await SocialMedia.AddSocialMediaUser(guildId, channelId, user, sendToChannel, option);
+                await SendMessage(result, sendToChannel);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
         }
 
         public virtual async Task DeleteAsync(string user)
@@ -72,25 +82,32 @@ namespace ChronoBot.Modules.SocialMedias
         protected virtual Embed HowToText(string socialMedia)
         {
             string urlIcon = "";
+            string optionsIntro = "";
             switch (socialMedia)
             {
                 case "twitter":
                     urlIcon =
                         "https://cdn.discordapp.com/attachments/891627208089698384/891627590023000074/Twitter_social_icons_-_circle_-_blue.png";
+                    optionsIntro = " [options]";
                     break;
                 case "youtube":
                     urlIcon =
                         "https://cdn.discordapp.com/attachments/891627208089698384/905575565636010074/youtube-logo-transparent-png-pictures-transparent-background-youtube-logo-11562856729oa42buzkng.png";
                     break;
             }
-            return new EmbedBuilder()
+
+            var embed = new EmbedBuilder()
                 .WithTitle($"How to use {socialMedia.ToUpper()}")
                 .WithThumbnailUrl(urlIcon)
-                .AddField("Add ", $"{Statics.Prefix}{socialMedia.ToLowerInvariant()}add <name> [channel]", true)
+                .AddField("Add ", $"{Statics.Prefix}{socialMedia.ToLowerInvariant()}add <name> [channel]{optionsIntro}",
+                    true)
                 .AddField("Delete", $"{Statics.Prefix}{socialMedia.ToLowerInvariant()}delete <name>", true)
                 .AddField("Get", $"{Statics.Prefix}{socialMedia.ToLowerInvariant()}get <name>", true)
-                .AddField("List", $"{Statics.Prefix}{socialMedia.ToLowerInvariant()}list", true)
-                .Build();
+                .AddField("List", $"{Statics.Prefix}{socialMedia.ToLowerInvariant()}list", true);
+            if (socialMedia == "twitter")
+                embed.WithFooter(
+                    "Options (can have multiple):\nOnly posts: p\r\nOnly retweets: r\r\nOnly quote retweets: q\r\nOnly likes: l\r\nOnly pictures: mp\r\nOnly animated GIF: mg\r\nOnly videos: mv\r\nOnly any media: m\r\nAll of the above: no input");
+            return embed.Build();
         }
 
         protected virtual async Task SendMessage(string result, ulong sendToChannel = 0)

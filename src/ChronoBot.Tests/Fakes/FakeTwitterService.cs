@@ -1,24 +1,50 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Hammock;
 using TweetSharp;
 
 namespace ChronoBot.Tests.Fakes
 {
     public class FakeTwitterService : TwitterService
     {
+        private int _addLikeCount = 0;
         public override async Task<TwitterAsyncResult<IEnumerable<TwitterStatus>>> ListFavoriteTweetsAsync(ListFavoriteTweetsOptions options)
         {
-            if(options.ScreenName != "Tweeter6")
+            if (options.ScreenName == "NoLike")
                 return null;
 
-            var status = new TwitterStatus
+            TwitterStatus status = null;
+            if (options.ScreenName == "AddLike")
             {
-                User = new TwitterUser { ScreenName = options.ScreenName },
-                Id = 123456789,
-                IdStr = "123"
-            };
+                if (_addLikeCount == 0)
+                {
+                    status = new TwitterStatus
+                    {
+                        User = new TwitterUser { ScreenName = options.ScreenName },
+                        Id = 123456789,
+                        IdStr = "123"
+                    }; 
+                    _addLikeCount++;
+                }
+                else
+                {
+                    status = new TwitterStatus
+                    {
+                        User = new TwitterUser { ScreenName = options.ScreenName },
+                        Id = 123456789,
+                        IdStr = "987"
+                    };
+                }
+            }
+            else 
+            {
+                status = new TwitterStatus
+                {
+                    User = new TwitterUser { ScreenName = options.ScreenName },
+                    Id = 123456789,
+                    IdStr = "123"
+                };
+            }
             var statuses = new TwitterAsyncResult<IEnumerable<TwitterStatus>>(new[] { status }, null);
             return await Task.FromResult(statuses);
         }
@@ -77,6 +103,11 @@ namespace ChronoBot.Tests.Fakes
                 ScreenName = name
             };
             var users = new TwitterAsyncResult<IEnumerable<TwitterUser>>(new []{ user }, null);
+            if(name == "Multiple")
+                users = new TwitterAsyncResult<IEnumerable<TwitterUser>>(new[] { user, user, user, user }, null);
+            else if (name == "MultipleSlightlyDifferent")
+                users = new TwitterAsyncResult<IEnumerable<TwitterUser>>(
+                    new[] { new TwitterUser { ScreenName = "m" }, user }, null);
             return await Task.FromResult(users);
         }
 

@@ -7,6 +7,7 @@ using ChronoBot.Common.Systems;
 using ChronoBot.Common.UserDatas;
 using ChronoBot.Enums;
 using ChronoBot.Helpers;
+using Discord;
 using Discord.WebSocket;
 using Microsoft.Extensions.Configuration;
 
@@ -80,7 +81,14 @@ namespace ChronoBot.Utilities.SocialMedias
 
         private async void OnUpdateTimerOnElapsed(object s, ElapsedEventArgs e)
         {
-            await UpdateTimerElapsed();
+            try
+            {
+                await UpdateTimerElapsed();
+            }
+            catch (Exception exception)
+            {
+                await Statics.SendEmbedMessageToLogChannel(Client, exception.Message, Color.Red);
+            }
         }
 
         protected virtual async Task UpdateTimerElapsed()
@@ -90,15 +98,9 @@ namespace ChronoBot.Utilities.SocialMedias
 
         protected virtual async Task AutoUpdate()
         {
-            ulong current = 0;
-            for (int i = 0; i < Users.Count; i++)
-            {
-                if (Users[i].GuildId == current)
-                    continue;
-
-                current = Users[i].GuildId;
-                await GetUpdatedSocialMediaUsers(current);
-            }
+            var groupedUsers = Users.GroupBy(x => x.GuildId).ToList();
+            foreach (var user in groupedUsers)
+                await GetUpdatedSocialMediaUsers(user.Key);
         }
 
         public virtual async Task<string> AddSocialMediaUser(ulong guildId, ulong channelId, string username,
