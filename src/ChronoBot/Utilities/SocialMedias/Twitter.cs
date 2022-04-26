@@ -370,7 +370,7 @@ namespace ChronoBot.Utilities.SocialMedias
             {
                 TwitterMediaVariant variant = tee.VideoInfo.Variants[i];
                 string res = string.Empty;
-                string[] segments = tee.VideoInfo.Variants[i].Url.Segments;
+                string[] segments = variant.Url.Segments;
                 foreach (var s in segments)
                 {
                     if (!int.TryParse(s[0].ToString(), out _))
@@ -385,9 +385,11 @@ namespace ChronoBot.Utilities.SocialMedias
                 }
 
                 string[] split = res.Split('x');
+                if(split.Length != 2)
+                    continue;
                 if (!int.TryParse(split[0], out int x))
                     continue;
-                if (!int.TryParse(split[0], out int y))
+                if (!int.TryParse(split[1], out int y))
                     continue;
 
                 int multiplyRes = x * y;
@@ -397,6 +399,10 @@ namespace ChronoBot.Utilities.SocialMedias
                 highest = multiplyRes;
                 j = i;
             }
+
+            if (j == -1)
+                return string.Empty;
+
             return tee.VideoInfo.Variants[j].Url.ToString();
         }
 
