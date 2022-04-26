@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Threading;
-using System.Threading.Tasks;
 using ChronoBot.Common.Systems;
 using ChronoBot.Common.UserDatas;
 using ChronoBot.Enums;
@@ -384,6 +383,56 @@ namespace ChronoBot.Tests.SocialMedias
             Assert.Equal($"Unrecognizable option: \"f\"", result);
 
             File.Delete(Path.Combine(fileSystem.PathToSaveFile, "123456789.xml"));
+        }
+
+        [Fact]
+        public void PostVideo_PostVideo_Success()
+        {
+            var twitter = LoadTwitter(out _);
+
+            var result = twitter.PostVideo(1, 1, "https://twitter.com/Video/status/1").Result;
+
+            Assert.Equal("https://video.twimg.com/ext_tw_video/2/pu/vid/1280x720/swhi5fpAMRc-fzJp.mp4?tag=12", result);
+        }
+
+        [Fact]
+        public void PostVideo_IncorrectVideoFormat_Fail()
+        {
+            var twitter = LoadTwitter(out _);
+
+            var result = twitter.PostVideo(1, 1, "https://twitter.com/Video/status/2").Result;
+
+            Assert.Equal("", result);
+        }
+
+        [Fact]
+        public void PostVideo_NoTweets_Fail()
+        {
+            var twitter = LoadTwitter(out _);
+
+            var result = twitter.PostVideo(1, 1, "https://twitter.com/Video/status/3").Result;
+
+            Assert.Equal("", result);
+        }
+
+        [Fact]
+        public void PostVideo_WrongMedia_Fail()
+        {
+            var twitter = LoadTwitter(out _);
+
+            var result = twitter.PostVideo(1, 1, "https://twitter.com/Video/status/4").Result;
+
+            Assert.Equal("", result);
+        }
+
+        [Fact]
+        public void PostVideo_NoExtendedTweets_Fail()
+        {
+            var twitter = LoadTwitter(out _);
+
+            var result = twitter.PostVideo(1, 1, "https://twitter.com/Video/status/5").Result;
+
+            Assert.Equal("", result);
         }
 
         [Fact]

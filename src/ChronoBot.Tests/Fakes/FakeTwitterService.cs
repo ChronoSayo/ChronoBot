@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using TweetSharp;
 
@@ -8,6 +9,127 @@ namespace ChronoBot.Tests.Fakes
     public class FakeTwitterService : TwitterService
     {
         private int _addLikeCount = 0;
+
+        public override async Task<TwitterAsyncResult<TwitterStatus>> GetTweetAsync(GetTweetOptions options)
+        {
+            if (options.Id == 3)
+                return null;
+
+            if (options.Id == 2)
+                return await Task.FromResult(GetFailTweetAsync());
+
+            var url1 = new Uri(
+                "https://video.twimg.com/ext_tw_video/1/pu/vid/180x20/swhi5fpAMRc-fzJp.mp4?tag=12");
+            var url2 = new Uri(
+                "https://video.twimg.com/ext_tw_video/2/pu/vid/1280x720/swhi5fpAMRc-fzJp.mp4?tag=12");
+            var url3 = new Uri(
+                "https://video.twimg.com/ext_tw_video/3/pu/vid/12x720/swhi5fpAMRc-fzJp.mp4?tag=12");
+
+            var variants = new List<TwitterMediaVariant>
+            {
+                new TwitterMediaVariant
+                {
+                    BitRate = 1, ContentType = "video/mp4", Url = url1
+                },
+                new TwitterMediaVariant
+                {
+                    BitRate = 2, ContentType = "video/mp4", Url = url2
+                },
+                new TwitterMediaVariant
+                {
+                    BitRate = 3, ContentType = "video/mp4", Url = url3
+                }
+            };
+
+            var aspectRatio = new List<int> {16, 2};
+            var videoInfo = new TwitterVideoInfo()
+            {
+                Variants = variants,
+                AspectRatio = aspectRatio,
+                DurationMs = 1230
+            };
+
+            var extended = new TwitterExtendedEntities
+            {
+                Media = new List<TwitterExtendedEntity>
+                {
+                    new TwitterExtendedEntity
+                    {
+                        ExtendedEntityType = options.Id == 4 ? TwitterMediaType.AnimatedGif : TwitterMediaType.Video,
+                        VideoInfo = videoInfo
+                    }
+                }
+            };
+
+            var status = new TwitterStatus
+            {
+                ExtendedEntities = options.Id == 5 ? null : extended
+            };
+
+            var statuses = new TwitterAsyncResult<TwitterStatus>(status, null);
+            return await Task.FromResult(statuses);
+        }
+
+        private TwitterAsyncResult<TwitterStatus> GetFailTweetAsync()
+        {
+            var url1 = new Uri(
+                "https://video.twimg.com/ext_tw_video/1/pu/vid/ggs/swhi5fpAMRc-fzJp.mp4?tag=12");
+            var url2 = new Uri(
+                "https://video.twimg.com/ext_tw_video/2/pu/vid/1280xf/swhi5fpAMRc-fzJp.mp4?tag=12");
+            var url3 = new Uri(
+                "https://video.twimg.com/ext_tw_video/3/pu/vid/1dadx720/swhi5fpAMRc-fzJp.mp4?tag=12");
+            var url4 = new Uri(
+                "https://video.twimg.com/ext_tw_video/3/pu/vid/1423720/swhi5fpAMRc-fzJp.mp4?tag=12");
+
+            var variants = new List<TwitterMediaVariant>
+            {
+                new TwitterMediaVariant
+                {
+                    BitRate = 1, ContentType = "video/mp4", Url = url1
+                },
+                new TwitterMediaVariant
+                {
+                    BitRate = 2, ContentType = "video/mp4", Url = url2
+                },
+                new TwitterMediaVariant
+                {
+                    BitRate = 3, ContentType = "video/mp4", Url = url3
+                },
+                new TwitterMediaVariant
+                {
+                    BitRate = 4, ContentType = "video/mp4", Url = url4
+                }
+            };
+
+            var aspectRatio = new List<int> { 16, 2 };
+            var videoInfo = new TwitterVideoInfo()
+            {
+                Variants = variants,
+                AspectRatio = aspectRatio,
+                DurationMs = 1230
+            };
+
+            var extended = new TwitterExtendedEntities
+            {
+                Media = new List<TwitterExtendedEntity>
+                {
+                    new TwitterExtendedEntity
+                    {
+                        ExtendedEntityType = TwitterMediaType.Video,
+                        VideoInfo = videoInfo
+                    }
+                }
+            };
+
+            var status = new TwitterStatus
+            {
+                ExtendedEntities = extended
+            };
+
+            var statuses = new TwitterAsyncResult<TwitterStatus>(status, null);
+            return statuses;
+        }
+        
         public override async Task<TwitterAsyncResult<IEnumerable<TwitterStatus>>> ListFavoriteTweetsAsync(ListFavoriteTweetsOptions options)
         {
             if (options.ScreenName == "NoLike")
