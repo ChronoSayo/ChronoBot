@@ -55,5 +55,15 @@ namespace ChronoBot.Modules.SocialMedias
             var embed = HowToText(SocialMediaCommand);
             await SendMessage(embed);
         }
+
+        [Command("v", true, RunMode = RunMode.Async)]
+        public async Task PostVideoAsync()
+        {
+            string video =
+                await ((Twitter) SocialMedia).PostVideo(Context.Guild.Id, Context.Channel.Id,
+                    Context.Message.ToString());
+            if(!string.IsNullOrEmpty(video))
+                await SendMessage(video);
+        }
     }
 }

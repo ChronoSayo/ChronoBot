@@ -326,73 +326,85 @@ namespace ChronoBot.Utilities.SocialMedias
             return result;
         }
 
-        //private async Task PostVideo(SocketMessage socketMessage)
-        //{
-        //    if (!socketMessage.Embeds.Any(x => x.Url.ToLowerInvariant().Contains("https://twitter.com/")))
-        //    {
-        //        if (!socketMessage.Content.Contains("https://twitter.com/") && !socketMessage.Content.Contains("/status/"))
-        //            return;
-        //    }
+        public async Task<string> PostVideo(ulong guildId, ulong channelId, string message)
+        {
+            if (!ContainsTweetLink(message))
+            {
+                var messages = await Client.GetGuild(guildId).GetTextChannel(channelId).GetMessagesAsync(5)
+                    .FlattenAsync();
+                foreach (var m in messages)
+                {
+                    if (!ContainsTweetLink(m.Content))
+                        continue;
+                    message = m.Content;
+                    break;
+                }
+                if (!ContainsTweetLink(message))
+                    return string.Empty;
+            }
 
-        //    Embed embed =
-        //        socketMessage.Embeds.FirstOrDefault(x => x.Url.ToLowerInvariant().Contains("https://twitter.com/"));
-        //    string id;
-        //    if (embed == null)
-        //        GetTweetFromPost(socketMessage.Content.Split('/'), out id);
-        //    else
-        //        GetTweetFromPost(embed.Url.Split('/'), out id);
 
-        //    if (id == string.Empty)
-        //        return;
+            string[] urlSplit = message.Split('/');
+            string id = urlSplit[^1];
 
-        //    GetTweetOptions options = new GetTweetOptions
-        //    {
-        //        Id = long.Parse(id),
-        //        IncludeEntities = true
-        //    };
-        //    var tweet = _service.GetTweet(options);
-        //    if (tweet == null || tweet.ExtendedEntities == null || tweet.ExtendedEntities.Media.Count != 1)
-        //        return;
+            GetTweetOptions options = new GetTweetOptions
+            {
+                Id = long.Parse(id),
+                IncludeEntities = true
+            };
+            var tweets = await _service.GetTweetAsync(options);
+            if (tweets == null)
+                return string.Empty;
+            if (tweets.Response != null && tweets.Response.RateLimitStatus.RemainingHits <= 0)
+                return string.Empty;
+            if (tweets.Value == null || tweets.Value.ExtendedEntities == null ||
+                tweets.Value.ExtendedEntities.Media.Count != 1)
+                return string.Empty;
+            TwitterExtendedEntity tee = tweets.Value.ExtendedEntities.Media.ElementAt(0);
+            if (tee.ExtendedEntityType != TwitterMediaType.Video)
+                return string.Empty;
 
-        //    TwitterExtendedEntity tee = tweet.ExtendedEntities.Media.ElementAt(0);
-        //    if (tee.ExtendedEntityType != TwitterMediaType.Video)
-        //        return;
+            int highest = 0;
+            int j = -1;
+            for (int i = 0; i < tee.VideoInfo.Variants.Count; i++)
+            {
+                TwitterMediaVariant variant = tee.VideoInfo.Variants[i];
+                string res = string.Empty;
+                string[] segments = tee.VideoInfo.Variants[i].Url.Segments;
+                foreach (var s in segments)
+                {
+                    if (!int.TryParse(s[0].ToString(), out _))
+                        continue;
+                    if (s.Length <= 5)
+                        continue;
+                    if (s[2] != 'x' && s[3] != 'x' && s[4] != 'x')
+                        continue;
 
-        //    int highest = 0;
-        //    int j = -1;
-        //    for (int i = 0; i < tee.VideoInfo.Variants.Count; i++)
-        //    {
-        //        TwitterMediaVariant variant = tee.VideoInfo.Variants[i];
-        //        string res = string.Empty;
-        //        string[] segments = tee.VideoInfo.Variants[i].Url.Segments;
-        //        foreach (var s in segments)
-        //        {
-        //            if (!int.TryParse(s[0].ToString(), out _))
-        //                continue;
-        //            if (s.Length <= 5)
-        //                continue;
-        //            if (s[2] != 'x' && s[3] != 'x' && s[4] != 'x')
-        //                continue;
+                    res = s.TrimEnd('/');
+                    break;
+                }
 
-        //            res = s.TrimEnd('/');
-        //            break;
-        //        }
+                string[] split = res.Split('x');
+                if (!int.TryParse(split[0], out int x))
+                    continue;
+                if (!int.TryParse(split[0], out int y))
+                    continue;
 
-        //        string[] split = res.Split('x');
-        //        if (!int.TryParse(split[0], out int x))
-        //            continue;
-        //        if (!int.TryParse(split[0], out int y))
-        //            continue;
+                int multiplyRes = x * y;
+                if (multiplyRes <= highest)
+                    continue;
 
-        //        int multiplyRes = x * y;
-        //        if (multiplyRes <= highest)
-        //            continue;
+                highest = multiplyRes;
+                j = i;
+            }
+            return tee.VideoInfo.Variants[j].Url.ToString();
+        }
 
-        //        highest = multiplyRes;
-        //        j = i;
-        //    }
-        //    Info.SendMessageToChannel(socketMessage, tee.VideoInfo.Variants[j].Url.ToString());
-        //}
+        private bool ContainsTweetLink(string message)
+        {
+            return message.Contains("https://twitter.com/") &&
+                   message.Contains("status", StringComparison.InvariantCultureIgnoreCase);
+        }
 
         private bool MessageDisplayed(string id, ulong guildId)
         {
