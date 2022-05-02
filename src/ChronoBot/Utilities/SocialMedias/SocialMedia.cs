@@ -191,7 +191,8 @@ namespace ChronoBot.Utilities.SocialMedias
                         switch(TypeOfSocialMedia)
                         {
                             case "twitch":
-                                message += GetStreamerUrlAndGame(users[j], streamerInfo);
+                                if(users[j].Id == "online")
+                                    message += GetStreamerUrlAndGame(users[j], streamerInfo);
                                 break;
                             case "twitter":
                                 message += GetTwitterUrl(users[j]);
