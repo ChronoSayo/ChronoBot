@@ -84,7 +84,10 @@ namespace ChronoBot.Utilities.SocialMedias
                     _rateLimitResetTime = tweets.Response.RateLimitStatus.ResetTime;
                     var wait = _rateLimitResetTime - DateTime.Now;
                     await Statics.SendEmbedMessageToLogChannel(Client,
-                        $"Twitter rate limit exceeded. Reset in {tweets.Response.RateLimitStatus.ResetTime}", Color.Gold);
+                        $"Twitter rate limit exceeded. Reset in {_rateLimitResetTime}\n +" +
+                        $"Name: {ud.Name}\nID: {ud.Id}\nGuild ID: {ud.GuildId}\nChannel ID: {ud.ChannelId}\n" +
+                        $"{(tweets.Value != null && tweets.Value.ToList().Count > 0 ? tweets.Value.ToList()[0].ToTwitterUrl().AbsolutePath : ud.Name)}",
+                        Color.Gold);
                     Thread.Sleep(wait);
                 }
             }
