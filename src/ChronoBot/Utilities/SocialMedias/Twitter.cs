@@ -350,7 +350,9 @@ namespace ChronoBot.Utilities.SocialMedias
             GetTweetOptions options = new GetTweetOptions
             {
                 Id = long.Parse(id),
-                IncludeEntities = true
+                IncludeEntities = true,
+                IncludeMyRetweet = true,
+                TweetMode = "extended"
             };
             var tweets = await _service.GetTweetAsync(options);
             if (tweets == null)
