@@ -11,6 +11,11 @@ using Discord;
 using Discord.WebSocket;
 using Microsoft.Extensions.Configuration;
 using TweetSharp;
+using System.Drawing.Imaging;
+using System.Globalization;
+using System.IO;
+using System.Net;
+using Color = Discord.Color;
 
 
 namespace ChronoBot.Utilities.SocialMedias
@@ -84,10 +89,7 @@ namespace ChronoBot.Utilities.SocialMedias
                     _rateLimitResetTime = tweets.Response.RateLimitStatus.ResetTime;
                     var wait = _rateLimitResetTime - DateTime.Now;
                     await Statics.SendEmbedMessageToLogChannel(Client,
-                        $"Twitter rate limit exceeded. Reset in {_rateLimitResetTime}\n +" +
-                        $"Name: {ud.Name}\nID: {ud.Id}\nGuild ID: {ud.GuildId}\nChannel ID: {ud.ChannelId}\n" +
-                        $"{(tweets.Value != null && tweets.Value.ToList().Count > 0 ? tweets.Value.ToList()[0].ToTwitterUrl().AbsolutePath : ud.Name)}",
-                        Color.Gold);
+                        $"Twitter rate limit exceeded. Reset in {_rateLimitResetTime}", Color.Gold);
                     Thread.Sleep(wait);
                 }
             }
@@ -219,7 +221,15 @@ namespace ChronoBot.Utilities.SocialMedias
             }
 
             if (newTweets.Any())
+            {
                 await UpdateSocialMedia(newTweets);
+                foreach (SocialMediaUserData ud in newTweets)
+                {
+                    string video = await PostVideo(ud.GuildId, ud.ChannelId, GetTwitterUrl(ud));
+                    if (!string.IsNullOrEmpty(video))
+                        await Client.GetGuild(ud.GuildId).GetTextChannel(ud.ChannelId).SendMessageAsync(video);
+                }
+            }
         }
 
         public override async Task<string> AddSocialMediaUser(ulong guildId, ulong channelId, string username,
@@ -329,24 +339,105 @@ namespace ChronoBot.Utilities.SocialMedias
             return result;
         }
 
+        public async Task<Embed> PostEmbed(ulong guildId, ulong channelId, string message)
+        {
+            if (ContainsTweetLink(message))
+                return await ConvertToEmbed(message);
+
+            message = await GetMessageFromChannelHistory(guildId, channelId, message);
+
+            if (string.IsNullOrEmpty(message))
+                return new EmbedBuilder()
+                    {Description = "Too many messages away from a Tweet."}.Build();
+
+            return await ConvertToEmbed(message);
+        }
+
         public async Task<string> PostVideo(ulong guildId, ulong channelId, string message)
         {
-            if (!ContainsTweetLink(message))
+            if (ContainsTweetLink(message)) 
+                return await ConvertToVideo(message);
+            
+            message = await GetMessageFromChannelHistory(guildId, channelId, message);
+
+            if (string.IsNullOrEmpty(message))
+                return "Too many messages away from a Tweet with video.";
+
+            return await ConvertToVideo(message);
+        }
+
+        private async Task<string> GetMessageFromChannelHistory(ulong guildId, ulong channelId, string message)
+        {
+            var messages = await Client.GetGuild(guildId).GetTextChannel(channelId).GetMessagesAsync(10)
+                .FlattenAsync();
+            foreach (var m in messages)
             {
-                var messages = await Client.GetGuild(guildId).GetTextChannel(channelId).GetMessagesAsync(5)
-                    .FlattenAsync();
-                foreach (var m in messages)
-                {
-                    if (!ContainsTweetLink(m.Content))
-                        continue;
-                    message = m.Content;
-                    break;
-                }
-                if (!ContainsTweetLink(message))
-                    return string.Empty;
+                if (!ContainsTweetLink(m.Content))
+                    continue;
+                message = m.Content;
+                break;
+            }
+            return !ContainsTweetLink(message) ? string.Empty : message;
+        }
+
+        private async Task<string> ConvertToVideo(string message)
+        {
+            var tweet = await GetTwitter(message);
+            if (tweet.Value == null || tweet.Value.ExtendedEntities == null ||
+                tweet.Value.ExtendedEntities.Media.Count != 1)
+                return string.Empty;
+            TwitterExtendedEntity tee = tweet.Value.ExtendedEntities.Media.ElementAt(0);
+            if (tee.ExtendedEntityType != TwitterMediaType.Video)
+                return string.Empty;
+
+            long highest = 0;
+            int j = -1;
+            for (int i = 0; i < tee.VideoInfo.Variants.Count; i++)
+            {
+                TwitterMediaVariant variant = tee.VideoInfo.Variants[i];
+                if (variant.BitRate <= highest)
+                    continue;
+
+                highest = variant.BitRate;
+                j = i;
             }
 
+            if (j == -1)
+                return string.Empty;
 
+            return tee.VideoInfo.Variants[j].Url.ToString();
+        }
+        private async Task<Embed> ConvertToEmbed(string message)
+        {
+            var tweet = await GetTwitter(message);
+            if (tweet.Value == null)
+                return null;
+            var t = tweet.Value;
+            EmbedBuilder embed = new EmbedBuilder()
+                .WithColor(Color.Blue)
+                .WithAuthor($"{t.User.Name} (@{t.Author.ScreenName})", t.Author.ProfileImageUrl)
+                .WithDescription(t.FullText)
+                .AddField("Likes", t.FavoriteCount, true)
+                .AddField("Retweets", t.RetweetCount, true)
+                .AddField("Twitter", t.ToTwitterUrl())
+                .WithFooter($"Twitter • {t.CreatedDate.ToString("MM/dd/yyyy", CultureInfo.InvariantCulture)}");
+
+            if (t.ExtendedEntities == null || !t.ExtendedEntities.Media.Any()) 
+                return embed.Build();
+
+            switch (t.ExtendedEntities.Media.ElementAt(0).ExtendedEntityType)
+            {
+                case TwitterMediaType.AnimatedGif:
+                case TwitterMediaType.Photo:
+                    embed.WithImageUrl(t.ExtendedEntities.Media.ElementAt(0).MediaUrl.AbsoluteUri);
+                    break;
+            }
+
+            return embed.Build();
+        }
+
+        private async Task<TwitterAsyncResult<TwitterStatus>> GetTwitter(string message)
+        {
             string[] urlSplit = message.Split('/');
             string id = urlSplit[^1];
 
@@ -357,58 +448,12 @@ namespace ChronoBot.Utilities.SocialMedias
                 IncludeMyRetweet = true,
                 TweetMode = "extended"
             };
-            var tweets = await _service.GetTweetAsync(options);
-            if (tweets == null)
-                return string.Empty;
-            if (tweets.Response != null && tweets.Response.RateLimitStatus.RemainingHits <= 0)
-                return string.Empty;
-            if (tweets.Value == null || tweets.Value.ExtendedEntities == null ||
-                tweets.Value.ExtendedEntities.Media.Count != 1)
-                return string.Empty;
-            TwitterExtendedEntity tee = tweets.Value.ExtendedEntities.Media.ElementAt(0);
-            if (tee.ExtendedEntityType != TwitterMediaType.Video)
-                return string.Empty;
-
-            int highest = 0;
-            int j = -1;
-            for (int i = 0; i < tee.VideoInfo.Variants.Count; i++)
-            {
-                TwitterMediaVariant variant = tee.VideoInfo.Variants[i];
-                string res = string.Empty;
-                string[] segments = variant.Url.Segments;
-                foreach (var s in segments)
-                {
-                    if (!int.TryParse(s[0].ToString(), out _))
-                        continue;
-                    if (s.Length <= 5)
-                        continue;
-                    if (s[2] != 'x' && s[3] != 'x' && s[4] != 'x')
-                        continue;
-
-                    res = s.TrimEnd('/');
-                    break;
-                }
-
-                string[] split = res.Split('x');
-                if(split.Length != 2)
-                    continue;
-                if (!int.TryParse(split[0], out int x))
-                    continue;
-                if (!int.TryParse(split[1], out int y))
-                    continue;
-
-                int multiplyRes = x * y;
-                if (multiplyRes <= highest)
-                    continue;
-
-                highest = multiplyRes;
-                j = i;
-            }
-
-            if (j == -1)
-                return string.Empty;
-
-            return tee.VideoInfo.Variants[j].Url.ToString();
+            var tweet = await _service.GetTweetAsync(options);
+            if (tweet == null)
+                return null;
+            if (tweet.Response != null && tweet.Response.RateLimitStatus.RemainingHits <= 0)
+                return null;
+            return tweet;
         }
 
         private bool ContainsTweetLink(string message)

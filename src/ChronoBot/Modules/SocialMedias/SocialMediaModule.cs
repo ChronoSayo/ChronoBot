@@ -128,13 +128,29 @@ namespace ChronoBot.Modules.SocialMedias
             else
                 await ReplyAsync(embed: result);
         }
-        protected virtual async Task SendFile(Embed result, string socialMedia)
+        protected virtual async Task SendMessage(string result, Embed resultEmbed, ulong sendToChannel = 0)
+        {
+            if (Statics.Debug)
+                await Statics.DebugSendMessageToChannelAsync(Client, result, resultEmbed);
+            else if (sendToChannel != 0)
+                await Client.GetGuild(Context.Guild.Id).GetTextChannel(sendToChannel).SendMessageAsync(embed: resultEmbed);
+            else
+                await ReplyAsync(result, embed: resultEmbed);
+        }
+        protected virtual async Task SendFileWithLogo(Embed result, string socialMedia)
         {
             string thumbnail = Path.Combine(Environment.CurrentDirectory, $@"Resources\Images\SocialMedia\{socialMedia}.png");
             if (Statics.Debug)
                 await Statics.DebugSendFileToChannelAsync(Client, result, thumbnail);
             else
                 await Context.Channel.SendFileAsync(thumbnail, embed: result);
+        }
+        protected virtual async Task SendFile(Embed result, string file)
+        {
+            if (Statics.Debug)
+                await Statics.DebugSendFileToChannelAsync(Client, result, file);
+            else
+                await Context.Channel.SendFileAsync(file, embed: result);
         }
     }
 }

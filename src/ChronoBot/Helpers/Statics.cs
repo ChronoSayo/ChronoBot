@@ -46,6 +46,10 @@ namespace ChronoBot.Helpers
         {
             await client.GetGuild(DebugGuildId).GetTextChannel(DebugChannelId).SendMessageAsync(embed: message);
         }
+        public static async Task DebugSendMessageToChannelAsync(DiscordSocketClient client, string message, Embed messageEmbed)
+        {
+            await client.GetGuild(DebugGuildId).GetTextChannel(DebugChannelId).SendMessageAsync(message, embed: messageEmbed);
+        }
         public static async Task DebugSendFileToChannelAsync(DiscordSocketClient client, Embed message, string file)
         {
             await client.GetGuild(DebugGuildId).GetTextChannel(DebugChannelId).SendFileAsync(file, null, embed: message);
