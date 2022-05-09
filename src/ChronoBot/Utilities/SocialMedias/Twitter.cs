@@ -90,6 +90,7 @@ namespace ChronoBot.Utilities.SocialMedias
                     var wait = _rateLimitResetTime - DateTime.Now;
                     await Statics.SendEmbedMessageToLogChannel(Client,
                         $"Twitter rate limit exceeded. Reset in {_rateLimitResetTime}", Color.Gold);
+                    UpdateTimer.Interval++;
                     Thread.Sleep(wait);
                 }
             }
@@ -342,12 +343,12 @@ namespace ChronoBot.Utilities.SocialMedias
         public async Task<Embed> PostEmbed(ulong guildId, ulong channelId, string message)
         {
             if (ContainsTweetLink(message))
-                return await ConvertToEmbed(message);
+                return await ConvertToEmbed(message.Split(' ')[^1]);
 
             message = await GetMessageFromChannelHistory(guildId, channelId, message);
 
             if (string.IsNullOrEmpty(message))
-                return new EmbedBuilder()
+                return new EmbedBuilder
                     {Description = "Too many messages away from a Tweet."}.Build();
 
             return await ConvertToEmbed(message);
@@ -356,8 +357,8 @@ namespace ChronoBot.Utilities.SocialMedias
         public async Task<string> PostVideo(ulong guildId, ulong channelId, string message)
         {
             if (ContainsTweetLink(message)) 
-                return await ConvertToVideo(message);
-            
+                return await ConvertToVideo(message.Split(' ')[^1]);
+
             message = await GetMessageFromChannelHistory(guildId, channelId, message);
 
             if (string.IsNullOrEmpty(message))
@@ -413,25 +414,15 @@ namespace ChronoBot.Utilities.SocialMedias
             if (tweet.Value == null)
                 return null;
             var t = tweet.Value;
-            EmbedBuilder embed = new EmbedBuilder()
+            var embed = new EmbedBuilder()
                 .WithColor(Color.Blue)
                 .WithAuthor($"{t.User.Name} (@{t.Author.ScreenName})", t.Author.ProfileImageUrl)
                 .WithDescription(t.FullText)
                 .AddField("Likes", t.FavoriteCount, true)
                 .AddField("Retweets", t.RetweetCount, true)
                 .AddField("Twitter", t.ToTwitterUrl())
-                .WithFooter($"Twitter • {t.CreatedDate.ToString("MM/dd/yyyy", CultureInfo.InvariantCulture)}");
-
-            if (t.ExtendedEntities == null || !t.ExtendedEntities.Media.Any()) 
-                return embed.Build();
-
-            switch (t.ExtendedEntities.Media.ElementAt(0).ExtendedEntityType)
-            {
-                case TwitterMediaType.AnimatedGif:
-                case TwitterMediaType.Photo:
-                    embed.WithImageUrl(t.ExtendedEntities.Media.ElementAt(0).MediaUrl.AbsoluteUri);
-                    break;
-            }
+                .WithFooter($"Twitter • {t.CreatedDate.ToString("MM/dd/yyyy", CultureInfo.InvariantCulture)}",
+                    "Resources\\Images\\SocialMedia\\twitter.png");
 
             return embed.Build();
         }
@@ -440,6 +431,8 @@ namespace ChronoBot.Utilities.SocialMedias
         {
             string[] urlSplit = message.Split('/');
             string id = urlSplit[^1];
+            if(id.Contains("?"))
+                id = id.Substring(0, id.IndexOf("?", StringComparison.Ordinal));
 
             GetTweetOptions options = new GetTweetOptions
             {

@@ -70,26 +70,26 @@ namespace ChronoBot.Modules.SocialMedias
                 await SendMessage(video);
         }
 
-        [Command("e", true, RunMode = RunMode.Async)]
-        public async Task PostEmbedAsync()
-        {
-            Embed embed =
-                await ((Twitter)SocialMedia).PostEmbed(Context.Guild.Id, Context.Channel.Id,
-                    Context.Message.ToString());
-            if (embed != null)
-            {
-                if (!embed.Author.HasValue)
-                    await SendMessage(embed.Description);
-                else
-                {
-                    await SendMessage(embed);
-                    string video =
-                        await ((Twitter)SocialMedia).PostVideo(Context.Guild.Id, Context.Channel.Id,
-                            embed.Fields.ToList().Find(x => x.Name == "Twitter").Value);
-                    if (!string.IsNullOrEmpty(video))
-                        await SendMessage(video);
-                }
-            }
-        }
+        //[Command("e", true, RunMode = RunMode.Async)]
+        //public async Task PostEmbedAsync()
+        //{
+        //    Embed embed =
+        //        await ((Twitter)SocialMedia).PostEmbed(Context.Guild.Id, Context.Channel.Id,
+        //            Context.Message.ToString());
+        //    if (embed != null)
+        //    {
+        //        if (!embed.Author.HasValue)
+        //            await SendMessage(embed.Description);
+        //        else
+        //        {
+        //            await SendMessage(embed);
+        //            string video =
+        //                await ((Twitter)SocialMedia).PostVideo(Context.Guild.Id, Context.Channel.Id,
+        //                    embed.Fields.ToList().Find(x => x.Name == "Twitter").Value);
+        //            if (!string.IsNullOrEmpty(video))
+        //                await SendMessage(video);
+        //        }
+        //    }
+        //}
     }
 }

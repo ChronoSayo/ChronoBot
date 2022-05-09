@@ -83,6 +83,7 @@ namespace ChronoBot.Modules.SocialMedias
         {
             string urlIcon = "";
             string optionsIntro = "";
+            Color color = Color.Blue;
             switch (socialMedia)
             {
                 case "twitter":
@@ -93,6 +94,12 @@ namespace ChronoBot.Modules.SocialMedias
                 case "youtube":
                     urlIcon =
                         "https://cdn.discordapp.com/attachments/891627208089698384/905575565636010074/youtube-logo-transparent-png-pictures-transparent-background-youtube-logo-11562856729oa42buzkng.png";
+                    color = Color.Red;
+                    break;
+                case "twitch":
+                    urlIcon =
+                        "https://cdn.discordapp.com/attachments/891627208089698384/972578720902701056/Twitch_Logo_Transparent_Image.png";
+                    color = Color.Purple;
                     break;
             }
 
@@ -103,7 +110,8 @@ namespace ChronoBot.Modules.SocialMedias
                     true)
                 .AddField("Delete", $"{Statics.Prefix}{socialMedia.ToLowerInvariant()}delete <name>", true)
                 .AddField("Get", $"{Statics.Prefix}{socialMedia.ToLowerInvariant()}get <name>", true)
-                .AddField("List", $"{Statics.Prefix}{socialMedia.ToLowerInvariant()}list", true);
+                .AddField("List", $"{Statics.Prefix}{socialMedia.ToLowerInvariant()}list", true)
+                .WithColor(color);
             if (socialMedia == "twitter")
                 embed.WithFooter(
                     "Options (can have multiple):\nOnly posts: p\r\nOnly retweets: r\r\nOnly quote retweets: q\r\nOnly likes: l\r\nOnly pictures: mp\r\nOnly animated GIF: mg\r\nOnly videos: mv\r\nOnly any media: m\r\nAll of the above: no input");
@@ -126,7 +134,7 @@ namespace ChronoBot.Modules.SocialMedias
             else if (sendToChannel != 0)
                 await Client.GetGuild(Context.Guild.Id).GetTextChannel(sendToChannel).SendMessageAsync(embed: result);
             else
-                await ReplyAsync(embed: result);
+                await ReplyAsync("", embed: result);
         }
         protected virtual async Task SendMessage(string result, Embed resultEmbed, ulong sendToChannel = 0)
         {
