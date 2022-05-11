@@ -62,8 +62,15 @@ namespace ChronoBot.Helpers
         //Send embedded message to log channel.
         public static async Task SendEmbedMessageToLogChannel(DiscordSocketClient client, string message, Color color)
         {
-            var embed = new ChronoBotEmbedBuilder(message).WithColor(color);
-            await client.GetGuild(DebugGuildId).GetTextChannel(DebugLogsChannelId).SendMessageAsync(embed: embed.Build());
+            try
+            {
+                var embed = new ChronoBotEmbedBuilder(message).WithColor(color);
+                await client.GetGuild(DebugGuildId).GetTextChannel(DebugLogsChannelId).SendMessageAsync(embed: embed.Build());
+            }
+            catch
+            {
+                //Ignore for testing.
+            }
         }
     }
 }

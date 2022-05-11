@@ -18,6 +18,7 @@ namespace ChronoBot.Tests.Fakes
             if (options.Id == 2)
                 return await Task.FromResult(GetFailTweetAsync());
 
+
             var url1 = new Uri(
                 "https://video.twimg.com/ext_tw_video/1/pu/vid/180x20/swhi5fpAMRc-fzJp.mp4?tag=12");
             var url2 = new Uri(
@@ -33,11 +34,11 @@ namespace ChronoBot.Tests.Fakes
                 },
                 new TwitterMediaVariant
                 {
-                    BitRate = 2, ContentType = "video/mp4", Url = url2
+                    BitRate = 3, ContentType = "video/mp4", Url = url2
                 },
                 new TwitterMediaVariant
                 {
-                    BitRate = 3, ContentType = "video/mp4", Url = url3
+                    BitRate = 2, ContentType = "video/mp4", Url = url3
                 }
             };
 
@@ -74,30 +75,12 @@ namespace ChronoBot.Tests.Fakes
         {
             var url1 = new Uri(
                 "https://video.twimg.com/ext_tw_video/1/pu/vid/ggs/swhi5fpAMRc-fzJp.mp4?tag=12");
-            var url2 = new Uri(
-                "https://video.twimg.com/ext_tw_video/2/pu/vid/1280xf/swhi5fpAMRc-fzJp.mp4?tag=12");
-            var url3 = new Uri(
-                "https://video.twimg.com/ext_tw_video/3/pu/vid/1dadx720/swhi5fpAMRc-fzJp.mp4?tag=12");
-            var url4 = new Uri(
-                "https://video.twimg.com/ext_tw_video/3/pu/vid/1423720/swhi5fpAMRc-fzJp.mp4?tag=12");
 
             var variants = new List<TwitterMediaVariant>
             {
                 new TwitterMediaVariant
                 {
-                    BitRate = 1, ContentType = "video/mp4", Url = url1
-                },
-                new TwitterMediaVariant
-                {
-                    BitRate = 2, ContentType = "video/mp4", Url = url2
-                },
-                new TwitterMediaVariant
-                {
-                    BitRate = 3, ContentType = "video/mp4", Url = url3
-                },
-                new TwitterMediaVariant
-                {
-                    BitRate = 4, ContentType = "video/mp4", Url = url4
+                    ContentType = "video/mp4", Url = url1
                 }
             };
 

@@ -384,7 +384,7 @@ namespace ChronoBot.Utilities.SocialMedias
         private async Task<string> ConvertToVideo(string message)
         {
             var tweet = await GetTwitter(message);
-            if (tweet.Value == null || tweet.Value.ExtendedEntities == null ||
+            if (tweet == null || tweet.Value == null || tweet.Value.ExtendedEntities == null ||
                 tweet.Value.ExtendedEntities.Media.Count != 1)
                 return string.Empty;
             TwitterExtendedEntity tee = tweet.Value.ExtendedEntities.Media.ElementAt(0);

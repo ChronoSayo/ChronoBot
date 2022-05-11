@@ -48,11 +48,11 @@ namespace ChronoBot.Tests.Fakes
 
         public override Task<string> GameName(string name)
         {
-            switch (name)
+            switch (name.ToLowerInvariant())
             {
                 case "streamer3":
                     return Task.FromResult("The Game");
-                case "PostUpdate1":
+                case "postupdate1":
                     return Task.FromResult("Game");
                 case "updated":
                     return Task.FromResult("Play");
