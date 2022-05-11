@@ -63,7 +63,7 @@ namespace ChronoBot.Utilities.SocialMedias
             string message;
             if (isLive)
             {
-                message = await UpdateSocialMedia(new List<SocialMediaUserData> { ud }, await GetStreamInfo(ud.Name));
+                message = await UpdateSocialMedia(new List<SocialMediaUserData> { ud });
             }
             else
                 message = Hyperlink + ud.Name;
@@ -86,7 +86,6 @@ namespace ChronoBot.Utilities.SocialMedias
                 return await Task.FromResult("No streamers registered.");
 
             List<SocialMediaUserData> live = new List<SocialMediaUserData>();
-            Tuple<string, string> streamerInfo = null;
             for (int i = 0; i < Users.Count; i++)
             {
                 SocialMediaUserData user = Users[i];
@@ -97,8 +96,9 @@ namespace ChronoBot.Utilities.SocialMedias
                 string oldId = user.Id;
                 if (isLive)
                 {
-                    user.Id = "online";
-                    streamerInfo = await GetStreamInfo(user.Name);
+                    if(user.Id.Contains("online"))
+                        continue;
+                    user.Id = await GetStreamInfo(user.Name);
                 }
                 else
                     user.Id = "offline";
@@ -112,16 +112,16 @@ namespace ChronoBot.Utilities.SocialMedias
             }
 
             if (live.Count > 0)
-                return await UpdateSocialMedia(live, streamerInfo);
+                return await UpdateSocialMedia(live);
 
             return await Task.FromResult("No streamers are broadcasting.");
         }
 
-        private async Task<Tuple<string, string>> GetStreamInfo(string name)
+        private async Task<string> GetStreamInfo(string name)
         {
             string displayName = await _api.DisplayName(name);
             string gameName = await _api.GameName(name);
-            return new Tuple<string, string>(displayName, gameName);
+            return $"online|{displayName} is playing {gameName}";
         }
     }
 }

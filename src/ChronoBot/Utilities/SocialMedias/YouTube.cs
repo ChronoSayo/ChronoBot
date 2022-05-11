@@ -1,5 +1,5 @@
-﻿using System.Collections.Generic;
-using System.IO;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using ChronoBot.Common.Systems;
@@ -17,9 +17,11 @@ namespace ChronoBot.Utilities.SocialMedias
     {
         private readonly YouTubeService _service;
         private readonly string _channelLink;
+        private bool _quotaReached;
+        private DateTime _newDay;
 
         public YouTube(YouTubeService service, DiscordSocketClient client, IConfiguration config,
-        IEnumerable<SocialMediaUserData> users, IEnumerable<string> availableOptions, SocialMediaFileSystem fileSystem, int seconds = 90) :
+        IEnumerable<SocialMediaUserData> users, IEnumerable<string> availableOptions, SocialMediaFileSystem fileSystem, int seconds = 240) :
             base(client, config, users, availableOptions, fileSystem, seconds)
         {
             _service = service;
@@ -30,6 +32,8 @@ namespace ChronoBot.Utilities.SocialMedias
             Hyperlink = "https://www.youtube.com/watch?v=";
 
             _channelLink = "https://www.youtube.com/user/";
+            _quotaReached = false;
+            _newDay = DateTime.MinValue;
 
             OnUpdateTimerAsync(seconds);
 
@@ -54,6 +58,7 @@ namespace ChronoBot.Utilities.SocialMedias
                     case "youtube#channel":
                         channelInfo.Add(searchResult.Snippet.Title);
                         channelInfo.Add(searchResult.Id.ChannelId);
+                        channelInfo.Add(searchResult.Snippet.ChannelId);
                         break;
                 }
             }
@@ -66,18 +71,35 @@ namespace ChronoBot.Utilities.SocialMedias
             if (Duplicate(guildId, username, SocialMediaEnum.YouTube))
                 return await Task.FromResult($"Already added {username}");
 
-            var ytChannelInfo = await SearchForYouTuber(username);
-            if (ytChannelInfo.Count <= 0)
+            if (_quotaReached && _newDay == DateTime.Today)
+                return await Task.FromResult("Cannot use YouTube service. Try again tomorrow."); ;
+
+            if (_newDay != DateTime.Today)
+                _quotaReached = false;
+
+            List<string> channelInfo;
+            try
+            {
+                channelInfo = await SearchForYouTuber(username);
+            }
+            catch
+            {
+                _quotaReached = true;
+                _newDay = DateTime.Today;
+                await Statics.SendMessageToLogChannel(Client, "YouTube quota has been reached.");
+                return await Task.FromResult("Cannot use YouTube service. Try again tomorrow.");
+            }
+            if (channelInfo.Count <= 0)
                 return await Task.FromResult("Can't find " + username);
 
-            string name = ytChannelInfo[0];
+            string name = channelInfo[0];
             if (sendToChannelId == 0)
                 sendToChannelId = Statics.Debug ? Statics.DebugChannelId : channelId;
 
             if (!CreateSocialMediaUser(username, guildId, sendToChannelId, "0", SocialMediaEnum.YouTube))
                 return await Task.FromResult($"Failed to add {name}.");
 
-            return await Task.FromResult($"Successfully added {name} \n{_channelLink + name}");
+            return await Task.FromResult($"Successfully added {name} \n{_channelLink + channelInfo[1]}");
 
         }
 
@@ -85,10 +107,27 @@ namespace ChronoBot.Utilities.SocialMedias
         {
             int i = FindIndexByName(guildId, username, SocialMediaEnum.YouTube);
             if (i == -1)
-                return await Task.FromResult("Could not find YouTuber.");
+                return await Task.FromResult("Could not find YouTuber."); 
+            
+            if (_quotaReached && _newDay == DateTime.Today)
+                return string.Empty;
+            
+            if (_newDay != DateTime.Today)
+                _quotaReached = false;
 
-            List<string> ytChannelInfo = await SearchForYouTuber(username);
-            if (ytChannelInfo.Count > 0)
+            List<string> channelInfo;
+            try
+            {
+                channelInfo = await SearchForYouTuber(username);
+            }
+            catch
+            {
+                _quotaReached = true;
+                _newDay = DateTime.Today;
+                await Statics.SendMessageToLogChannel(Client, "YouTube quota has been reached.");
+                return string.Empty;
+            }
+            if (channelInfo.Count > 0)
                 return await Task.FromResult(GetYouTuber(Users[i]));
 
 
@@ -108,6 +147,12 @@ namespace ChronoBot.Utilities.SocialMedias
             if (Users.Count == 0)
                 return await Task.FromResult("No YouTuber registered.");
 
+            if (_quotaReached && _newDay == DateTime.Today)
+                return string.Empty;
+
+            if (_newDay != DateTime.Today)
+                _quotaReached = false;
+
             List<SocialMediaUserData> newVideos = new List<SocialMediaUserData>();
             for (int i = 0; i < Users.Count; i++)
             {
@@ -115,7 +160,20 @@ namespace ChronoBot.Utilities.SocialMedias
                 if (user.SocialMedia != SocialMediaEnum.YouTube || user.GuildId != guildId)
                     continue;
 
-                List<string> channelInfo = await SearchForYouTuber(user.Name);
+                List<string> channelInfo;
+                try
+                {
+                    channelInfo = await SearchForYouTuber(user.Name);
+                }
+                catch
+                {
+                    _quotaReached = true;
+                    _newDay = DateTime.Today;
+                    await Statics.SendMessageToLogChannel(Client, "YouTube quota has been reached.");
+                    UpdateTimer.Interval++;
+                    return string.Empty;
+                }
+                
                 if (channelInfo.Count == 0)
                     continue;
                 if (channelInfo[0] == user.Id)
