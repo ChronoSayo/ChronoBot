@@ -32,8 +32,8 @@ namespace ChronoBot.Services
                 .AddSingleton<TwitterService>()
                 .AddSingleton<Twitter>()
                 .AddSingleton<YouTubeService>()
-                //.AddSingleton<YouTube>()
-                //.AddSingleton<ChronoTwitch.ChronoTwitch>()
+                .AddSingleton<YouTube>()
+                .AddSingleton<ChronoTwitch.ChronoTwitch>()
                 .AddSingleton<Twitch>();
         }
 
