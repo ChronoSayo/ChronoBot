@@ -87,6 +87,8 @@ namespace ChronoBot.Utilities.SocialMedias
                 if (tweets.Response != null && tweets.Response.RateLimitStatus.RemainingHits <= 0)
                 {
                     _rateLimitResetTime = tweets.Response.RateLimitStatus.ResetTime;
+                    if (_rateLimitResetTime.Year == 1970)
+                        return null;
                     var wait = _rateLimitResetTime - DateTime.Now;
                     await Statics.SendEmbedMessageToLogChannel(Client,
                         $"Twitter rate limit exceeded. Reset in {_rateLimitResetTime}", Color.Gold);
