@@ -9,7 +9,6 @@ using System.Xml.Linq;
 using ChronoBot.Common.UserDatas;
 using ChronoBot.Enums;
 using ChronoBot.Interfaces;
-using ChronoBot.Utilities.Games;
 
 namespace ChronoBot.Common.Systems
 {
@@ -125,7 +124,6 @@ namespace ChronoBot.Common.Systems
                         Console.WriteLine(e);
                         StackTrace st = new StackTrace();
                         MethodBase mb = st.GetFrame(1).GetMethod();
-                        //Program.Logger(new LogMessage(LogSeverity.Info, mb.ReflectedType + "." + mb, "Unable to load users."));
                     }
                 }
             }
