@@ -2,7 +2,6 @@
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using ChronoBot.Enums;
 using ChronoBot.Helpers;
 using ChronoBot.Utilities.Games;
 using Discord;

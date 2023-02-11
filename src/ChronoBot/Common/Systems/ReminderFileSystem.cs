@@ -43,7 +43,7 @@ namespace ChronoBot.Common.Systems
             string channelId = reminderUserData.ChannelId.ToString();
             string id = reminderUserData.Id ?? string.Empty;
             string deadline = reminderUserData.Deadline.ToString();
-            string dailyReminder = reminderUserData.DailyReminder ? "1" : "0";
+            string dailyReminder = reminderUserData.Countdown ? "1" : "0";
 
             XElement user = new XElement("User");
             XAttribute newName = new XAttribute("Name", name);
@@ -133,7 +133,7 @@ namespace ChronoBot.Common.Systems
                     user.ChannelId = ulong.Parse(e.Attribute("ChannelID")?.Value ?? string.Empty);
                     user.Id = e.Attribute("ID")?.Value;
                     user.Deadline = DateTime.Parse(e.Attribute("Deadline")?.Value ?? string.Empty);
-                    user.DailyReminder = bool.Parse(e.Attribute("DailyReminder")?.Value ?? "0");
+                    user.Countdown = bool.Parse(e.Attribute("DailyReminder")?.Value ?? "0");
                     ud.Add(user);
                 }
             }
