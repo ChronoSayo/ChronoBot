@@ -182,7 +182,7 @@ namespace ChronoBot.Common.Systems
                 {
                     if (!File.Exists(guildPath))
                     {
-                        Console.WriteLine("Unable to delete {0}", userData.Name);
+                        Console.WriteLine($"Unable to delete {0}", userData.Name);
                         return false;
                     }
 

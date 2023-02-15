@@ -4,11 +4,8 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using System.Xml.Linq;
 using ChronoBot.Common.UserDatas;
-using ChronoBot.Enums;
 using ChronoBot.Interfaces;
 
 namespace ChronoBot.Common.Systems
@@ -43,15 +40,19 @@ namespace ChronoBot.Common.Systems
             string channelId = reminderUserData.ChannelId.ToString();
             string id = reminderUserData.Id ?? string.Empty;
             string deadline = reminderUserData.Deadline.ToString();
-            string dailyReminder = reminderUserData.Countdown ? "1" : "0";
+            string countdown = reminderUserData.Countdown ? "1" : "0";
+            string countedToday = reminderUserData.CountedForToday ? "1" : "0";
+            string remindee = reminderUserData.Remindee.ToString();
 
             XElement user = new XElement("User");
             XAttribute newName = new XAttribute("Name", name);
             XAttribute newChannelId = new XAttribute("ChannelID", channelId);
             XAttribute newId = new XAttribute("ID", id);
-            XAttribute newDeadline = new XAttribute("Deadline", dailyReminder);
-            XAttribute newDailyReminder = new XAttribute("Deadline", dailyReminder);
-            user.Add(newName, newChannelId, newId, newDeadline, newDailyReminder);
+            XAttribute newDeadline = new XAttribute("Deadline", deadline);
+            XAttribute newCountdown = new XAttribute("Countdown", countdown);
+            XAttribute newCountedToday = new XAttribute("CountedToday", countedToday);
+            XAttribute newRemindee = new XAttribute("Remindee", remindee);
+            user.Add(newName, newChannelId, newId, newDeadline, newCountdown, newCountedToday, newRemindee);
 
             XDocument xDoc;
             string guildPath = Path.Combine(PathToSaveFile, guildId + ".xml");
@@ -133,7 +134,9 @@ namespace ChronoBot.Common.Systems
                     user.ChannelId = ulong.Parse(e.Attribute("ChannelID")?.Value ?? string.Empty);
                     user.Id = e.Attribute("ID")?.Value;
                     user.Deadline = DateTime.Parse(e.Attribute("Deadline")?.Value ?? string.Empty);
-                    user.Countdown = bool.Parse(e.Attribute("DailyReminder")?.Value ?? "0");
+                    user.Countdown = bool.Parse(e.Attribute("Countdown")?.Value ?? "0");
+                    user.CountedForToday = bool.Parse(e.Attribute("CountedToday")?.Value ?? "0");
+                    user.Remindee = ulong.Parse(e.Attribute("Remindee")?.Value ?? string.Empty);
                     ud.Add(user);
                 }
             }
@@ -157,13 +160,15 @@ namespace ChronoBot.Common.Systems
             {
                 if (ud.Name == reminderUserData.Name)
                 {
-                    foreach (XElement e in xml.Key.Descendants("Service").Descendants(ElementRoot).Descendants("User"))
+                    XElement found = xml.Descendants("Service").Descendants(ElementRoot).Descendants("User")
                         .First(x => x.Attributes("Name").First().Value == reminderUserData.Name);
                     found.Attributes("Name").First().Value = reminderUserData.Name;
                     found.Attributes("ChannelID").First().Value = reminderUserData.ChannelId.ToString();
                     found.Attributes("ID").First().Value = reminderUserData.Id;
-                    if (!string.IsNullOrEmpty(reminderUserData.Options))
-                        found.Attributes("Options").First().Value = reminderUserData.Options;
+                    found.Attributes("Deadline").First().Value = reminderUserData.Deadline.ToShortDateString();
+                    found.Attributes("CountedToday").First().Value = reminderUserData.CountedForToday.ToString();
+                    found.Attributes("Countdown").First().Value = reminderUserData.Countdown.ToString();
+                    found.Attributes("Remindee").First().Value = reminderUserData.Remindee.ToString();
                     updated = true;
                     break;
                 }
@@ -179,7 +184,35 @@ namespace ChronoBot.Common.Systems
 
         public override bool DeleteInFile(IUserData userData)
         {
-            throw new NotImplementedException();
+            if (!(userData is ReminderUserData reminderUserData))
+                return false;
+
+            string guildPath = Path.Combine(PathToSaveFile, reminderUserData.GuildId + ".xml");
+            if (!File.Exists(guildPath))
+            {
+                Console.WriteLine($"Unable to delete {0} \"{1}\"", reminderUserData.Name, reminderUserData.Id);
+                return false;
+            }
+
+            XDocument xml = XDocument.Load(guildPath);
+            List<ReminderUserData> users = new List<ReminderUserData>();
+            users.AddRange(CollectUserData(new Dictionary<XDocument, ulong> { { xml, reminderUserData.GuildId } }));
+            bool remove = true;
+            foreach (ReminderUserData ud in users)
+            {
+                if (ud.Id != reminderUserData.Id)
+                    continue;
+                xml.Descendants("Service").Descendants(ElementRoot).Descendants("User").Where(x => x.Attribute("ID")?.Value == ud.Id).Remove();
+                remove = false;
+                break;
+            }
+
+            if (remove)
+                return false;
+
+            xml.Save(guildPath);
+
+            return true;
         }
 
     }

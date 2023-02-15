@@ -261,7 +261,7 @@ namespace ChronoBot.Common.Systems
             string guildPath = Path.Combine(PathToSaveFile, rpsUserData.GuildId + ".xml");
             if (!File.Exists(guildPath))
             {
-                Console.WriteLine("Unable to delete {0}", rpsUserData.UserId);
+                Console.WriteLine($"Unable to delete {0}", rpsUserData.UserId);
                 return false;
             }
 
