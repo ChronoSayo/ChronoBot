@@ -2,23 +2,25 @@
 using ChronoBot.Common;
 using ChronoBot.Utilities.Tools;
 using Discord.Commands;
+using Discord.Interactions;
+using Discord;
 using Microsoft.Extensions.Logging;
+using Discord.WebSocket;
+using System.Linq;
 
 namespace ChronoBot.Modules.Tools
 {
-    public class CalculatorModule : ModuleBase<SocketCommandContext>
+    public class CalculatorModule : InteractionModuleBase<SocketInteractionContext>
     {
-        private readonly ILogger<CalculatorModule> _logger;
+        public InteractionService Commands { get; set; }
         private readonly Calculator _calculator;
 
-        public CalculatorModule(ILogger<CalculatorModule> logger, Calculator calculator)
+        public CalculatorModule(Calculator calculator)
         {
-            _logger = logger;
             _calculator = calculator;
         }
 
-        [Command("calculator")]
-        [Alias("calculate", "calc", "c", "calc", "math", "m")]
+        [SlashCommand("calculator", "Calculates calculations.")]
         public async Task CalculatorAsync([Remainder] string calc)
         {
             bool ok;
@@ -31,8 +33,6 @@ namespace ChronoBot.Modules.Tools
             }
             else
                 await ReplyAsync(result);
-
-            _logger.LogInformation($"{Context.User.Username} used {System.Reflection.MethodBase.GetCurrentMethod()?.Name} in {GetType().Name}.");
         }
     }
 }

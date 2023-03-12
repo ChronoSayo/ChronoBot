@@ -38,16 +38,10 @@ namespace ChronoBot.Utilities.Tools
             DateTime now = DateTime.Now;
             foreach (ReminderUserData user in _users)
             {
-                if (now < user.Deadline && !user.Countdown)
+                if (now < user.Deadline)
                     continue;
 
                 string message = $"{user.Name}\n{user.Id}";
-                if (now.Day > user.Deadline.Day && user.Countdown)
-                {
-                    int days = user.Deadline.Day - now.Day;
-                    message = $"{user.Remindee}\nOnly {days} left until {user.Id}";
-                    
-                }
 
                 if (Statics.Debug)
                     await Statics.DebugSendMessageToChannelAsync(_client, message);
@@ -56,28 +50,21 @@ namespace ChronoBot.Utilities.Tools
             }
         }
 
-        public bool SetReminder(string message, DateTime dateTime, ulong remindee, ulong guildId, ulong channelId, ulong user)
+        public bool SetReminder(string message, DateTime dateTime, ulong remindee, ulong guildId, ulong channelId, string user)
         {
-            return CreateReminderUserData(message, dateTime, remindee, guildId, channelId, user, false);
+            return CreateReminderUserData(message, dateTime, remindee, guildId, channelId, user);
         }
 
-        public bool SetReminderCountdown(string message, DateTime dateTime, ulong remindee, ulong guildId, ulong channelId, ulong user)
-        {
-            return CreateReminderUserData(message, dateTime, remindee, guildId, channelId, user, true);
-        }
-
-        private bool CreateReminderUserData(string message, DateTime dateTime, ulong remindee, ulong guildId, ulong channelId, ulong user, bool countdown)
+        private bool CreateReminderUserData(string message, DateTime dateTime, ulong remindee, ulong guildId, ulong channelId, string user)
         {
             ReminderUserData temp = new ReminderUserData
             {
-                Name = user.ToString(),
+                Name = user,
                 GuildId = guildId,
                 ChannelId = channelId,
                 Deadline = dateTime,
                 Remindee = remindee,
-                Id = message,
-                Countdown = countdown,
-                CountedForToday = false
+                Id = message
             };
             _users.Add(temp); 
             
@@ -86,12 +73,6 @@ namespace ChronoBot.Utilities.Tools
                 _users.Remove(temp);
 
             return ok;
-        }
-
-        private bool UpdateCountedToday(ReminderUserData ud)
-        {
-            var user = _users.Find(x => x.Id == x.Id);
-            user.CountedForToday = true;
         }
     }
 }

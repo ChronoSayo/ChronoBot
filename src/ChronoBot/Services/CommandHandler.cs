@@ -5,77 +5,146 @@ using System.Threading.Tasks;
 using ChronoBot.Common;
 using ChronoBot.Helpers;
 using Discord;
+using Discord.Interactions;
 using Discord.Addons.Hosting;
-using Discord.Commands;
 using Discord.WebSocket;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace ChronoBot.Services
 {
-    public class CommandHandler : DiscordClientService
+    public class CommandHandler
     {
         private readonly IServiceProvider _provider;
         private readonly DiscordSocketClient _client;
-        private readonly CommandService _service;
+        private readonly InteractionService _command;
         private readonly IConfiguration _config;
-        private readonly ILogger<DiscordClientService> _logger;
 
-        public CommandHandler(DiscordSocketClient client, ILogger<DiscordClientService> logger, 
-            IServiceProvider provider, CommandService service, IConfiguration config) : base(client, logger)
+        public CommandHandler(DiscordSocketClient client,
+            IServiceProvider provider, InteractionService service, IConfiguration config)
         {
             _client = client;
             _provider = provider;
-            _service = service;
+            _command = service;
             _config = config;
-            _logger = logger;
         }
 
-        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+        public async Task InitializeAsync()
         {
-            _client.MessageReceived += MessageReceived;
-            _service.CommandExecuted += CommandExecuted;
-            await _service.AddModulesAsync(Assembly.GetEntryAssembly(), _provider);
+            await _command.AddModulesAsync(Assembly.GetEntryAssembly(), _provider);
+
+            _client.InteractionCreated += HandleInteraction;
+
+            _command.SlashCommandExecuted += SlashCommandExecuted;
+            _command.ContextCommandExecuted += ContextCommandExecuted;
+            _command.ComponentCommandExecuted += ComponentCommandExecuted;
         }
 
-        private async Task CommandExecuted(Optional<CommandInfo> commandInfo, ICommandContext commandContext, IResult result)
+        private Task ComponentCommandExecuted(ComponentCommandInfo arg1, Discord.IInteractionContext arg2, IResult arg3)
         {
-            var embed = new ChronoBotEmbedBuilder(commandContext);
-
-            if (result.IsSuccess)
+            if (!arg3.IsSuccess)
             {
-                await _client.GetGuild(Statics.DebugGuildId).GetTextChannel(Statics.DebugLogsChannelId)
-                    .SendMessageAsync(embed: embed.Build()); 
-                return;
+                switch (arg3.Error)
+                {
+                    case InteractionCommandError.UnmetPrecondition:
+                        // implement
+                        break;
+                    case InteractionCommandError.UnknownCommand:
+                        // implement
+                        break;
+                    case InteractionCommandError.BadArgs:
+                        // implement
+                        break;
+                    case InteractionCommandError.Exception:
+                        // implement
+                        break;
+                    case InteractionCommandError.Unsuccessful:
+                        // implement
+                        break;
+                    default:
+                        break;
+                }
             }
 
-            await commandContext.Channel.SendMessageAsync("I don't recognize that command...");
-
-            embed.WithDescription(result.ErrorReason).WithColor(Color.Red);
-            await _client.GetGuild(Statics.DebugGuildId).GetTextChannel(Statics.DebugLogsChannelId)
-                .SendMessageAsync(embed: embed.Build());
+            return Task.CompletedTask;
         }
 
-        private async Task MessageReceived(SocketMessage socketMessage)
+        private Task ContextCommandExecuted(ContextCommandInfo arg1, Discord.IInteractionContext arg2, IResult arg3)
         {
-            if (!(socketMessage is SocketUserMessage message) || message.Source == MessageSource.Bot) 
-                return;
+            if (!arg3.IsSuccess)
+            {
+                switch (arg3.Error)
+                {
+                    case InteractionCommandError.UnmetPrecondition:
+                        // implement
+                        break;
+                    case InteractionCommandError.UnknownCommand:
+                        // implement
+                        break;
+                    case InteractionCommandError.BadArgs:
+                        // implement
+                        break;
+                    case InteractionCommandError.Exception:
+                        // implement
+                        break;
+                    case InteractionCommandError.Unsuccessful:
+                        // implement
+                        break;
+                    default:
+                        break;
+                }
+            }
 
-            var argPos = 0;
-            string s = "Prefix";
-            if(!message.HasStringPrefix(_config[s], ref argPos) && !message.HasMentionPrefix(_client.CurrentUser, ref argPos))
-                return;
+            return Task.CompletedTask;
+        }
 
-            var context = new SocketCommandContext(_client, message);
-            await _service.ExecuteAsync(context, argPos, _provider);
+        private Task SlashCommandExecuted(SlashCommandInfo arg1, Discord.IInteractionContext arg2, IResult arg3)
+        {
+            if (!arg3.IsSuccess)
+            {
+                switch (arg3.Error)
+                {
+                    case InteractionCommandError.UnmetPrecondition:
+                        // implement
+                        break;
+                    case InteractionCommandError.UnknownCommand:
+                        // implement
+                        break;
+                    case InteractionCommandError.BadArgs:
+                        // implement
+                        break;
+                    case InteractionCommandError.Exception:
+                        // implement
+                        break;
+                    case InteractionCommandError.Unsuccessful:
+                        // implement
+                        break;
+                    default:
+                        break;
+                }
+            }
 
-            var embed = new EmbedBuilder()
-                .WithAuthor(socketMessage.Author.Username)
-                .WithTitle($"Channel {socketMessage.Channel.Name}")
-                .WithDescription(socketMessage.Content)
-                .Build();
-            await _client.GetGuild(Statics.DebugGuildId).GetTextChannel(Statics.DebugLogsChannelId)
-                .SendMessageAsync(embed: embed);
+            return Task.CompletedTask;
+        }
+
+        private async Task HandleInteraction(SocketInteraction arg)
+        {
+            try
+            {
+                // create an execution context that matches the generic type parameter of your InteractionModuleBase<T> modules
+                var ctx = new SocketInteractionContext(_client, arg);
+                await _command.ExecuteCommandAsync(ctx, _provider);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+                // if a Slash Command execution fails it is most likely that the original interaction acknowledgement will persist. It is a good idea to delete the original
+                // response, or at least let the user know that something went wrong during the command execution.
+                if (arg.Type == InteractionType.ApplicationCommand)
+                {
+                    await arg.GetOriginalResponseAsync().ContinueWith(async (msg) => await msg.Result.DeleteAsync());
+                }
+            }
         }
     }
 }
