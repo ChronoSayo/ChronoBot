@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Data;
+using System.Linq;
 using System.Threading.Tasks;
 using ChronoBot.Common;
+using Discord.WebSocket;
 
 namespace ChronoBot.Utilities.Tools
 {
@@ -23,6 +25,14 @@ namespace ChronoBot.Utilities.Tools
                 return $"Unable to calculate {calc}";
             }
             return calc + " = " + result;
+        }
+        public async Task ResultAsync(SocketSlashCommand command)
+        {
+            object result;
+            int calc = Convert.ToInt32(command.Data.Options.First().Value);
+            var dt = new DataTable();
+            result = dt.Compute((calc / 2).ToString(), null);
+            await command.RespondAsync(result.ToString());
         }
     }
 }

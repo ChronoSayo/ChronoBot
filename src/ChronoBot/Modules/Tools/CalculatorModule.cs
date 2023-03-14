@@ -1,12 +1,11 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Linq;
+using System.Threading.Tasks;
 using ChronoBot.Common;
 using ChronoBot.Utilities.Tools;
 using Discord.Commands;
 using Discord.Interactions;
-using Discord;
-using Microsoft.Extensions.Logging;
 using Discord.WebSocket;
-using System.Linq;
 
 namespace ChronoBot.Modules.Tools
 {
@@ -21,7 +20,7 @@ namespace ChronoBot.Modules.Tools
         }
 
         [SlashCommand("calculator", "Calculates calculations.")]
-        public async Task CalculatorAsync([Remainder] string calc)
+        public async Task CalculatorAsync(string calc)
         {
             bool ok;
             string result = _calculator.Result(calc, out ok);

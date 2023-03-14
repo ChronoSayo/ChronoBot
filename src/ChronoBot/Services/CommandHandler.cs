@@ -2,6 +2,7 @@
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Timers;
 using ChronoBot.Common;
 using ChronoBot.Helpers;
 using Discord;
@@ -10,6 +11,9 @@ using Discord.Addons.Hosting;
 using Discord.WebSocket;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using System.Linq;
+using ChronoBot.Utilities.Tools;
+using ChronoBot.Modules.Tools;
 
 namespace ChronoBot.Services
 {
@@ -19,14 +23,49 @@ namespace ChronoBot.Services
         private readonly DiscordSocketClient _client;
         private readonly InteractionService _command;
         private readonly IConfiguration _config;
+        private readonly Calculator _calculator;
+        private System.Timers.Timer _timer;
 
-        public CommandHandler(DiscordSocketClient client,
-            IServiceProvider provider, InteractionService service, IConfiguration config)
+        public CommandHandler(DiscordSocketClient client, IServiceProvider provider, InteractionService service, IConfiguration config,
+            Calculator calculator)
         {
             _client = client;
             _provider = provider;
             _command = service;
             _config = config;
+            _calculator = calculator;
+
+            _timer = new System.Timers.Timer()
+            {
+                AutoReset = false,
+                Enabled = true,
+                Interval = 3000
+            };
+            _timer.Elapsed += AddCommandsTimer;
+        }
+
+        private async void AddCommandsTimer(object sender, ElapsedEventArgs e)
+        {
+            var guildCommand = new SlashCommandBuilder()
+            .WithName("ffafsf")
+            .WithDescription("half the number")
+            .AddOption(new SlashCommandOptionBuilder()
+                .WithName("num")
+                .WithType(ApplicationCommandOptionType.Number)
+                .WithDescription("add num")
+                .WithRequired(true)
+                .AddChoice("Terrible", 1)
+                .AddChoice("Meh", 2)
+                .AddChoice("Good", 3)
+                .AddChoice("Lovely", 4)
+                .AddChoice("Excellent!", 5));
+
+            var commands = await _client.GetGlobalApplicationCommandsAsync();
+            foreach (var c in commands)
+            {
+                if (c.Name != "half")
+                    await _client.GetGuild(Statics.DebugGuildId).CreateApplicationCommandAsync(guildCommand.Build());
+            }
         }
 
         public async Task InitializeAsync()
@@ -34,97 +73,19 @@ namespace ChronoBot.Services
             await _command.AddModulesAsync(Assembly.GetEntryAssembly(), _provider);
 
             _client.InteractionCreated += HandleInteraction;
-
-            _command.SlashCommandExecuted += SlashCommandExecuted;
-            _command.ContextCommandExecuted += ContextCommandExecuted;
-            _command.ComponentCommandExecuted += ComponentCommandExecuted;
+            _client.SlashCommandExecuted += SlashCommandExecuted;
         }
 
-        private Task ComponentCommandExecuted(ComponentCommandInfo arg1, Discord.IInteractionContext arg2, IResult arg3)
+        private async Task SlashCommandExecuted(SocketSlashCommand command)
         {
-            if (!arg3.IsSuccess)
+            switch(command.Data.Name)
             {
-                switch (arg3.Error)
-                {
-                    case InteractionCommandError.UnmetPrecondition:
-                        // implement
-                        break;
-                    case InteractionCommandError.UnknownCommand:
-                        // implement
-                        break;
-                    case InteractionCommandError.BadArgs:
-                        // implement
-                        break;
-                    case InteractionCommandError.Exception:
-                        // implement
-                        break;
-                    case InteractionCommandError.Unsuccessful:
-                        // implement
-                        break;
-                    default:
-                        break;
-                }
+                case "calculator":
+                    break;
+                case "half":
+                    await _calculator.ResultAsync(command);
+                    break;
             }
-
-            return Task.CompletedTask;
-        }
-
-        private Task ContextCommandExecuted(ContextCommandInfo arg1, Discord.IInteractionContext arg2, IResult arg3)
-        {
-            if (!arg3.IsSuccess)
-            {
-                switch (arg3.Error)
-                {
-                    case InteractionCommandError.UnmetPrecondition:
-                        // implement
-                        break;
-                    case InteractionCommandError.UnknownCommand:
-                        // implement
-                        break;
-                    case InteractionCommandError.BadArgs:
-                        // implement
-                        break;
-                    case InteractionCommandError.Exception:
-                        // implement
-                        break;
-                    case InteractionCommandError.Unsuccessful:
-                        // implement
-                        break;
-                    default:
-                        break;
-                }
-            }
-
-            return Task.CompletedTask;
-        }
-
-        private Task SlashCommandExecuted(SlashCommandInfo arg1, Discord.IInteractionContext arg2, IResult arg3)
-        {
-            if (!arg3.IsSuccess)
-            {
-                switch (arg3.Error)
-                {
-                    case InteractionCommandError.UnmetPrecondition:
-                        // implement
-                        break;
-                    case InteractionCommandError.UnknownCommand:
-                        // implement
-                        break;
-                    case InteractionCommandError.BadArgs:
-                        // implement
-                        break;
-                    case InteractionCommandError.Exception:
-                        // implement
-                        break;
-                    case InteractionCommandError.Unsuccessful:
-                        // implement
-                        break;
-                    default:
-                        break;
-                }
-            }
-
-            return Task.CompletedTask;
         }
 
         private async Task HandleInteraction(SocketInteraction arg)

@@ -10,6 +10,7 @@ using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
 using Discord.Net;
+using System.Linq;
 
 namespace ChronoBot
 {
@@ -64,22 +65,16 @@ namespace ChronoBot
 
         private async Task ReadyAsync()
         {
-            var guildCommand = new SlashCommandBuilder()
-            .WithName("list-roles")
-            .WithDescription("Lists all roles of a user.")
-            .AddOption("user", ApplicationCommandOptionType.User, "The users whos roles you want to be listed", isRequired: true);
-
-            await _client.Rest.CreateGlobalCommand(guildCommand.Build());
             if (IsDebug())
             {
-                await _commands.RegisterCommandsToGuildAsync(Statics.DebugGuildId);
+                await _commands.RegisterCommandsToGuildAsync(Statics.DebugGuildId, true);
 
             }
             else
             {
                 await _commands.RegisterCommandsGloballyAsync(true);
             }
-            Console.WriteLine($"Connected as -> [{_client.CurrentUser.Username}]");
+            Console.WriteLine($"Connected as {_client.CurrentUser.Username}");
         }
 
         private ServiceProvider GetConfigureServices()
