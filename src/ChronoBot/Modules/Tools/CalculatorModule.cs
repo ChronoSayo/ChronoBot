@@ -11,7 +11,6 @@ namespace ChronoBot.Modules.Tools
 {
     public class CalculatorModule : InteractionModuleBase<SocketInteractionContext>
     {
-        public InteractionService Commands { get; set; }
         private readonly Calculator _calculator;
 
         public CalculatorModule(Calculator calculator)
@@ -28,10 +27,10 @@ namespace ChronoBot.Modules.Tools
             if (ok)
             {
                 var embed = new ChronoBotEmbedBuilder(result).Build();
-                await ReplyAsync(embed: embed);
+                await RespondAsync(embed: embed);
             }
             else
-                await ReplyAsync(result);
+                await RespondAsync(result);
         }
     }
 }

@@ -8,23 +8,75 @@ using ChronoBot.Helpers;
 using ChronoBot.Utilities.SocialMedias;
 using Discord;
 using Discord.Commands;
+using Discord.Interactions;
 using Discord.WebSocket;
 using Microsoft.Extensions.Logging;
 
 namespace ChronoBot.Modules.SocialMedias
 {
-    public class SocialMediaModule : ModuleBase<SocketCommandContext>
+    public class SocialMediaModule : InteractionModuleBase<SocketInteractionContext>
     {
         protected readonly DiscordSocketClient Client;
         private readonly ILogger<SocialMediaModule> _logger;
         protected SocialMedia SocialMedia;
         protected SocialMediaEnum SocialMediaType;
 
+        public enum Actions
+        {
+            Add, Delete, Get, List, Update
+        }
+
         public SocialMediaModule(DiscordSocketClient client, ILogger<SocialMediaModule> logger, SocialMedia socialMedia)
         {
             Client = client;
             _logger = logger;
             SocialMedia = socialMedia;
+        }
+
+        public virtual async Task Action(Actions actions, string user, [ChannelTypes(ChannelType.Text)] IChannel channel = null)
+        {
+            switch (actions)
+            {
+                case Actions.Add:
+                    try
+                    {
+                        ulong guildId = Context.Guild.Id;
+                        ulong channelId = Context.Channel.Id;
+                        ulong sendToChannel = channel == null ? channelId : channel.Id;
+                        if (option.Contains(sendToChannel.ToString()))
+                            option = option.Remove(option.IndexOf('<'), option.IndexOf('>') - option.IndexOf('<') + 1);
+                        string result = await SocialMedia.AddSocialMediaUser(guildId, channelId, user, sendToChannel, option);
+                        await SendMessage(result, sendToChannel);
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e);
+                        throw;
+                    }
+                    break;
+                case Actions.Delete:
+                    break;
+                case Actions.Get:
+                    break;
+                case Actions.List:
+                    break;
+                case Actions.Update:
+                    break;
+            }
+        }
+
+        public virtual async Task ActionTwitter(Actions actions, string user, 
+            [Choice("Posts", "Shows only posts from user.")] string posts,
+            [Choice("Retweets", "Shows only retweets from user.")] string retweets,
+            [Choice("Likes", "Shows only likes from user.")] string likes,
+            [Choice("QuoteTweets", "Shows only quote tweets from user.")] string quoteTweets,
+            [Choice("AllMedia", "Shows all media from user.")] string allMedia,
+            [Choice("Pictures", "Shows only pictures from user.")] string pictures,
+            [Choice("GIF", "Shows only GIF's from user.")] string gifs,
+            [Choice("Video", "Shows only videos from user.")] string videos,
+            [Choice("All", "Shows everything.")] string all)
+        {
+
         }
 
         public virtual async Task AddAsync(string user, [Remainder] string option = "")
@@ -74,50 +126,6 @@ namespace ChronoBot.Modules.SocialMedias
             await SendMessage(result);
         }
 
-        public virtual async Task HowToUseAsync()
-        {
-            await Task.CompletedTask;
-        }
-
-        protected virtual Embed HowToText(string socialMedia)
-        {
-            string urlIcon = "";
-            string optionsIntro = "";
-            Color color = Color.Blue;
-            switch (socialMedia)
-            {
-                case "twitter":
-                    urlIcon =
-                        "https://cdn.discordapp.com/attachments/891627208089698384/891627590023000074/Twitter_social_icons_-_circle_-_blue.png";
-                    optionsIntro = " [options]";
-                    break;
-                case "youtube":
-                    urlIcon =
-                        "https://cdn.discordapp.com/attachments/891627208089698384/905575565636010074/youtube-logo-transparent-png-pictures-transparent-background-youtube-logo-11562856729oa42buzkng.png";
-                    color = Color.Red;
-                    break;
-                case "twitch":
-                    urlIcon =
-                        "https://cdn.discordapp.com/attachments/891627208089698384/972578720902701056/Twitch_Logo_Transparent_Image.png";
-                    color = Color.Purple;
-                    break;
-            }
-
-            var embed = new EmbedBuilder()
-                .WithTitle($"How to use {socialMedia.ToUpper()}")
-                .WithThumbnailUrl(urlIcon)
-                .AddField("Add ", $"{Statics.Prefix}{socialMedia.ToLowerInvariant()}add <name> [channel]{optionsIntro}",
-                    true)
-                .AddField("Delete", $"{Statics.Prefix}{socialMedia.ToLowerInvariant()}delete <name>", true)
-                .AddField("Get", $"{Statics.Prefix}{socialMedia.ToLowerInvariant()}get <name>", true)
-                .AddField("List", $"{Statics.Prefix}{socialMedia.ToLowerInvariant()}list", true)
-                .WithColor(color);
-            if (socialMedia == "twitter")
-                embed.WithFooter(
-                    "Options (can have multiple):\nOnly posts: p\r\nOnly retweets: r\r\nOnly quote retweets: q\r\nOnly likes: l\r\nOnly pictures: mp\r\nOnly animated GIF: mg\r\nOnly videos: mv\r\nOnly any media: m\r\nAll of the above: no input");
-            return embed.Build();
-        }
-
         protected virtual async Task SendMessage(string result, ulong sendToChannel = 0)
         {
             if (Statics.Debug)
@@ -125,7 +133,7 @@ namespace ChronoBot.Modules.SocialMedias
             else if (sendToChannel != 0)
                 await Client.GetGuild(Context.Guild.Id).GetTextChannel(sendToChannel).SendMessageAsync(result);
             else
-                await ReplyAsync(result);
+                await RespondAsync(result);
         }
         protected virtual async Task SendMessage(Embed result, ulong sendToChannel = 0)
         {
@@ -134,7 +142,7 @@ namespace ChronoBot.Modules.SocialMedias
             else if (sendToChannel != 0)
                 await Client.GetGuild(Context.Guild.Id).GetTextChannel(sendToChannel).SendMessageAsync(embed: result);
             else
-                await ReplyAsync("", embed: result);
+                await RespondAsync("", embed: result);
         }
         protected virtual async Task SendMessage(string result, Embed resultEmbed, ulong sendToChannel = 0)
         {
@@ -143,7 +151,7 @@ namespace ChronoBot.Modules.SocialMedias
             else if (sendToChannel != 0)
                 await Client.GetGuild(Context.Guild.Id).GetTextChannel(sendToChannel).SendMessageAsync(embed: resultEmbed);
             else
-                await ReplyAsync(result, embed: resultEmbed);
+                await RespondAsync(result, embed: resultEmbed);
         }
         protected virtual async Task SendFileWithLogo(Embed result, string socialMedia)
         {

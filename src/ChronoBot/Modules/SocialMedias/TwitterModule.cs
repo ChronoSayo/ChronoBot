@@ -1,11 +1,7 @@
-﻿using System.Collections.Immutable;
-using System.IO.Compression;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using ChronoBot.Enums;
 using ChronoBot.Utilities.SocialMedias;
-using Discord;
-using Discord.Commands;
+using Discord.Interactions;
 using Discord.WebSocket;
 using Microsoft.Extensions.Logging;
 
@@ -23,44 +19,23 @@ namespace ChronoBot.Modules.SocialMedias
             SocialMediaType = SocialMediaEnum.Twitter;
         }
 
-        [Command(SocialMediaCommand + "add", RunMode = RunMode.Async)]
-        public override async Task AddAsync(string user, [Remainder] string option = "")
+        [SlashCommand(SocialMediaCommand, "Gets a user's Twitter activity.", runMode: RunMode.Async)]
+        public override Task ActionTwitter(Actions actions, 
+            string user, 
+            [Choice("Posts", "Shows only posts from user.")] string posts, 
+            [Choice("Retweets", "Shows only retweets from user.")] string retweets, 
+            [Choice("Likes", "Shows only likes from user.")] string likes, 
+            [Choice("QuoteTweets", "Shows only quote tweets from user.")] string quoteTweets, 
+            [Choice("AllMedia", "Shows all media from user.")] string allMedia, 
+            [Choice("Pictures", "Shows only pictures from user.")] string pictures, 
+            [Choice("GIF", "Shows only GIF's from user.")] string gifs, 
+            [Choice("Video", "Shows only videos from user.")] string videos, 
+            [Choice("All", "Shows everything.")] string all)
         {
-            await base.AddAsync(user, option);
+            return base.ActionTwitter(actions, user, posts, retweets, likes, quoteTweets, allMedia, pictures, gifs, videos, all);
         }
 
-        [Command(SocialMediaCommand + "delete", RunMode = RunMode.Async), Alias(SocialMediaCommand + "del", SocialMediaCommand + "remove")]
-        public override async Task DeleteAsync(string user)
-        {
-            await base.DeleteAsync(user);
-        }
-
-        [Command(SocialMediaCommand + "get", RunMode = RunMode.Async), Alias(SocialMediaCommand)]
-        public override async Task GetAsync(string user)
-        {
-            await base.GetAsync(user);
-        }
-
-        [Command(SocialMediaCommand + "list", RunMode = RunMode.Async), Alias(SocialMediaCommand + "all")]
-        public override async Task ListAsync()
-        {
-            await base.ListAsync();
-        }
-
-        [Command(SocialMediaCommand + "update", RunMode = RunMode.Async), Alias(SocialMediaCommand + "latest")]
-        public override async Task UpdateAsync()
-        {
-            await base.UpdateAsync();
-        }
-
-        [Command(SocialMediaCommand + "?", RunMode = RunMode.Async), Alias(SocialMediaCommand + "howto", SocialMediaCommand)]
-        public override async Task HowToUseAsync()
-        {
-            var embed = HowToText(SocialMediaCommand);
-            await SendMessage(embed);
-        }
-
-        [Command("v", true, RunMode = RunMode.Async)]
+        [SlashCommand("Show video", "Use this if embedded video didn't work from the tweet.", runMode: RunMode.Async)]
         public async Task PostVideoAsync()
         {
             string video =
