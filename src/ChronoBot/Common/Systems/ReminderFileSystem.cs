@@ -109,7 +109,7 @@ namespace ChronoBot.Common.Systems
             }
 
             if (xmls.Count == 0)
-                return new List<RpsUserData>();
+                return new List<ReminderUserData>();
 
             List<ReminderUserData> ud = new List<ReminderUserData>();
             ud.AddRange(CollectUserData(xmls));

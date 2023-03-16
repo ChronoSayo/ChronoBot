@@ -73,7 +73,7 @@ namespace ChronoBot.Modules.SocialMedias
         public virtual async Task HandleTwitterOption(Options option,
             string user,
             [ChannelTypes(ChannelType.Text)] IChannel channel = null,
-            [Choice("posts", "p")]
+            [Choice("Posts", "p")]
             [Choice("Retweets", "r")]
             [Choice("Likes", "l")]
             [Choice("QuoteTweets", "q")]

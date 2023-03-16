@@ -22,7 +22,7 @@ namespace ChronoBot.Modules.Tools
             _client = client;
         }
 
-        [SlashCommand("Reminder", "Set reminder.", runMode: RunMode.Async)]
+        [SlashCommand("reminder", "Set reminder.", runMode: RunMode.Async)]
         public async Task SetReminderAsync(string message, DateTime date, [ChannelTypes(ChannelType.Text)] IChannel channel = null)
         {
             channel ??= Context.Channel;

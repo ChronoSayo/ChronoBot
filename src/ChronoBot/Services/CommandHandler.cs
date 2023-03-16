@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Reflection;
 using System.Threading.Tasks;
+using ChronoBot.Helpers;
 using Discord.Interactions;
 using Discord.WebSocket;
 
@@ -36,9 +37,12 @@ namespace ChronoBot.Services
             catch (Exception ex)
             {
                 Console.WriteLine(ex);
+                await Statics.SendMessageToLogChannel(_client, ex.Message);
             }
 
-            await socketInteraction.GetOriginalResponseAsync().ContinueWith(async (msg) => await msg.Result.DeleteAsync());
+            var message = await socketInteraction.GetOriginalResponseAsync();
+            if(message != null)
+                await message.DeleteAsync();
         }
     }
 }

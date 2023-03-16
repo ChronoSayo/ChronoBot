@@ -19,7 +19,7 @@ namespace ChronoBot.Modules.SocialMedias
         public override Task HandleTwitterOption(Options option, 
             string user, 
             [ChannelTypes(ChannelType.Text)] IChannel channel = null,
-            [Choice("posts", "p")]
+            [Choice("Posts", "p")]
             [Choice("Retweets", "r")]
             [Choice("Likes", "l")]
             [Choice("QuoteTweets", "q")]
@@ -39,7 +39,7 @@ namespace ChronoBot.Modules.SocialMedias
             string video =
                 await ((Twitter) SocialMedia).PostVideo(Context.Guild.Id, Context.Channel.Id, message.Source.ToString());
             if(!string.IsNullOrEmpty(video))
-                await SendMessage(video);
+                await SendMessage(Client, video);
         }
     }
 }

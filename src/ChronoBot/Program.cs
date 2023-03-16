@@ -48,6 +48,8 @@ namespace ChronoBot
                 _commands.Log += LogAsync;
                 _client.Ready += ReadyAsync;
 
+                var f = _config[Statics.DiscordToken];
+
                 await _client.LoginAsync(TokenType.Bot, _config[Statics.DiscordToken]);
                 await _client.StartAsync();
 

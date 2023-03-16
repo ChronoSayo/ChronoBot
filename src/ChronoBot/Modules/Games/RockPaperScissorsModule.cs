@@ -30,8 +30,7 @@ namespace ChronoBot.Modules.Games
                 Context.User.Username, Context.User.GetAvatarUrl() ?? Context.User.GetDefaultAvatarUrl());
 
             RpsPlayData? mentionData = null;
-            var message = await GetOriginalResponseAsync();
-            if (vsUser != null && vsUser != _client.CurrentUser)
+            if (vsUser != null && !vsUser.IsBot)
             {
                 mentionData = CreatePlayData(vsUser.Id, actor, vsUser.Mention, vsUser.Username,
                     vsUser.GetAvatarUrl() ?? vsUser.GetDefaultAvatarUrl());
