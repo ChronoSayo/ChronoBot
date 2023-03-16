@@ -1,16 +1,16 @@
 ﻿using System.Threading.Tasks;
 using ChronoBot.Utilities.Tools;
-using Discord.Commands;
 using Microsoft.Extensions.Logging;
 using System;
 using ChronoBot.Helpers;
 using Discord.WebSocket;
 using Discord;
 using System.Linq;
+using Discord.Interactions;
 
 namespace ChronoBot.Modules.Tools
 {
-    public class ReminderModule : ModuleBase<SocketCommandContext>
+    public class ReminderModule : InteractionModuleBase<SocketInteractionContext>
     {
         private readonly DiscordSocketClient _client;
         private readonly ILogger<ReminderModule> _logger;
@@ -23,8 +23,7 @@ namespace ChronoBot.Modules.Tools
             _client = client;
         }
 
-        [Command("remindme")]
-        [Alias("remind", "reminder", "rm")]
+        [SlashCommand]
         public async Task SetReminderUserAsync(string message, DateTime dateTime)
         {
             bool ok = _reminder.SetReminder(message, dateTime, Context.Message.Author.Id, 
