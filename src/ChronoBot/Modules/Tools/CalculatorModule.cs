@@ -1,11 +1,7 @@
-﻿using System;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using ChronoBot.Common;
 using ChronoBot.Utilities.Tools;
-using Discord.Commands;
 using Discord.Interactions;
-using Discord.WebSocket;
 
 namespace ChronoBot.Modules.Tools
 {

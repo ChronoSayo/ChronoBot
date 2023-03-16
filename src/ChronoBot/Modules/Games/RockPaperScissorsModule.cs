@@ -1,7 +1,5 @@
-﻿using System;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
+using ChronoBot.Common;
 using ChronoBot.Helpers;
 using ChronoBot.Utilities.Games;
 using Discord;
@@ -10,7 +8,7 @@ using Discord.WebSocket;
 
 namespace ChronoBot.Modules.Games
 {
-    public class RockPaperScissorsModule : InteractionModuleBase<SocketInteractionContext>
+    public class RockPaperScissorsModule : ChronoInteractionModuleBase
     {
         private readonly DiscordSocketClient _client;
         private readonly RockPaperScissors _rps;
@@ -35,51 +33,25 @@ namespace ChronoBot.Modules.Games
             var message = await GetOriginalResponseAsync();
             if (vsUser != null && vsUser != _client.CurrentUser)
             {
-                mentionData = CreatePlayData(mentionUser.Id, actor, mentionUser.Mention, mentionUser.Username,
-                    mentionUser.GetAvatarUrl() ?? mentionUser.GetDefaultAvatarUrl());
+                mentionData = CreatePlayData(vsUser.Id, actor, vsUser.Mention, vsUser.Username,
+                    vsUser.GetAvatarUrl() ?? vsUser.GetDefaultAvatarUrl());
             }
 
             var result = _rps.Play(playData, mentionData);
             if (result.Description.Contains("Wrong input"))
-                await SendMessage(result.Description);
+                await SendMessage(_client, result.Description);
             else
-                await SendMessage(result);
+                await SendMessage(_client, result);
         }
 
         [SlashCommand("rps-options", "Rock-Paper-Scissors options", runMode: RunMode.Async)]
         public async Task OptionsAsync([Choice("SeeStats", "s")][Choice("ResetStats", "r")] string option)
         {
-            var result = _rps.Options(CreatePlayData(Context.User.Id, action,
+            var result = _rps.Options(CreatePlayData(Context.User.Id, option,
                 Context.User.Mention, Context.User.Username, 
                 Context.User.GetAvatarUrl() ?? Context.User.GetDefaultAvatarUrl()));
 
-            if (result.Description != null && result.Description.Contains("Wrong input"))
-                await SendMessage(result);
-            else
-                await SendMessage(result);
-        }
-
-        private async Task SendMessage(string result)
-        {
-            if (Statics.Debug)
-                await Statics.DebugSendMessageToChannelAsync(_client, result);
-            else
-                await RespondAsync(result);
-        }
-        private async Task SendMessage(Embed result)
-        {
-            if (Statics.Debug)
-                await Statics.DebugSendMessageToChannelAsync(_client, result);
-            else
-                await RespondAsync(embed: result);
-        }
-        private async Task SendFile(Embed result, string socialMedia)
-        {
-            string thumbnail = Path.Combine(Environment.CurrentDirectory, $@"Resources\Images\SocialMedia\{socialMedia}.png");
-            if (Statics.Debug)
-                await Statics.DebugSendFileToChannelAsync(_client, result, thumbnail);
-            else
-                await RespondWithFileAsync(thumbnail, embed: result);
+            await SendMessage(_client, result);
         }
 
         private RpsPlayData CreatePlayData(ulong userId, string input, string mention, string username, string thumbnailIcon)
