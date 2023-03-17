@@ -1,16 +1,16 @@
 ﻿using System.Threading.Tasks;
 using ChronoBot.Utilities.Tools;
-using Microsoft.Extensions.Logging;
 using System;
-using ChronoBot.Helpers;
 using Discord.WebSocket;
 using Discord;
-using System.Linq;
 using Discord.Interactions;
 using ChronoBot.Common;
+using System.Drawing;
+using Google.Apis.YouTube.v3.Data;
 
 namespace ChronoBot.Modules.Tools
 {
+    [Group("reminder", "Notifies you of your reminder.")]
     public class ReminderModule : ChronoInteractionModuleBase
     {
         private readonly DiscordSocketClient _client;
@@ -23,20 +23,35 @@ namespace ChronoBot.Modules.Tools
         }
 
         [SlashCommand("reminder", "Set reminder.", runMode: RunMode.Async)]
-        public async Task SetReminderAsync(string message, DateTime date, [ChannelTypes(ChannelType.Text)] IChannel channel = null)
+        public async Task SetReminderAsync(string message,
+            [Summary("When", "yyyy-mm-dd or reverse. Time also works: hh:mm")] DateTime time,
+            [Summary("Where", "To which channel should this be posted. Default is this channel.")] 
+                [ChannelTypes(ChannelType.Text)] IChannel channel = null)
         {
             channel ??= Context.Channel;
-            bool ok = _reminder.SetReminder(message, date, Context.User.Id, Context.Guild.Id, channel.Id, Context.User.Username);
-            await HandleSendMessage(Context.User.Mention, ok, message, date);
+            bool ok = _reminder.SetReminder(message, time, Context.User.Id, Context.Guild.Id, channel.Id, Context.User.Username);
+            await HandleSendMessage(Context.User.Username, ok, message, time, channel.Name);
         }
 
 
-        private async Task HandleSendMessage(string remindee, bool ok, string message, DateTime dateTime)
+        private async Task HandleSendMessage(string remindee, bool ok, string message, DateTime dateTime, string channelName)
         {
             if (ok)
-                await SendMessage(_client, $"I will remind {remindee} of \"{message}\" in {dateTime}");
+                await SendMessage(_client, RemindMessage($"A reminder has been created.\n\"{message}\"", remindee, dateTime, channelName));
             else
-                await SendMessage(_client, "Something went wrong. Try \"!remindme <message> <date>");
+                await SendMessage(_client, "Something went wrong.");
+        }
+
+        public static Embed RemindMessage(string message, string remindee, DateTime dateTime, string channelName)
+        {
+            return new EmbedBuilder()
+                .WithDescription(message)
+                .WithAuthor(remindee)
+                .WithTitle("REMINDER")
+                .WithFields(new EmbedFieldBuilder { IsInline = true, Name = "Date", Value = dateTime })
+                .WithFields(new EmbedFieldBuilder { IsInline = true, Name = "In", Value = channelName })
+                .WithColor(Discord.Color.Green)
+                .Build();
         }
     }
 }

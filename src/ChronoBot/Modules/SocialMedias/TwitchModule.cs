@@ -7,6 +7,7 @@ using Discord.WebSocket;
 
 namespace ChronoBot.Modules.SocialMedias
 {
+    [Group("twitch", "Notifies when a Twitch streamer is broadcasting.")]
     public class TwitchModule : SocialMediaModule
     {
         public TwitchModule(DiscordSocketClient client, Twitch socialMedia) : base(client, socialMedia)
@@ -15,8 +16,11 @@ namespace ChronoBot.Modules.SocialMedias
             SocialMediaType = SocialMediaEnum.Twitch;
         }
 
-        [SlashCommand("twitch", "Notifies when a Twitch streamer is broadcasting.", runMode: RunMode.Async)]
-        public override Task HandleOptions(Options option, string user, [ChannelTypes(new[] { ChannelType.Text })] IChannel channel = null)
+        [SlashCommand("twitch-options", "Choose an option on how to handle streamer.", runMode: RunMode.Async)]
+        public override Task HandleOptions(Options option,
+            [Summary("Streamer", "Insert streamer's name.")] string user,
+            [Summary("Where", "To which channel should this be posted. Default is this channel.")]
+                [ChannelTypes(new[] { ChannelType.Text })] IChannel channel = null)
         {
             return base.HandleOptions(option, user, channel);
         }

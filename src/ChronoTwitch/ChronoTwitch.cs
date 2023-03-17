@@ -1,6 +1,5 @@
 ﻿using System.Threading.Tasks;
 using TwitchLib.Api;
-using TwitchLib.Api.Helix;
 using TwitchLib.Api.Helix.Models.Streams.GetStreams;
 using TwitchLib.Api.Helix.Models.Users.GetUsers;
 
@@ -8,7 +7,8 @@ namespace ChronoTwitch
 {
     public class ChronoTwitch : TwitchAPI
     {
-        private Authorization _authorization;
+        private AccessToken _accessToken;
+        private string _refreshToken;
 
         public virtual string ClientId => Settings.ClientId;
         public virtual string Secret => Settings.Secret;
@@ -18,13 +18,14 @@ namespace ChronoTwitch
         {
         }
 
-        public virtual void Authenticate(string clientId, string secret, string accessToken)
+        public virtual async void Authenticate(string clientId, string secret, string accessToken, string refreshToken)
         {
-            _authorization = new Authorization(this, clientId, secret);
+            _refreshToken = refreshToken;
+            _accessToken = new AccessToken(clientId, secret);
 
             Settings.ClientId = clientId;
             Settings.Secret = secret;
-            Settings.AccessToken = _authorization.GetAccessToken().Result;
+            Settings.AccessToken = await _accessToken.GetAccessTokenAsync() ?? accessToken;
         }
 
         public virtual async Task<string> LoginName(string name)
@@ -36,7 +37,7 @@ namespace ChronoTwitch
             }
             catch
             {
-                Settings.AccessToken = await _authorization.RefreshToken();
+                await SetNewAccessToken();
                 loginName = await GetLoginName(name);
             }
             return loginName;
@@ -51,7 +52,7 @@ namespace ChronoTwitch
             }
             catch
             {
-                Settings.AccessToken = await _authorization.RefreshToken();
+                await SetNewAccessToken();
                 displayName = await GetDisplayName(name);
             }
             return displayName;
@@ -66,7 +67,7 @@ namespace ChronoTwitch
             }
             catch
             {
-                Settings.AccessToken = await _authorization.RefreshToken();
+                await SetNewAccessToken();
                 info = await GetStreamInfo(name);
             }
             return info is { Type: "live" };
@@ -81,7 +82,7 @@ namespace ChronoTwitch
             }
             catch
             {
-                Settings.AccessToken = await _authorization.RefreshToken();
+                await SetNewAccessToken();
                 info = await GetStreamInfo(name);
             }
             if (info != null && info.GameName != string.Empty)
@@ -99,7 +100,7 @@ namespace ChronoTwitch
             }
             catch
             {
-                Settings.AccessToken = await _authorization.RefreshToken();
+                await SetNewAccessToken();
                 users = await this.GetUserAsync(name);
             }
             if (users == null || users.Users.Length == 0)
@@ -116,7 +117,7 @@ namespace ChronoTwitch
             }
             catch
             {
-                Settings.AccessToken = await _authorization.RefreshToken();
+                await SetNewAccessToken();
                 users = await this.GetUserAsync(name);
             }
             if (users == null || users.Users.Length == 0)
@@ -134,13 +135,20 @@ namespace ChronoTwitch
             }
             catch
             {
-                Settings.AccessToken = await _authorization.RefreshToken();
+                await SetNewAccessToken();
                 streams = await this.GetStreamAsync(name);
             }
             if (streams == null || streams.Streams.Length == 0)
                 return null;
 
             return await Task.FromResult(streams.Streams[0]);
+        }
+
+        private async Task SetNewAccessToken()
+        {
+            var tokens = await _accessToken.GetRefreshTokenAsync(_refreshToken);
+            Settings.AccessToken = tokens.Item1;
+            _refreshToken = tokens.Item2;
         }
     }
 }

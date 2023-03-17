@@ -21,7 +21,7 @@ namespace ChronoBot.Utilities.SocialMedias
         {
             _api = api;
             _api.Authenticate(Config[Statics.TwitchClientId], Config[Statics.TwitchSecret],
-                Config[Statics.TwitchAccessToken]);
+                Config[Statics.TwitchAccessToken], Config[Statics.TwitchRefreshToken]);
 
             Hyperlink = "https://www.twitch.com/";
 

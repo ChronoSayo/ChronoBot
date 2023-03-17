@@ -5,6 +5,7 @@ using Discord.Interactions;
 
 namespace ChronoBot.Modules.Tools
 {
+    [Group("calculator", "Solves math problems.")]
     public class CalculatorModule : InteractionModuleBase<SocketInteractionContext>
     {
         private readonly Calculator _calculator;
@@ -15,10 +16,10 @@ namespace ChronoBot.Modules.Tools
         }
 
         [SlashCommand("calculator", "Calculates calculations.")]
-        public async Task CalculatorAsync(string calc)
+        public async Task CalculatorAsync([Summary("Calculation", "Insert what you want to be calculated.")] string calculation)
         {
             bool ok;
-            string result = _calculator.Result(calc, out ok);
+            string result = _calculator.Result(calculation, out ok);
 
             if (ok)
             {

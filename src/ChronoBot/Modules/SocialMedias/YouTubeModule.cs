@@ -8,6 +8,7 @@ using Discord.WebSocket;
 
 namespace ChronoBot.Modules.SocialMedias
 {
+    [Group("youtube", "Notifies when a YouTuber has uploaded a video.")]
     public class YouTubeModule : SocialMediaModule
     {
         public YouTubeModule(DiscordSocketClient client, YouTube socialMedia) : base(client, socialMedia)
@@ -17,7 +18,10 @@ namespace ChronoBot.Modules.SocialMedias
         }
 
         [SlashCommand("youtube", "Notifies when a YouTuber uploads a video.", runMode: RunMode.Async)]
-        public override Task HandleOptions(Options option, string user, [ChannelTypes(new[] { ChannelType.Text })] IChannel channel = null)
+        public override Task HandleOptions(Options option,
+            [Summary("YouTuber", "Insert YouTuber's channel.")] string user,
+            [Summary("Where", "To which channel should this be posted. Default is this channel.")]
+                [ChannelTypes(new[] { ChannelType.Text })] IChannel channel = null)
         {
             return base.HandleOptions(option, user, channel);
         }

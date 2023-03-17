@@ -67,30 +67,13 @@ namespace ChronoBot
 
         private async Task ReadyAsync()
         {
-            if (IsDebug())
-            {
-                await _commands.RegisterCommandsToGuildAsync(Statics.DebugGuildId, true);
-
-            }
-            else
-            {
-                await _commands.RegisterCommandsGloballyAsync(true);
-            }
+            await _commands.RegisterCommandsGloballyAsync(true);
             Console.WriteLine($"Connected as {_client.CurrentUser.Username}");
         }
 
         private ServiceProvider GetConfigureServices()
         {
             return ConfigureServices.RegisterServices();
-        }
-
-        static bool IsDebug()
-        {
-#if DEBUG
-            return true;
-#else
-            return false;
-#endif
         }
     }
 }

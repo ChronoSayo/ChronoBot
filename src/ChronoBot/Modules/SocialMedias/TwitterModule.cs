@@ -7,6 +7,7 @@ using Discord.WebSocket;
 
 namespace ChronoBot.Modules.SocialMedias
 {
+    [Group("twitter", "Notifies when a Tweeter has tweeted.")]
     public class TwitterModule : SocialMediaModule
     {
         public TwitterModule(DiscordSocketClient client, Twitter socialMedia) : base(client, socialMedia)
@@ -15,11 +16,12 @@ namespace ChronoBot.Modules.SocialMedias
             SocialMediaType = SocialMediaEnum.Twitter;
         }
 
-        [SlashCommand("twitter", "Gets a user's Twitter activity.", runMode: RunMode.Async)]
+        [SlashCommand("twitter-options", "Choose an option on how to handle Tweeter.", runMode: RunMode.Async)]
         public override Task HandleTwitterOption(Options option, 
-            string user, 
-            [ChannelTypes(ChannelType.Text)] IChannel channel = null,
-            [Choice("Posts", "p")]
+            [Summary("Tweeter", "Insert Twitter handle.")] string user,
+            [Summary("Where", "To which channel should this be posted. Default is this channel.")] 
+                [ChannelTypes(ChannelType.Text)] IChannel channel = null,
+            [Summary("Filter", "Choose which the bot should filter the Tweeter's posts by.")] [Choice("Posts", "p")]
             [Choice("Retweets", "r")]
             [Choice("Likes", "l")]
             [Choice("QuoteTweets", "q")]
@@ -36,6 +38,12 @@ namespace ChronoBot.Modules.SocialMedias
         public async Task PostVideoAsync()
         {
             var message = await GetOriginalResponseAsync();
+            if(message == null)
+            {
+                await SendMessage(Client, "No Twitter video discovered.");
+                return;
+            }
+
             string video =
                 await ((Twitter) SocialMedia).PostVideo(Context.Guild.Id, Context.Channel.Id, message.Source.ToString());
             if(!string.IsNullOrEmpty(video))

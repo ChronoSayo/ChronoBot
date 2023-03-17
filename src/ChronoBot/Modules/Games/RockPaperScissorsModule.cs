@@ -8,6 +8,7 @@ using Discord.WebSocket;
 
 namespace ChronoBot.Modules.Games
 {
+    [Group("rock-paper-scissors", "Play Rock-Paper-Scissors against the bot or another user.")]
     public class RockPaperScissorsModule : ChronoInteractionModuleBase
     {
         private readonly DiscordSocketClient _client;
@@ -24,7 +25,7 @@ namespace ChronoBot.Modules.Games
             [Choice("Rock", "r")]
             [Choice("Paper", "P")]
             [Choice("Scissors", "s")] string actor,
-            [Choice("VS", "")] IUser vsUser)
+            [Choice("VS", "")] [Summary("VS-User", "Choose who to challenge against. Leaving empty to challenge bot.")] IUser vsUser)
         {
             RpsPlayData playData = CreatePlayData(Context.User.Id, actor, Context.User.Mention,
                 Context.User.Username, Context.User.GetAvatarUrl() ?? Context.User.GetDefaultAvatarUrl());
@@ -44,7 +45,9 @@ namespace ChronoBot.Modules.Games
         }
 
         [SlashCommand("rps-options", "Rock-Paper-Scissors options", runMode: RunMode.Async)]
-        public async Task OptionsAsync([Choice("SeeStats", "s")][Choice("ResetStats", "r")] string option)
+        public async Task OptionsAsync([Summary("Stats", "Choose to either see stats or reset stats.")]
+            [Choice("SeeStats", "s")]
+            [Choice("ResetStats", "r")] string option)
         {
             var result = _rps.Options(CreatePlayData(Context.User.Id, option,
                 Context.User.Mention, Context.User.Username, 

@@ -71,9 +71,10 @@ namespace ChronoBot.Modules.SocialMedias
         }
 
         public virtual async Task HandleTwitterOption(Options option,
-            string user,
-            [ChannelTypes(ChannelType.Text)] IChannel channel = null,
-            [Choice("Posts", "p")]
+            [Summary("Tweeter", "Insert Twitter handle.")] string user,
+            [Summary("Where", "To which channel should this be posted. Default is this channel.")]
+                [ChannelTypes(ChannelType.Text)] IChannel channel = null,
+            [Summary("Filter", "Choose which the bot should filter the Tweeter's posts by.")] [Choice("Posts", "p")]
             [Choice("Retweets", "r")]
             [Choice("Likes", "l")]
             [Choice("QuoteTweets", "q")]
