@@ -38,6 +38,15 @@
     <None Update="Test Files\Load\123456789.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="Test Files\ReminderFileSystemTests\Delete\123456789.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Test Files\ReminderFileSystemTests\Load Fail\fail.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Test Files\ReminderFileSystemTests\Load\123456789.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="Test Files\TwitchTests\Load Fail\fail.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -74,6 +83,11 @@
     <None Update="Test Files\SocialMediaFileSystemTests\Load\123456789.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Test Files\ReminderFileSystemTests\Save\" />
+    <Folder Include="Test Files\ReminderFileSystemTests\Update\" />
   </ItemGroup>
 
 </Project>

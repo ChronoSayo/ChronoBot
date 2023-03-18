@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -39,14 +40,16 @@ namespace ChronoBot.Common.Systems
             string name = reminderUserData.Name ?? string.Empty;
             string channelId = reminderUserData.ChannelId.ToString();
             string id = reminderUserData.Id ?? string.Empty;
-            string deadline = reminderUserData.Deadline.ToString();
+            string deadline = reminderUserData.Deadline.ToString(CultureInfo.InvariantCulture);
+            string userId = reminderUserData.UserId.ToString();
 
             XElement user = new XElement("User");
             XAttribute newName = new XAttribute("Name", name);
             XAttribute newChannelId = new XAttribute("ChannelID", channelId);
             XAttribute newId = new XAttribute("ID", id);
             XAttribute newDeadline = new XAttribute("Deadline", deadline);
-            user.Add(newName, newChannelId, newId, newDeadline);
+            XAttribute newUserId = new XAttribute("UserID", userId);
+            user.Add(newName, newChannelId, newId, newDeadline, newUserId);
 
             XDocument xDoc;
             string guildPath = Path.Combine(PathToSaveFile, guildId + ".xml");
@@ -128,6 +131,7 @@ namespace ChronoBot.Common.Systems
                     user.ChannelId = ulong.Parse(e.Attribute("ChannelID")?.Value ?? string.Empty);
                     user.Id = e.Attribute("ID")?.Value;
                     user.Deadline = DateTime.Parse(e.Attribute("Deadline")?.Value ?? string.Empty);
+                    user.UserId = ulong.Parse(e.Attribute("UserID")?.Value ?? string.Empty);
                     ud.Add(user);
                 }
             }
@@ -151,14 +155,22 @@ namespace ChronoBot.Common.Systems
             {
                 if (ud.Name == reminderUserData.Name)
                 {
-                    XElement found = xml.Descendants("Service").Descendants(ElementRoot).Descendants("User")
-                        .First(x => x.Attributes("Name").First().Value == reminderUserData.Name);
-                    found.Attributes("Name").First().Value = reminderUserData.Name;
-                    found.Attributes("ChannelID").First().Value = reminderUserData.ChannelId.ToString();
-                    found.Attributes("ID").First().Value = reminderUserData.Id;
-                    found.Attributes("Deadline").First().Value = reminderUserData.Deadline.ToShortDateString();
-                    updated = true;
-                    break;
+                    try
+                    {
+                        XElement found = xml.Descendants("Service").Descendants(ElementRoot).Descendants("User")
+                            .First(x => x.Attributes("UserID").First().Value == reminderUserData.UserId.ToString());
+                        found.Attributes("Name").First().Value = reminderUserData.Name;
+                        found.Attributes("ChannelID").First().Value = reminderUserData.ChannelId.ToString();
+                        found.Attributes("ID").First().Value = reminderUserData.Id;
+                        found.Attributes("Deadline").First().Value = reminderUserData.Deadline.ToShortDateString();
+                        found.Attributes("UserID").First().Value = reminderUserData.UserId.ToString();
+                        updated = true;
+                        break;
+                    }
+                    catch
+                    {
+                        return false;
+                    }
                 }
             }
 
@@ -188,13 +200,12 @@ namespace ChronoBot.Common.Systems
             bool remove = true;
             foreach (ReminderUserData ud in users)
             {
-                if (ud.Id != reminderUserData.Id && ud.Name == ud.Name)
+                if (ud.Id != reminderUserData.Id && ud.UserId != reminderUserData.UserId)
                     continue;
-                xml.Descendants("Service").
-                    Descendants(ElementRoot).
-                    Descendants("User").
-                    Where(x => x.Attribute("ID")?.Value == ud.Id && x.Attribute("Name")?.Value == ud.Name).
-                    Remove();
+                xml.Descendants("Service")
+                    .Descendants(ElementRoot)
+                    .Descendants("User").Where(x => x.Attribute("ID")?.Value == ud.Id && x.Attribute("UserID")?.Value == ud.UserId.ToString())
+                    .Remove();
                 remove = false;
                 break;
             }

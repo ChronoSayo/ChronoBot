@@ -35,7 +35,7 @@ namespace ChronoBot.Tests.Tools
         {
             var tomorrow = DateTime.Now.AddDays(1);
             var ok = _reminder.SetReminder("TestReminder", tomorrow, DefaultGuildId,
-            DefaultGuildId, "Test");
+            DefaultGuildId, "Test", 420);
             
             var users = (List<ReminderUserData>)_fileSystem.Load();
             var user = users.Find(x => x.Id == "TestReminder");
@@ -47,6 +47,7 @@ namespace ChronoBot.Tests.Tools
             Assert.True(user.GuildId == DefaultGuildId);
             Assert.True(user.ChannelId == DefaultGuildId);
             Assert.True(user.Id == "TestReminder");
+            Assert.True(user.UserId == 420);
             Assert.True(ok);
         }
 
@@ -57,7 +58,8 @@ namespace ChronoBot.Tests.Tools
                 DateTime.Now.AddSeconds(1), 
                 DefaultGuildId,
                 DefaultGuildId, 
-                "Reminded");
+                "Reminded",
+                69);
 
             Thread.Sleep(3000);
 

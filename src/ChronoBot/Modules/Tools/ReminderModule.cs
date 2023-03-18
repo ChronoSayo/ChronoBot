@@ -29,7 +29,7 @@ namespace ChronoBot.Modules.Tools
                 [ChannelTypes(ChannelType.Text)] IChannel channel = null)
         {
             channel ??= Context.Channel;
-            bool ok = _reminder.SetReminder(message, time, Context.Guild.Id, channel.Id, Context.User.Username);
+            bool ok = _reminder.SetReminder(message, time, Context.Guild.Id, channel.Id, Context.User.Username, Context.User.Id);
             await HandleSendMessage(Context.User.Username, ok, message, time, Context.Guild.Id, channel.Id);
         }
 

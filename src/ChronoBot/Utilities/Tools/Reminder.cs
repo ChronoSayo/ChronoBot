@@ -69,12 +69,12 @@ namespace ChronoBot.Utilities.Tools
             }
         }
 
-        public bool SetReminder(string message, DateTime dateTime, ulong guildId, ulong channelId, string user)
+        public bool SetReminder(string message, DateTime dateTime, ulong guildId, ulong channelId, string user, ulong userId)
         {
-            return CreateReminderUserData(message, dateTime, guildId, channelId, user);
+            return CreateReminderUserData(message, dateTime, guildId, channelId, user, userId);
         }
 
-        private bool CreateReminderUserData(string message, DateTime dateTime, ulong guildId, ulong channelId, string user)
+        private bool CreateReminderUserData(string message, DateTime dateTime, ulong guildId, ulong channelId, string user, ulong userId)
         {
             ReminderUserData temp = new ReminderUserData
             {
@@ -82,7 +82,8 @@ namespace ChronoBot.Utilities.Tools
                 GuildId = guildId,
                 ChannelId = channelId,
                 Deadline = dateTime,
-                Id = message
+                Id = message,
+                UserId = userId
             };
             _users.Add(temp); 
             
