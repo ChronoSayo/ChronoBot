@@ -253,7 +253,7 @@ namespace ChronoBot.Utilities.Games
             return new EmbedBuilder()
                 .WithAuthor(TitleBuilder(authorPlayData))
                 .WithTitle("*GAME*")
-                .WithThumbnailUrl(thumbnailWinner)
+                .WithThumbnailUrl($"attachment://{thumbnailWinner}")
                 .WithColor(Color.DarkOrange)
                 .WithDescription(result).Build();
         }
@@ -498,7 +498,7 @@ namespace ChronoBot.Utilities.Games
 
         private EmbedAuthorBuilder TitleBuilder(RpsPlayData playData)
         {
-            return new EmbedAuthorBuilder().WithName(Title).WithIconUrl(playData.ThumbnailIconUrl);
+            return new EmbedAuthorBuilder().WithName(Title).WithIconUrl($"attachment://{playData.ThumbnailIconUrl}");
         }
 
         private void LogToFile(LogSeverity severity, string message, Exception e = null, [CallerMemberName] string caller = null)
