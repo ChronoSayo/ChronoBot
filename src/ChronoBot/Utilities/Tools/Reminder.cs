@@ -6,32 +6,28 @@ using ChronoBot.Common.UserDatas;
 using ChronoBot.Helpers;
 using ChronoBot.Modules.Tools;
 using Discord.WebSocket;
-using Microsoft.Extensions.Configuration;
 
 namespace ChronoBot.Utilities.Tools
 {
     public class Reminder
     {
-        DiscordSocketClient _client;
-        private readonly IConfiguration _config;
+        private readonly DiscordSocketClient _client;
         private readonly ReminderFileSystem _fileSystem;
-        private Timer _timer;
         private readonly List<ReminderUserData> _users;
 
-        public Reminder(DiscordSocketClient client, IConfiguration config, ReminderFileSystem fileSystem)
+        public Reminder(DiscordSocketClient client, ReminderFileSystem fileSystem)
         {
             _client = client;
-            _config = config;
             _fileSystem = fileSystem;
             _users = (List<ReminderUserData>)_fileSystem.Load();
 
-            _timer = new Timer()
+            var timer = new Timer()
             {
                 AutoReset = true,
                 Enabled = true,
                 Interval = 1000
             };
-            _timer.Elapsed += DeadlineCheck;
+            timer.Elapsed += DeadlineCheck;
         }
 
         private async void DeadlineCheck(object sender, ElapsedEventArgs e)
@@ -42,16 +38,25 @@ namespace ChronoBot.Utilities.Tools
             {
                 if (now < user.Deadline)
                     continue;
-                
-                var embed = ReminderModule.RemindMessage(user.Id,
-                    _client.GetGuild(user.GuildId).GetTextChannel(user.ChannelId).GetUser(user.Remindee).Username, 
-                    user.Deadline,
-                    _client.GetGuild(user.GuildId).GetTextChannel(user.ChannelId).Name);
 
-                if (Statics.Debug)
-                    await Statics.DebugSendMessageToChannelAsync(_client, embed);
-                else
-                    await _client.GetGuild(user.GuildId).GetTextChannel(user.ChannelId).SendMessageAsync(embed: embed);
+                try
+                {
+                    var embed = ReminderModule.RemindMessage(user.Id,
+                        user.Name,
+                        user.Deadline,
+                        user.GuildId,
+                        user.ChannelId,
+                        _client);
+
+                    if (Statics.Debug)
+                        await Statics.DebugSendMessageToChannelAsync(_client, embed);
+                    else
+                        await _client.GetGuild(user.GuildId).GetTextChannel(user.ChannelId).SendMessageAsync(embed: embed);
+                }
+                catch
+                {
+                    // Continue
+                }
 
                 remindedUsers.Add(user);
             }
@@ -64,12 +69,12 @@ namespace ChronoBot.Utilities.Tools
             }
         }
 
-        public bool SetReminder(string message, DateTime dateTime, ulong remindee, ulong guildId, ulong channelId, string user)
+        public bool SetReminder(string message, DateTime dateTime, ulong guildId, ulong channelId, string user)
         {
-            return CreateReminderUserData(message, dateTime, remindee, guildId, channelId, user);
+            return CreateReminderUserData(message, dateTime, guildId, channelId, user);
         }
 
-        private bool CreateReminderUserData(string message, DateTime dateTime, ulong remindee, ulong guildId, ulong channelId, string user)
+        private bool CreateReminderUserData(string message, DateTime dateTime, ulong guildId, ulong channelId, string user)
         {
             ReminderUserData temp = new ReminderUserData
             {
@@ -77,7 +82,6 @@ namespace ChronoBot.Utilities.Tools
                 GuildId = guildId,
                 ChannelId = channelId,
                 Deadline = dateTime,
-                Remindee = remindee,
                 Id = message
             };
             _users.Add(temp); 

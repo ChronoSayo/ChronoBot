@@ -29,27 +29,36 @@ namespace ChronoBot.Modules.Tools
                 [ChannelTypes(ChannelType.Text)] IChannel channel = null)
         {
             channel ??= Context.Channel;
-            bool ok = _reminder.SetReminder(message, time, Context.User.Id, Context.Guild.Id, channel.Id, Context.User.Username);
-            await HandleSendMessage(Context.User.Username, ok, message, time, channel.Name);
+            bool ok = _reminder.SetReminder(message, time, Context.Guild.Id, channel.Id, Context.User.Username);
+            await HandleSendMessage(Context.User.Username, ok, message, time, Context.Guild.Id, channel.Id);
         }
 
-
-        private async Task HandleSendMessage(string remindee, bool ok, string message, DateTime dateTime, string channelName)
+        private async Task HandleSendMessage(string remindTo, bool ok, string message, DateTime dateTime, ulong guildId, ulong channelId)
         {
             if (ok)
-                await SendMessage(_client, RemindMessage($"A reminder has been created.\n\"{message}\"", remindee, dateTime, channelName));
+                await SendMessage(_client, RemindMessage($"A reminder has been created.\n\"{message}\"", 
+                    remindTo, 
+                    dateTime, 
+                    guildId,
+                    channelId, 
+                    _client));
             else
                 await SendMessage(_client, "Something went wrong.");
         }
 
-        public static Embed RemindMessage(string message, string remindee, DateTime dateTime, string channelName)
+        public static Embed RemindMessage(string message, string remindTo, DateTime dateTime, ulong guildId, ulong channelId, DiscordSocketClient client)
         {
             return new EmbedBuilder()
                 .WithDescription(message)
-                .WithAuthor(remindee)
+                .WithAuthor(remindTo)
                 .WithTitle("REMINDER")
                 .WithFields(new EmbedFieldBuilder { IsInline = true, Name = "Date", Value = dateTime })
-                .WithFields(new EmbedFieldBuilder { IsInline = true, Name = "In", Value = channelName })
+                .WithFields(new EmbedFieldBuilder
+                {
+                    IsInline = true, 
+                    Name = "In", 
+                    Value = client.GetGuild(guildId).GetTextChannel(channelId).Name
+                })
                 .WithColor(Discord.Color.Green)
                 .Build();
         }
