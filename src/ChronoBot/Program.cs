@@ -1,65 +1,79 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Threading.Tasks;
+using System.Threading;
 using ChronoBot.Helpers;
 using ChronoBot.Services;
-using Discord;
-using Discord.Addons.Hosting;
-using Discord.Commands;
-using Discord.WebSocket;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
+using Discord;
+using Discord.Interactions;
+using Discord.WebSocket;
+using Discord.Net;
+using System.Linq;
 
 namespace ChronoBot
 {
     class Program
     {
-        static async Task Main()
+        private readonly IConfiguration _config;
+        private DiscordSocketClient _client;
+        private InteractionService _commands;
+
+        public static Task Main(string[] args) => new Program().MainAsync();
+
+        public async Task MainAsync(string[] args)
         {
-            var builder = new HostBuilder()
-                .ConfigureAppConfiguration(x =>
-                {
-                    var configuration = new ConfigurationBuilder()
-                        .SetBasePath(Directory.GetCurrentDirectory())
-                        .AddJsonFile("appsettings.json", false, true)
-                        .Build();
 
-                    x.AddConfiguration(configuration);
-                })
-                .ConfigureLogging(x =>
-                {
-                    x.AddConsole();
-                    x.SetMinimumLevel(LogLevel.Debug);
-                })
-                .ConfigureDiscordHost((context, config) =>
-                {
-                    config.SocketConfig = new DiscordSocketConfig
-                    {
-                        LogLevel = LogSeverity.Debug,
-                        AlwaysDownloadUsers = true,
-                        MessageCacheSize = 200
-                    };
-                    
-                    Statics.Config = context.Configuration;
-                    config.Token = context.Configuration[Statics.DiscordToken];
-                })
-                .UseCommandService((context, config) =>
-                {
-                    config.CaseSensitiveCommands = false;
-                    config.LogLevel = LogSeverity.Debug;
-                    config.DefaultRunMode = RunMode.Async;
-                })
-                .ConfigureServices((context, services) =>
-                {
-                    ConfigureServices.RegisterServices(services);
-                })
-                .UseConsoleLifetime();
+        }
 
-            var host = builder.Build();
-            using (host)
+        public Program()
+        {
+            var _builder = new ConfigurationBuilder()
+                .SetBasePath(AppContext.BaseDirectory)
+                .AddJsonFile(path: "appsettings.json");
+
+            _config = _builder.Build();
+            Statics.Config = _config;
+        }
+
+        public async Task MainAsync()
+        {
+            using (var services = GetConfigureServices())
             {
-                await host.RunAsync();
+                _client = services.GetRequiredService<DiscordSocketClient>();
+                _commands = services.GetRequiredService<InteractionService>();
+
+                _client.Log += LogAsync;
+                _commands.Log += LogAsync;
+                _client.Ready += ReadyAsync;
+
+                var f = _config[Statics.DiscordToken];
+
+                await _client.LoginAsync(TokenType.Bot, _config[Statics.DiscordToken]);
+                await _client.StartAsync();
+
+                await services.GetRequiredService<CommandHandler>().InitializeAsync();
+
+                await Task.Delay(Timeout.Infinite);
             }
+        }
+
+        private Task LogAsync(LogMessage log)
+        {
+            Console.WriteLine(log.ToString());
+            return Task.CompletedTask;
+        }
+
+        private async Task ReadyAsync()
+        {
+            await _commands.RegisterCommandsGloballyAsync(true);
+            Console.WriteLine($"Connected as {_client.CurrentUser.Username}");
+        }
+
+        private ServiceProvider GetConfigureServices()
+        {
+            return ConfigureServices.RegisterServices();
         }
     }
 }

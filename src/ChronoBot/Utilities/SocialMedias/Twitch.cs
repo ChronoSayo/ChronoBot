@@ -7,6 +7,7 @@ using ChronoBot.Enums;
 using ChronoBot.Helpers;
 using Discord.WebSocket;
 using Microsoft.Extensions.Configuration;
+using TwitchLib.Api.Core.Exceptions;
 
 namespace ChronoBot.Utilities.SocialMedias
 {
@@ -21,7 +22,7 @@ namespace ChronoBot.Utilities.SocialMedias
         {
             _api = api;
             _api.Authenticate(Config[Statics.TwitchClientId], Config[Statics.TwitchSecret],
-                Config[Statics.TwitchAccessToken]);
+                Config[Statics.TwitchAccessToken], Config[Statics.TwitchRefreshToken]);
 
             Hyperlink = "https://www.twitch.com/";
 
@@ -38,7 +39,15 @@ namespace ChronoBot.Utilities.SocialMedias
             if (Duplicate(guildId, username, SocialMediaEnum.Twitch))
                 return await Task.FromResult($"Already added {username}");
 
-            string loginName = await _api.LoginName(username);
+            string loginName = string.Empty;
+            try
+            {
+                loginName = await _api.LoginName(username);
+            }
+            catch (BadScopeException ex)
+            {
+                await Statics.SendMessageToLogChannel(Client, ex.Message);
+            }
             if (string.IsNullOrEmpty(loginName))
                 return await Task.FromResult("Can't find " + username);
 
@@ -48,7 +57,15 @@ namespace ChronoBot.Utilities.SocialMedias
             if (!CreateSocialMediaUser(loginName, guildId, sendToChannelId, "offline", SocialMediaEnum.Twitch))
                 return await Task.FromResult($"Failed to add {loginName}.");
 
-            var displayName = await _api.DisplayName(username);
+            var displayName = string.Empty;
+            try
+            {
+                displayName = await _api.DisplayName(username);
+            }
+            catch (BadScopeException ex)
+            {
+                await Statics.SendMessageToLogChannel(Client, ex.Message);
+            }
             return await Task.FromResult($"Successfully added {displayName} \n{Hyperlink}{loginName}");
         }
 
@@ -59,7 +76,15 @@ namespace ChronoBot.Utilities.SocialMedias
                 return await Task.FromResult("Can't find streamer.");
 
             SocialMediaUserData ud = Users[i];
-            bool isLive = await _api.IsLive(ud.Name);
+            bool isLive = false;
+            try
+            {
+                isLive = await _api.IsLive(ud.Name);
+            }
+            catch(BadScopeException ex)
+            {
+                await Statics.SendMessageToLogChannel(Client, ex.Message);
+            }
             string message;
             if (isLive)
             {
@@ -92,7 +117,15 @@ namespace ChronoBot.Utilities.SocialMedias
                 if (user.SocialMedia != SocialMediaEnum.Twitch || user.GuildId != guildId)
                     continue;
 
-                bool isLive = await _api.IsLive(user.Name);
+                bool isLive = false;
+                try
+                {
+                    isLive = await _api.IsLive(user.Name);
+                }
+                catch (BadScopeException ex)
+                {
+                    await Statics.SendMessageToLogChannel(Client, ex.Message);
+                }
                 string oldId = user.Id;
                 if (isLive)
                 {

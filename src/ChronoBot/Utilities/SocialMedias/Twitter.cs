@@ -11,10 +11,7 @@ using Discord;
 using Discord.WebSocket;
 using Microsoft.Extensions.Configuration;
 using TweetSharp;
-using System.Drawing.Imaging;
 using System.Globalization;
-using System.IO;
-using System.Net;
 using Color = Discord.Color;
 
 

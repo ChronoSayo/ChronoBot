@@ -7,7 +7,7 @@ using ChronoBot.Common.UserDatas;
 using ChronoBot.Enums;
 using Xunit;
 
-namespace ChronoBot.Tests.SocialMedias
+namespace ChronoBot.Tests.Systems
 {
     public class SocialMediaFileSystemTests
     {
@@ -57,8 +57,8 @@ namespace ChronoBot.Tests.SocialMedias
             var file1 = Path.Combine(fileSystem.PathToSaveFile, "123456789.xml");
             var file2 = Path.Combine(fileSystem.PathToSaveFile, "987654321.xml");
 
-            
-            if(File.Exists(file2))
+
+            if (File.Exists(file2))
                 File.Delete(file2);
             File.Copy(file1, file2);
             List<SocialMediaUserData> users = fileSystem.Load().Cast<SocialMediaUserData>().ToList();
@@ -245,7 +245,7 @@ namespace ChronoBot.Tests.SocialMedias
             var file = tuple.Item2;
 
             bool ok = fileSystem.DeleteInFile(new SocialMediaUserData { GuildId = 123456789, Name = "Fail" });
-            
+
             Assert.True(File.Exists(file));
             Assert.False(ok);
         }
@@ -278,7 +278,7 @@ namespace ChronoBot.Tests.SocialMedias
         {
             var srcFile = Path.Combine(_path, "Load", "123456789.xml");
             var updatePath = Path.Combine(_path, folderName);
-            if(Directory.Exists(updatePath))
+            if (Directory.Exists(updatePath))
                 Directory.Delete(updatePath, true);
             var fileSystem = new SocialMediaFileSystem(updatePath);
             File.Copy(srcFile, Path.Combine(fileSystem.PathToSaveFile, "123456789.xml"));

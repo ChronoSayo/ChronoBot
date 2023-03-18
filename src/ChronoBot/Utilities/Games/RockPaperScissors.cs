@@ -2,18 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Net.NetworkInformation;
-using System.Reflection.Metadata;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
 using System.Timers;
 using ChronoBot.Common.Systems;
 using ChronoBot.Common.UserDatas;
 using ChronoBot.Enums;
 using ChronoBot.Helpers;
 using Discord;
-using Discord.WebSocket;
 using Microsoft.Extensions.Configuration;
 using Color = Discord.Color;
 
@@ -258,7 +253,7 @@ namespace ChronoBot.Utilities.Games
             return new EmbedBuilder()
                 .WithAuthor(TitleBuilder(authorPlayData))
                 .WithTitle("*GAME*")
-                .WithThumbnailUrl(thumbnailWinner)
+                .WithThumbnailUrl($"attachment://{thumbnailWinner}")
                 .WithColor(Color.DarkOrange)
                 .WithDescription(result).Build();
         }
@@ -503,7 +498,7 @@ namespace ChronoBot.Utilities.Games
 
         private EmbedAuthorBuilder TitleBuilder(RpsPlayData playData)
         {
-            return new EmbedAuthorBuilder().WithName(Title).WithIconUrl(playData.ThumbnailIconUrl);
+            return new EmbedAuthorBuilder().WithName(Title).WithIconUrl($"attachment://{playData.ThumbnailIconUrl}");
         }
 
         private void LogToFile(LogSeverity severity, string message, Exception e = null, [CallerMemberName] string caller = null)

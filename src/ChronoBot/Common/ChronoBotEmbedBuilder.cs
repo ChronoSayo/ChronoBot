@@ -3,6 +3,7 @@
 namespace ChronoBot.Common
 {
     using Discord;
+    using System.Diagnostics.Contracts;
 
     internal class ChronoBotEmbedBuilder : EmbedBuilder
     {

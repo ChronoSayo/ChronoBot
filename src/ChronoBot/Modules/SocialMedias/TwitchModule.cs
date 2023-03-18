@@ -1,59 +1,28 @@
 ﻿using System.Threading.Tasks;
 using ChronoBot.Enums;
 using ChronoBot.Utilities.SocialMedias;
-using Discord.Commands;
+using Discord;
+using Discord.Interactions;
 using Discord.WebSocket;
-using Microsoft.Extensions.Logging;
 
 namespace ChronoBot.Modules.SocialMedias
 {
+    [Group("twitch", "Notifies when a Twitch streamer is broadcasting.")]
     public class TwitchModule : SocialMediaModule
     {
-        private readonly ILogger<SocialMediaModule> _logger;
-        private const string SocialMediaCommand = "twitch";
-
-        public TwitchModule(DiscordSocketClient client, ILogger<SocialMediaModule> logger, Twitch socialMedia) : base(client, logger, socialMedia)
+        public TwitchModule(DiscordSocketClient client, Twitch socialMedia) : base(client, socialMedia)
         {
-            _logger = logger;
             SocialMedia = socialMedia;
             SocialMediaType = SocialMediaEnum.Twitch;
         }
 
-        [Command(SocialMediaCommand + "add", RunMode = RunMode.Async)]
-        public override async Task AddAsync(string user, [Remainder] string option = "")
+        [SlashCommand("twitch-options", "Choose an option on how to handle streamer.", runMode: RunMode.Async)]
+        public override Task HandleOptions(Options option,
+            [Summary("Streamer", "Insert streamer's name.")] string user,
+            [Summary("Where", "To which channel should this be posted. Default is this channel.")]
+                [ChannelTypes(new[] { ChannelType.Text })] IChannel channel = null)
         {
-            await base.AddAsync(user, option);
-        }
-
-        [Command(SocialMediaCommand + "delete", RunMode = RunMode.Async), Alias(SocialMediaCommand + "del", SocialMediaCommand + "remove")]
-        public override async Task DeleteAsync(string user)
-        {
-            await base.DeleteAsync(user);
-        }
-
-        [Command(SocialMediaCommand + "get", RunMode = RunMode.Async), Alias(SocialMediaCommand)]
-        public override async Task GetAsync(string user)
-        {
-            await base.GetAsync(user);
-        }
-
-        [Command(SocialMediaCommand + "list", RunMode = RunMode.Async), Alias(SocialMediaCommand + "all")]
-        public override async Task ListAsync()
-        {
-            await base.ListAsync();
-        }
-
-        [Command(SocialMediaCommand + "update", RunMode = RunMode.Async), Alias(SocialMediaCommand + "latest")]
-        public override async Task UpdateAsync()
-        {
-            await base.UpdateAsync();
-        }
-
-        [Command(SocialMediaCommand + "?", RunMode = RunMode.Async), Alias(SocialMediaCommand + "howto", SocialMediaCommand)]
-        public override async Task HowToUseAsync()
-        {
-            var embed = HowToText(SocialMediaCommand);
-            await SendMessage(embed);
+            return base.HandleOptions(option, user, channel);
         }
     }
 }

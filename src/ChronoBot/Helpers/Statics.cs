@@ -14,7 +14,6 @@ namespace ChronoBot.Helpers
         public static string Username => Config["Username"];
         public static IConfiguration Config { get; set; }
         public static bool Debug => bool.TryParse(Config["Debug"], out bool debug) && debug;
-        public static string Prefix => Config["Prefix"];
         public static ulong DebugGuildId => ulong.TryParse(Config["IDs:Guild"], out ulong guildId) ? guildId : 0;
         public static ulong DebugChannelId => ulong.TryParse(Config["IDs:TextChannel"], out ulong channelId) ? channelId : 0;
         public static ulong DebugLogsChannelId => ulong.TryParse(Config["IDs:LogTextChannel"], out ulong channelId) ? channelId : 0;
@@ -31,6 +30,7 @@ namespace ChronoBot.Helpers
         public static string TwitchClientId => "Tokens:Twitch:ClientID";
         public static string TwitchSecret => "Tokens:Twitch:Secret";
         public static string TwitchAccessToken => "Tokens:Twitch:AccessToken";
+        public static string TwitchRefreshToken => "Tokens:Twitch:RefreshToken";
 
         public static string RpsWinImage => "Images:Rps:Win";
         public static string RpsLoseImage => "Images:Rps:Lose";

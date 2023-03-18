@@ -1,7 +1,10 @@
 ﻿using ChronoBot.Common.Systems;
+using ChronoBot.Helpers;
 using ChronoBot.Utilities.Games;
 using ChronoBot.Utilities.SocialMedias;
 using ChronoBot.Utilities.Tools;
+using Discord.Interactions;
+using Discord.WebSocket;
 using Google.Apis.YouTube.v3;
 using Microsoft.Extensions.DependencyInjection;
 using TweetSharp;
@@ -10,18 +13,31 @@ namespace ChronoBot.Services
 {
     public static class ConfigureServices
     {
-        public static void RegisterServices(IServiceCollection services)
+        public static ServiceProvider RegisterServices()
         {
-            services.AddHostedService<CommandHandler>()
+            return new ServiceCollection()
+                .AddBaseServiceCollection()
                 .AddToolServiceCollection()
                 .AddSocialMediaServiceCollection()
-                .AddGamesServiceCollection();
+                .AddGamesServiceCollection()
+                .BuildServiceProvider();
+        }
+
+        private static IServiceCollection AddBaseServiceCollection(this IServiceCollection services)
+        {
+            return services
+                .AddSingleton(Statics.Config)
+                .AddSingleton<DiscordSocketClient>()
+                .AddSingleton(x => new InteractionService(x.GetRequiredService<DiscordSocketClient>()))
+                .AddSingleton<CommandHandler>();
         }
 
         private static IServiceCollection AddToolServiceCollection(this IServiceCollection services)
         {
             return services
-                .AddSingleton<Calculator>();
+                .AddSingleton<Calculator>()
+                .AddSingleton<ReminderFileSystem>()
+                .AddSingleton<Reminder>();
         }
 
         private static IServiceCollection AddSocialMediaServiceCollection(this IServiceCollection services)
