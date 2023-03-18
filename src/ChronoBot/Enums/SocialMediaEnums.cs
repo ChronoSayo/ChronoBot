@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace ChronoBot.Enums
+﻿namespace ChronoBot.Enums
 {
     public enum SocialMediaEnum
     {

@@ -36,8 +36,10 @@ namespace ChronoBot.Services
         {
             return services
                 .AddSingleton<Calculator>()
-                .AddSingleton<ReminderFileSystem>()
-                .AddSingleton<Reminder>();
+                .AddSingleton<Deadline>()
+                .AddSingleton<DeadlineFileSystem>()
+                .AddSingleton<Reminder>()
+                .AddSingleton<Countdown>();
         }
 
         private static IServiceCollection AddSocialMediaServiceCollection(this IServiceCollection services)
