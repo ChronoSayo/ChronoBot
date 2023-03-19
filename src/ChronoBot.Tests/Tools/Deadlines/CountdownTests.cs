@@ -83,7 +83,7 @@ namespace ChronoBot.Tests.Tools.Deadline
                 "CountedDown",
                 69);
 
-            Thread.Sleep(3000);
+            Thread.Sleep(1500);
 
             var users = (List<DeadlineUserData>)_fileSystem.Load();
             var user = users.Find(x => x.Id == "TestCountedDown");
