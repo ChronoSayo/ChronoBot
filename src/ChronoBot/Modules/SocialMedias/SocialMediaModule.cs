@@ -32,7 +32,7 @@ namespace ChronoBot.Modules.SocialMedias
         {
             ulong guildId = Context.Guild.Id;
             ulong channelId = Context.Channel.Id;
-            ulong sendToChannel = channel == null ? channelId : channel.Id;
+            ulong sendToChannel = channel?.Id ?? channelId;
             string result;
             switch (option)
             {
@@ -88,7 +88,7 @@ namespace ChronoBot.Modules.SocialMedias
             {
                 ulong guildId = Context.Guild.Id;
                 ulong channelId = Context.Channel.Id;
-                ulong sendToChannel = channel == null ? channelId : channel.Id;  
+                ulong sendToChannel = channel?.Id ?? channelId;  
                 string result = await SocialMedia.AddSocialMediaUser(guildId, channelId, user, sendToChannel);
                 await SendMessage(Client, result, sendToChannel);
             }

@@ -8,11 +8,11 @@ using Xunit;
 
 namespace ChronoBot.Tests.Systems
 {
-    public class ReminderFileSystemTests
+    public class DeadlineFileSystemTests
     {
         private readonly string _path;
 
-        public ReminderFileSystemTests()
+        public DeadlineFileSystemTests()
         {
             _path = Path.Combine(Directory.GetCurrentDirectory(), "Test Files", GetType().Name);
         }
@@ -20,7 +20,7 @@ namespace ChronoBot.Tests.Systems
         [Fact]
         public void SetPath_Test_NoPath_Success()
         {
-            var fileSystem = new ReminderFileSystem();
+            var fileSystem = new DeadlineFileSystem();
 
             Assert.True(Directory.Exists(fileSystem.PathToSaveFile));
 
@@ -29,7 +29,7 @@ namespace ChronoBot.Tests.Systems
         [Fact]
         public void SetPath_Test_WithPath_Success()
         {
-            var fileSystem = new ReminderFileSystem(Path.Combine(_path, "Set Path"));
+            var fileSystem = new DeadlineFileSystem(Path.Combine(_path, "Set Path"));
 
             Assert.True(Directory.Exists(fileSystem.PathToSaveFile));
 
@@ -39,9 +39,9 @@ namespace ChronoBot.Tests.Systems
         [Fact]
         public void Load_Test_SingleFile_Success()
         {
-            var fileSystem = new ReminderFileSystem(Path.Combine(_path, "Load"));
+            var fileSystem = new DeadlineFileSystem(Path.Combine(_path, "Load"));
 
-            List<ReminderUserData> users = fileSystem.Load().Cast<ReminderUserData>().ToList();
+            List<DeadlineUserData> users = fileSystem.Load().Cast<DeadlineUserData>().ToList();
 
             Assert.True(File.Exists(Path.Combine(fileSystem.PathToSaveFile, "123456789.xml")));
             Assert.Equal(2, users.Count);
@@ -51,14 +51,14 @@ namespace ChronoBot.Tests.Systems
         [Fact]
         public void Load_Test_MultipleFiles_Success()
         {
-            var fileSystem = new ReminderFileSystem(Path.Combine(_path, "Load"));
+            var fileSystem = new DeadlineFileSystem(Path.Combine(_path, "Load"));
             var file1 = Path.Combine(fileSystem.PathToSaveFile, "123456789.xml");
             var file2 = Path.Combine(fileSystem.PathToSaveFile, "987654321.xml");
 
             if (File.Exists(file2))
                 File.Delete(file2);
             File.Copy(file1, file2);
-            List<ReminderUserData> users = fileSystem.Load().Cast<ReminderUserData>().ToList();
+            List<DeadlineUserData> users = fileSystem.Load().Cast<DeadlineUserData>().ToList();
 
             Assert.True(File.Exists(file1));
             Assert.True(File.Exists(file2));
@@ -73,14 +73,14 @@ namespace ChronoBot.Tests.Systems
         [Fact]
         public void Load_Test_MultipleFilesWithOneWorking_Success()
         {
-            var fileSystem = new ReminderFileSystem(Path.Combine(_path, "Load"));
+            var fileSystem = new DeadlineFileSystem(Path.Combine(_path, "Load"));
             var file1 = Path.Combine(fileSystem.PathToSaveFile, "123456789.xml");
             var file2 = Path.Combine(fileSystem.PathToSaveFile, "987654321.txt");
 
             if (File.Exists(file2))
                 File.Delete(file2);
             File.Copy(file1, file2);
-            List<ReminderUserData> users = fileSystem.Load().Cast<ReminderUserData>().ToList();
+            List<DeadlineUserData> users = fileSystem.Load().Cast<DeadlineUserData>().ToList();
 
             Assert.True(File.Exists(file1));
             Assert.True(File.Exists(file2));
@@ -93,9 +93,9 @@ namespace ChronoBot.Tests.Systems
         [Fact]
         public void Load_Test_Fail()
         {
-            var fileSystem = new ReminderFileSystem(Path.Combine(_path, "Load Fail"));
+            var fileSystem = new DeadlineFileSystem(Path.Combine(_path, "Load Fail"));
 
-            List<ReminderUserData> users = fileSystem.Load().Cast<ReminderUserData>().ToList();
+            List<DeadlineUserData> users = fileSystem.Load().Cast<DeadlineUserData>().ToList();
 
             Assert.True(File.Exists(Path.Combine(fileSystem.PathToSaveFile, "fail.xml")));
             Assert.Empty(users);
@@ -107,7 +107,7 @@ namespace ChronoBot.Tests.Systems
             var tuple = SetUpSaveFileTests();
             var fileSystem = tuple.Item1;
             var file = tuple.Item2;
-            List<ReminderUserData> saveUsers = new List<ReminderUserData>()
+            List<DeadlineUserData> saveUsers = new List<DeadlineUserData>()
             {
                 new()
                 {
@@ -129,12 +129,12 @@ namespace ChronoBot.Tests.Systems
             };
 
             bool ok = false;
-            foreach (ReminderUserData data in saveUsers)
+            foreach (DeadlineUserData data in saveUsers)
             {
                 ok |= fileSystem.Save(data);
                 ok |= fileSystem.UpdateFile(data);
             }
-            List<ReminderUserData> users = fileSystem.Load().Cast<ReminderUserData>().ToList();
+            List<DeadlineUserData> users = fileSystem.Load().Cast<DeadlineUserData>().ToList();
 
             Assert.True(File.Exists(file));
             Assert.True(ok);
@@ -149,7 +149,7 @@ namespace ChronoBot.Tests.Systems
             var tuple = SetUpSaveFileTests();
             var fileSystem = tuple.Item1;
             var file = tuple.Item2;
-            ReminderUserData user = new ReminderUserData();
+            DeadlineUserData user = new DeadlineUserData();
 
             bool ok = fileSystem.Save(user);
 
@@ -163,7 +163,7 @@ namespace ChronoBot.Tests.Systems
             var tuple = SetUpCopyOfFileTests("Update");
             var fileSystem = tuple.Item1;
             var file = tuple.Item2;
-            List<ReminderUserData> users = fileSystem.Load().Cast<ReminderUserData>().ToList();
+            List<DeadlineUserData> users = fileSystem.Load().Cast<DeadlineUserData>().ToList();
 
             users[0].UserId = 1;
             bool ok = fileSystem.UpdateFile(users[0]);
@@ -179,7 +179,7 @@ namespace ChronoBot.Tests.Systems
             var tuple = SetUpCopyOfFileTests("Update");
             var fileSystem = tuple.Item1;
             var file = tuple.Item2;
-            List<ReminderUserData> users = fileSystem.Load().Cast<ReminderUserData>().ToList();
+            List<DeadlineUserData> users = fileSystem.Load().Cast<DeadlineUserData>().ToList();
 
             users[0].GuildId = 2;
             bool ok = fileSystem.UpdateFile(users[0]);
@@ -196,10 +196,10 @@ namespace ChronoBot.Tests.Systems
             var tuple = SetUpCopyOfFileTests("Delete");
             var fileSystem = tuple.Item1;
             var file = tuple.Item2;
-            List<ReminderUserData> users = fileSystem.Load().Cast<ReminderUserData>().ToList();
+            List<DeadlineUserData> users = fileSystem.Load().Cast<DeadlineUserData>().ToList();
 
             bool ok = fileSystem.DeleteInFile(users[0]);
-            users = fileSystem.Load().Cast<ReminderUserData>().ToList();
+            users = fileSystem.Load().Cast<DeadlineUserData>().ToList();
 
             Assert.True(File.Exists(file));
             Assert.True(ok);
@@ -213,7 +213,7 @@ namespace ChronoBot.Tests.Systems
             var fileSystem = tuple.Item1;
             var file = tuple.Item2;
 
-            bool ok = fileSystem.DeleteInFile(new ReminderUserData { GuildId = 123456789, UserId = 1, Id = "Fail"});
+            bool ok = fileSystem.DeleteInFile(new DeadlineUserData { GuildId = 123456789, UserId = 1, Id = "Fail" });
 
             Assert.True(File.Exists(file));
             Assert.False(ok);
@@ -224,7 +224,7 @@ namespace ChronoBot.Tests.Systems
             var tuple = SetUpCopyOfFileTests("Delete");
             var fileSystem = tuple.Item1;
             var file = tuple.Item2;
-            List<ReminderUserData> users = fileSystem.Load().Cast<ReminderUserData>().ToList();
+            List<DeadlineUserData> users = fileSystem.Load().Cast<DeadlineUserData>().ToList();
 
             users[0].GuildId = 16;
             bool ok = fileSystem.DeleteInFile(users[0]);
@@ -233,30 +233,30 @@ namespace ChronoBot.Tests.Systems
             Assert.False(ok);
         }
 
-        private Tuple<ReminderFileSystem, string> SetUpSaveFileTests()
+        private Tuple<DeadlineFileSystem, string> SetUpSaveFileTests()
         {
             var fileSystem =
-                new ReminderFileSystem(Path.Combine(_path, "Save"));
+                new DeadlineFileSystem(Path.Combine(_path, "Save"));
             string file = Path.Combine(fileSystem.PathToSaveFile, "987654321.xml");
             if (File.Exists(file))
                 File.Delete(file);
 
-            return new Tuple<ReminderFileSystem, string>(fileSystem, file);
+            return new Tuple<DeadlineFileSystem, string>(fileSystem, file);
         }
-        private Tuple<ReminderFileSystem, string> SetUpCopyOfFileTests(string folderName)
+        private Tuple<DeadlineFileSystem, string> SetUpCopyOfFileTests(string folderName)
         {
             var srcFile = Path.Combine(_path, "Load", "123456789.xml");
             var updatePath = Path.Combine(_path, folderName);
             if (Directory.Exists(updatePath))
                 Directory.Delete(updatePath, true);
-            var fileSystem = new ReminderFileSystem(updatePath);
+            var fileSystem = new DeadlineFileSystem(updatePath);
             File.Copy(srcFile, Path.Combine(fileSystem.PathToSaveFile, "123456789.xml"));
             var file = Path.Combine(_path, folderName, "123456789.xml");
 
-            return new Tuple<ReminderFileSystem, string>(fileSystem, file);
+            return new Tuple<DeadlineFileSystem, string>(fileSystem, file);
         }
 
-        private void EqualUser1(ReminderUserData ud, string username = "Reminder1", ulong userId = 69, 
+        private void EqualUser1(DeadlineUserData ud, string username = "Reminder1", ulong userId = 69,
             ulong channelId = 4, ulong guildId = 123456789, string id = "Remind message 1")
         {
             Assert.Equal(username.ToString(), ud.Name);
@@ -265,7 +265,7 @@ namespace ChronoBot.Tests.Systems
             Assert.Equal((double)guildId, ud.GuildId);
         }
 
-        private void EqualUser2(ReminderUserData ud, string username = "Reminder2", ulong userId = 420, 
+        private void EqualUser2(DeadlineUserData ud, string username = "Reminder2", ulong userId = 420,
             ulong channelId = 4, ulong guildId = 123456789, string id = "Remind message 2")
         {
             EqualUser1(ud, username, userId, channelId, guildId);

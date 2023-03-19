@@ -41,8 +41,8 @@ namespace ChronoBot.Tests.SocialMedias
         [Fact]
         public void ListSocialMedias_Test_Success()
         {
-            var twitter = LoadYouTubeService();
-            var result = twitter.ListSavedSocialMediaUsers(123456789, SocialMediaEnum.YouTube).GetAwaiter().GetResult();
+            var youtube = LoadYouTubeService();
+            var result = youtube.ListSavedSocialMediaUsers(123456789, SocialMediaEnum.YouTube).GetAwaiter().GetResult();
             
             Assert.Equal("■ YouTuber1 \n■ YouTuber2 \n■ YouTuber3 \n", result);
         }
@@ -50,9 +50,9 @@ namespace ChronoBot.Tests.SocialMedias
         [Fact]
         public void DeleteYouTube_Test_Success()
         {
-            var twitter = LoadCopyYouTubeService(out var fileSystem);
+            var youtube = LoadCopyYouTubeService(out var fileSystem);
             
-            string result = twitter.DeleteSocialMediaUser(123456789, "YouTuber2", SocialMediaEnum.YouTube);
+            string result = youtube.DeleteSocialMediaUser(123456789, "YouTuber2", SocialMediaEnum.YouTube);
             var users = (List<SocialMediaUserData>)fileSystem.Load();
             users.RemoveAll(x => x.SocialMedia != SocialMediaEnum.YouTube);
 

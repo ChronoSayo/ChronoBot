@@ -9,6 +9,7 @@ using ChronoBot.Common.UserDatas;
 using System.Xml.Linq;
 using ChronoBot.Enums;
 using ChronoBot.Interfaces;
+using ChronoBot.Utilities.SocialMedias;
 
 namespace ChronoBot.Common.Systems
 {
@@ -134,6 +135,7 @@ namespace ChronoBot.Common.Systems
                     user.Id = e.Attribute("ID")?.Value;
                     user.Deadline = DateTime.Parse(e.Attribute("Deadline")?.Value ?? string.Empty);
                     user.UserId = ulong.Parse(e.Attribute("UserID")?.Value ?? string.Empty);
+                    user.DeadlineType = deadlineType;
                     ud.Add(user);
                 }
             }
@@ -151,8 +153,7 @@ namespace ChronoBot.Common.Systems
 
             var xml = XDocument.Load(guildPath);
             List<DeadlineUserData> users = new List<DeadlineUserData>();
-            users.AddRange(CollectUserData(new Dictionary<XDocument, ulong> { { xml, deadlineUserData.GuildId } }, DeadlineEnum.Reminder));
-            users.AddRange(CollectUserData(new Dictionary<XDocument, ulong> { { xml, deadlineUserData.GuildId } }, DeadlineEnum.Countdown));
+            users.AddRange(CollectUserData(new Dictionary<XDocument, ulong> { { xml, deadlineUserData.GuildId } }, deadlineUserData.DeadlineType));
             bool updated = false;
             foreach (DeadlineUserData ud in users)
             {
@@ -200,7 +201,7 @@ namespace ChronoBot.Common.Systems
             XDocument xml = XDocument.Load(guildPath);
             List<DeadlineUserData> users = new List<DeadlineUserData>();
             users.AddRange(CollectUserData(new Dictionary<XDocument, ulong> { { xml, deadlineUserData.GuildId } }, deadlineUserData.DeadlineType));
-            bool remove = true;
+            bool remove = false;
             foreach (DeadlineUserData ud in users)
             {
                 if (ud.Id != deadlineUserData.Id && ud.UserId != deadlineUserData.UserId)
@@ -209,11 +210,11 @@ namespace ChronoBot.Common.Systems
                     .Descendants(ud.DeadlineType.ToString())
                     .Descendants("User").Where(x => x.Attribute("ID")?.Value == ud.Id && x.Attribute("UserID")?.Value == ud.UserId.ToString())
                     .Remove();
-                remove = false;
+                remove = true;
                 break;
             }
 
-            if (remove)
+            if (!remove)
                 return false;
 
             xml.Save(guildPath);
