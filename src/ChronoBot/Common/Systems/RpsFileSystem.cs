@@ -268,18 +268,18 @@ namespace ChronoBot.Common.Systems
             XDocument xml = XDocument.Load(guildPath);
             List<RpsUserData> users = new List<RpsUserData>();
             users.AddRange(CollectUserData(new Dictionary<XDocument, ulong> { { xml, rpsUserData.GuildId } }));
-            bool remove = true;
+            bool remove = false;
             foreach (RpsUserData ud in users)
             {
                 if (ud.UserId != rpsUserData.UserId)
                     continue;
                 xml.Descendants("Service").Descendants(ElementRoot).Descendants("User").Where(x =>
                     x.Attribute(_attributeNames.ElementAt(0))?.Value == ud.UserId.ToString()).Remove();
-                remove = false;
+                remove = true;
                 break;
             }
 
-            if (remove)
+            if (!remove)
                 return false;
 
             xml.Save(guildPath);

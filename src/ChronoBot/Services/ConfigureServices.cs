@@ -3,6 +3,7 @@ using ChronoBot.Helpers;
 using ChronoBot.Utilities.Games;
 using ChronoBot.Utilities.SocialMedias;
 using ChronoBot.Utilities.Tools;
+using ChronoBot.Utilities.Tools.Deadlines;
 using Discord.Interactions;
 using Discord.WebSocket;
 using Google.Apis.YouTube.v3;
@@ -36,8 +37,15 @@ namespace ChronoBot.Services
         {
             return services
                 .AddSingleton<Calculator>()
-                .AddSingleton<ReminderFileSystem>()
-                .AddSingleton<Reminder>();
+                .AddDeadlineServiceCollection();
+        }
+        private static IServiceCollection AddDeadlineServiceCollection(this IServiceCollection services)
+        {
+            return services
+                .AddSingleton<Deadline>()
+                .AddSingleton<DeadlineFileSystem>()
+                .AddSingleton<Reminder>()
+                .AddSingleton<Countdown>();
         }
 
         private static IServiceCollection AddSocialMediaServiceCollection(this IServiceCollection services)
