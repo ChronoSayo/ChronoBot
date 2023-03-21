@@ -29,7 +29,14 @@ namespace ChronoTwitch
 
             Settings.ClientId = clientId;
             Settings.Secret = secret;
-            Settings.AccessToken = await _accessToken.GetAccessTokenAsync() ?? accessToken;   
+            try
+            {
+                Settings.AccessToken = await _accessToken.GetAccessTokenAsync();
+            }
+            catch
+            {
+                Settings.AccessToken = accessToken;
+            }
         }
 
         public virtual async Task<string> LoginName(string name)

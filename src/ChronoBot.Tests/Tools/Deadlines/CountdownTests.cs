@@ -1,51 +1,43 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Threading;
+using ChronoBot.Common.Systems;
+using ChronoBot.Common.UserDatas;
+using ChronoBot.Utilities.Tools.Deadlines;
 using Discord.WebSocket;
 using Moq;
 using Xunit;
-using ChronoBot.Common.Systems;
-using System.IO;
-using System.Threading;
-using ChronoBot.Common.UserDatas;
-using ChronoBot.Utilities.Tools.Deadlines;
 
-namespace ChronoBot.Tests.Tools.Deadline
+namespace ChronoBot.Tests.Tools.Deadlines
 {
     public class CountdownTests
     {
-        private readonly Countdown _countdown;
-        private readonly DeadlineFileSystem _fileSystem;
         private const ulong DefaultGuildId = 234567891;
 
         public CountdownTests()
         {
-            var mockClient = new Mock<DiscordSocketClient>(MockBehavior.Loose);
-            _fileSystem = new DeadlineFileSystem(Path.Combine(Directory.GetCurrentDirectory(), "Test Files", GetType().Name));
-            _countdown = new Countdown(mockClient.Object, _fileSystem, new List<DeadlineUserData>());
-            if (!File.Exists(Path.Join(_fileSystem.PathToSaveFile, GetType().Name + DefaultGuildId + ".xml")))
-                return;
-
-            File.Delete(Path.Join(_fileSystem.PathToSaveFile, GetType().Name + DefaultGuildId + ".xml"));
-            _fileSystem = new DeadlineFileSystem(Path.Combine(Directory.GetCurrentDirectory(), "Test Files", GetType().Name));
-            _countdown = new Countdown(mockClient.Object, _fileSystem, new List<DeadlineUserData>());
         }
 
         [Fact]
         public void Countdown_SetCountdown_Success()
         {
+            ulong guildId = 789;
+            var entry = CreateCountdownEntry(guildId);
+            var countdown = entry.Item1;
+            var fileSystem = entry.Item2;
             var tomorrow = DateTime.Now.AddDays(1);
-            _countdown.SetDeadline("TestCountdown", tomorrow, DefaultGuildId,
-            DefaultGuildId, "Test", 420);
 
-            var users = (List<DeadlineUserData>)_fileSystem.Load();
+            countdown.SetDeadline("TestCountdown", tomorrow, guildId,
+            guildId, "Test", 420);
+
+            var users = (List<DeadlineUserData>)fileSystem.Load();
             var user = users.Find(x => x.Id == "TestCountdown");
 
-            Assert.True(user.Name == "Test");
+            Assert.True(user is { Name: "Test" });
             Assert.True(user.Deadline.Day == tomorrow.Day);
-            Assert.True(user.Deadline.Hour == tomorrow.Hour);
-            Assert.True(user.Deadline.Minute == tomorrow.Minute);
-            Assert.True(user.GuildId == DefaultGuildId);
-            Assert.True(user.ChannelId == DefaultGuildId);
+            Assert.True(user.GuildId == guildId);
+            Assert.True(user.ChannelId == guildId);
             Assert.True(user.Id == "TestCountdown");
             Assert.True(user.UserId == 420);
         }
@@ -53,42 +45,64 @@ namespace ChronoBot.Tests.Tools.Deadline
         [Fact]
         public void Countdown_CountingDown_Success()
         {
-            var tomorrow = DateTime.Now.AddDays(1);
-            var user = _countdown.SetDeadline("TestCountingDown",
-                tomorrow,
-                DefaultGuildId,
-                DefaultGuildId,
+            ulong guildId = 456;
+            var entry = CreateCountdownEntry(guildId);
+            var countdown = entry.Item1;
+            var future = DateTime.Now.AddDays(5);
+            var user = countdown.SetDeadline("TestCountingDown",
+                future,
+                guildId,
+                guildId,
                 "CountingDown",
                 69);
 
-            Thread.Sleep(1000);
+            Thread.Sleep(2000);
 
             Assert.True(user.Name == "CountingDown");
-            Assert.True(user.Deadline.Day == tomorrow.Day);
-            Assert.True(user.Deadline.Hour == tomorrow.Hour);
-            Assert.True(user.Deadline.Minute == tomorrow.Minute);
-            Assert.True(user.GuildId == DefaultGuildId);
-            Assert.True(user.ChannelId == DefaultGuildId);
-            Assert.True(user.Id.Contains("€"));
+            Assert.True(user.Deadline.Day == future.Day);
+            Assert.True(user.Deadline.Hour == future.Hour);
+            Assert.True(user.Deadline.Minute == future.Minute);
+            Assert.True(user.GuildId == guildId);
+            Assert.True(user.ChannelId == guildId);
+            Assert.Contains("€", user.Id);
             Assert.True(user.UserId == 69);
         }
 
         [Fact]
         public void Countdown_CountedDown_Success()
         {
-            _countdown.SetDeadline("TestCountedDown",
+            ulong guildId = 123;
+            var entry = CreateCountdownEntry(guildId);
+            var countdown = entry.Item1;
+            var fileSystem = entry.Item2;
+            countdown.SetDeadline("TestCountedDown",
                 DateTime.Now.AddSeconds(1),
                 DefaultGuildId,
-                DefaultGuildId,
+                guildId,
                 "CountedDown",
                 69);
 
             Thread.Sleep(1500);
 
-            var users = (List<DeadlineUserData>)_fileSystem.Load();
+            var users = (List<DeadlineUserData>)fileSystem.Load();
             var user = users.Find(x => x.Id == "TestCountedDown");
 
             Assert.Null(user);
+        }
+
+        private Tuple<Countdown, DeadlineFileSystem> CreateCountdownEntry(ulong guildId)
+        {
+            var mockClient = new Mock<DiscordSocketClient>(MockBehavior.Loose);
+            var fileSystem = new DeadlineFileSystem(Path.Combine(Directory.GetCurrentDirectory(), "Test Files", GetType().Name));
+            var countdown = new Countdown(mockClient.Object, fileSystem, new List<DeadlineUserData>());
+            if (!File.Exists(Path.Join(fileSystem.PathToSaveFile, GetType().Name + guildId + ".xml")))
+                return new Tuple<Countdown, DeadlineFileSystem>(countdown, fileSystem);
+
+            File.Delete(Path.Join(fileSystem.PathToSaveFile, GetType().Name + guildId + ".xml"));
+            fileSystem = new DeadlineFileSystem(Path.Combine(Directory.GetCurrentDirectory(), "Test Files", GetType().Name));
+            countdown = new Countdown(mockClient.Object, fileSystem, new List<DeadlineUserData>());
+
+            return new Tuple<Countdown, DeadlineFileSystem>(countdown, fileSystem);
         }
     }
 }
