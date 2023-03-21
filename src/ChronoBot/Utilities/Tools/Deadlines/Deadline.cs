@@ -45,6 +45,28 @@ namespace ChronoBot.Utilities.Tools.Deadlines
             return null;
         }
 
+        public virtual List<DeadlineUserData> GetDeadlines(ulong guildId, ulong channelId, ulong userId)
+        {
+            return Users.FindAll(x => x.GuildId == guildId && x.ChannelId == channelId && x.UserId == userId);
+        }
+
+        public virtual List<DeadlineUserData> ListDeadlines(ulong guildId, ulong channelId, ulong userId)
+        {
+            return Users.FindAll(x => x.GuildId == guildId && x.ChannelId == channelId && x.UserId == userId);
+        }
+
+        public virtual DeadlineUserData DeleteDeadline(ulong guildId, ulong channelId, ulong userId)
+        {
+            var user = Users.Find(x => x.GuildId == guildId && x.ChannelId == channelId && x.UserId == userId);
+            if (user == null) 
+                return null;
+
+            bool ok = FileSystem.DeleteInFile(user);
+            if (ok)
+                Users.Remove(user);
+            return user;
+        }
+
         protected virtual DeadlineUserData CreateDeadlineUserData(string message, DateTime dateTime, ulong guildId, 
             ulong channelId, string user, ulong userId, DeadlineEnum deadlineType)
         {

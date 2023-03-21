@@ -12,7 +12,7 @@ namespace ChronoBot.Utilities.Tools.Deadlines
 {
     public sealed class Countdown : Deadline
     {
-        private const char Key = '€';
+        public static char Key = '€';
 
         public Countdown(DiscordSocketClient client, DeadlineFileSystem fileSystem, IEnumerable<DeadlineUserData> users) :
             base(client, fileSystem, users)
@@ -25,6 +25,8 @@ namespace ChronoBot.Utilities.Tools.Deadlines
         {
             return CreateDeadlineUserData(message, dateTime, guildId, channelId, user, userId, DeadlineEnum.Countdown);
         }
+
+        override 
 
         protected override async void DeadlineCheck(object sender, ElapsedEventArgs e)
         {
