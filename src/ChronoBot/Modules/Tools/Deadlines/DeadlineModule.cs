@@ -16,7 +16,7 @@ namespace ChronoBot.Modules.Tools.Deadlines
         protected Deadline Deadline;
         protected DeadlineEnum DeadlineType;
 
-        public DeadlineModule(DiscordSocketClient client, Countdown countdown)
+        public DeadlineModule(DiscordSocketClient client, Deadline deadline)
         {
             Client = client;
         }
