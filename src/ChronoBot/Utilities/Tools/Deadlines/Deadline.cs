@@ -7,6 +7,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Timers;
 using ChronoBot.Enums;
+using Discord;
+using Google.Apis.YouTube.v3.Data;
 
 namespace ChronoBot.Utilities.Tools.Deadlines
 {
@@ -45,26 +47,93 @@ namespace ChronoBot.Utilities.Tools.Deadlines
             return null;
         }
 
-        public virtual List<DeadlineUserData> GetDeadlines(ulong guildId, ulong channelId, ulong userId)
+        public virtual string GetDeadlines(ulong guildId, ulong channelId, ulong userId, int num, string username, string channelName, out Embed embed)
         {
-            return Users.FindAll(x => x.GuildId == guildId && x.ChannelId == channelId && x.UserId == userId);
+            embed = null;
+            var getEntries = Users.FindAll(x => x.GuildId == guildId && x.ChannelId == channelId && x.UserId == userId);
+
+            if (getEntries.Count == 0)
+                return $"Nothing found in {channelName}.";
+            int i = num - 1;
+            if (i >= getEntries.Count)
+                return $"Entry number {num} not found.";
+            
+            var ud = getEntries[i];
+            string deadlineType = ud.DeadlineType.ToString().ToUpper();
+            string message = $"\"{ud.Id}\"";
+
+            if (ud.DeadlineType == DeadlineEnum.Countdown && message.Contains(Countdown.Key))
+            {
+                string daysLeft = message.Split(Countdown.Key)[^1];
+                message = message.Replace($"{Countdown.Key}{daysLeft}", "");
+            }
+
+            embed = new EmbedBuilder()
+                .WithAuthor(username)
+                .WithDescription(message)
+                .WithTitle(deadlineType)
+                .WithColor(Color.Red)
+                .Build();
+
+            return "ok";
         }
 
-        public virtual List<DeadlineUserData> ListDeadlines(ulong guildId, ulong channelId, ulong userId)
+        public virtual string ListDeadlines(ulong guildId, ulong channelId, ulong userId, string username, string channelName, out Embed embed)
         {
-            return Users.FindAll(x => x.GuildId == guildId && x.ChannelId == channelId && x.UserId == userId);
+            embed = null;
+            var getEntries = Users.FindAll(x => x.GuildId == guildId && x.ChannelId == channelId && x.UserId == userId);
+            if (getEntries.Count == 0)
+                return $"Nothing found in {channelName}.";
+
+            string deadlineType = getEntries[0].DeadlineType.ToString().ToUpper();
+            string message = string.Empty;
+            for (int i = 0; i < getEntries.Count; i++)
+            {
+                var ud = getEntries[i];
+                message += $"{i + 1}. \"{ud.Id}\" - {ud.Deadline} \n";
+            }
+            message = message.TrimEnd();
+
+            embed = new EmbedBuilder()
+                .WithAuthor(username)
+                .WithDescription(message)
+                .WithTitle(deadlineType)
+                .WithColor(Color.Green)
+                .Build();
+
+            return "ok";
         }
 
-        public virtual DeadlineUserData DeleteDeadline(ulong guildId, ulong channelId, ulong userId)
+        public virtual string DeleteDeadline(ulong guildId, ulong channelId, ulong userId, int num, string channelName)
         {
-            var user = Users.Find(x => x.GuildId == guildId && x.ChannelId == channelId && x.UserId == userId);
-            if (user == null) 
-                return null;
+            var getEntries = Users.FindAll(x => x.GuildId == guildId && x.ChannelId == channelId && x.UserId == userId);
 
-            bool ok = FileSystem.DeleteInFile(user);
-            if (ok)
-                Users.Remove(user);
-            return user;
+            if (getEntries.Count == 0)
+                return $"Nothing found in {channelName}.";
+            int i = num - 1;
+            return i >= getEntries.Count ? $"Entry number {num} not found." : $"Deleted entry number {num}.";
+        }
+
+        public virtual string DeleteAllInChannelDeadline(ulong guildId, ulong channelId, ulong userId, string channelName)
+        {
+            var getEntries = Users.FindAll(x => x.GuildId == guildId && x.ChannelId == channelId && x.UserId == userId);
+
+            if (getEntries.Count == 0)
+                return $"Nothing found in {channelName}.";
+
+            string type = getEntries[0].DeadlineType.ToString().ToLower();
+            return $"All {type}s have been deleted from {channelName}.";
+        }
+
+        public virtual string DeleteAllInGuildDeadline(ulong guildId, ulong userId, string guildName)
+        {
+            var getEntries = Users.FindAll(x => x.GuildId == guildId && x.UserId == userId);
+
+            if (getEntries.Count == 0)
+                return $"Nothing found in {guildName}.";
+
+            string type = getEntries[0].DeadlineType.ToString().ToLower();
+            return $"All {type}s have been deleted from {guildName}.";
         }
 
         protected virtual DeadlineUserData CreateDeadlineUserData(string message, DateTime dateTime, ulong guildId, 

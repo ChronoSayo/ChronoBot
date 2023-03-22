@@ -26,8 +26,6 @@ namespace ChronoBot.Utilities.Tools.Deadlines
             return CreateDeadlineUserData(message, dateTime, guildId, channelId, user, userId, DeadlineEnum.Countdown);
         }
 
-        override 
-
         protected override async void DeadlineCheck(object sender, ElapsedEventArgs e)
         {
             DateTime now = DateTime.Now;

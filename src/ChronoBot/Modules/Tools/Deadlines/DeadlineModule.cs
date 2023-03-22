@@ -16,7 +16,7 @@ namespace ChronoBot.Modules.Tools.Deadlines
         protected Deadline Deadline;
         protected DeadlineEnum DeadlineType;
 
-        public DeadlineModule(DiscordSocketClient client)
+        public DeadlineModule(DiscordSocketClient client, Countdown countdown)
         {
             Client = client;
         }
@@ -37,65 +37,30 @@ namespace ChronoBot.Modules.Tools.Deadlines
             [ChannelTypes(ChannelType.Text)] IChannel channel = null)
         {
             channel ??= Context.Channel;
-            var getEntries = Deadline.ListDeadlines(Context.Guild.Id, channel.Id, Context.User.Id);
-            string message = $"Nothing found in {channel.Name}.";
-            if (getEntries != null)
+            var result = Deadline.GetDeadlines(Context.Guild.Id, channel.Id, Context.User.Id, num,
+                Context.User.Username, channel.Name, out Embed embed);
+            if (result != "ok")
             {
-                if (getEntries[num] == null)
-                {
-                    await SendMessage(Client, $"Entry number {num} not found.");
-                    return;
-                }
-
-                message = string.Empty;
-                var ud = getEntries[num];
-                string deadlineType = ud.DeadlineType.ToString().ToUpper();
-                message += $"\"{ud.Id}\"";
-
-                if (ud.DeadlineType == DeadlineEnum.Countdown && message.Contains(Countdown.Key))
-                {
-                    string daysLeft = message.Split(Countdown.Key)[^1];
-                    message = message.Replace($"{Countdown.Key}{daysLeft}", "");
-                }
-
-                var embed = new EmbedBuilder()
-                    .WithAuthor(Context.User.Username)
-                    .WithDescription(message)
-                    .WithTitle(deadlineType)
-                    .WithColor(Color.Green)
-                    .Build();
-                await SendMessage(Client, embed);
+                await SendMessage(Client, result);
+                return;
             }
-            else
-                await SendMessage(Client, message);
+
+            await SendMessage(Client, embed);
         }
 
         public virtual async Task ListDeadlinesAsync([Summary("List", "Lists your entries in the specified channel. Default is this channel.")]
             [ChannelTypes(ChannelType.Text)] IChannel channel = null)
         {
             channel ??= Context.Channel;
-            var getEntries = Deadline.ListDeadlines(Context.Guild.Id, channel.Id, Context.User.Id);
-            string message = $"Nothing found in {channel.Name}.";
-            if (getEntries != null)
+            var result = Deadline.ListDeadlines(Context.Guild.Id, channel.Id, Context.User.Id,
+                Context.User.Username, channel.Name, out Embed embed);
+            if (result != "ok")
             {
-                string deadlineType = getEntries[0].DeadlineType.ToString().ToUpper();
-                for (int i = 0; i < getEntries.Count; i++)
-                {
-                    var ud = getEntries[i];
-                    message += $"{i+1}. \"{ud.Id}\" - {ud.Deadline} \n";
-                }
-                message = message.TrimEnd();
-
-                var embed = new EmbedBuilder()
-                    .WithAuthor(Context.User.Username)
-                    .WithDescription(message)
-                    .WithTitle(deadlineType)
-                    .WithColor(Color.Green)
-                    .Build();
-                await SendMessage(Client, embed);
+                await SendMessage(Client, result);
+                return;
             }
-            else
-                await SendMessage(Client, message);
+
+            await SendMessage(Client, embed);
         }
 
         public virtual async Task DeleteDeadlineAsync(
@@ -104,37 +69,26 @@ namespace ChronoBot.Modules.Tools.Deadlines
             [ChannelTypes(ChannelType.Text)] IChannel channel = null)
         {
             channel ??= Context.Channel;
-            var getEntries = Deadline.ListDeadlines(Context.Guild.Id, channel.Id, Context.User.Id);
-            string message = $"Nothing found in {channel.Name}.";
-            if (getEntries != null)
-            {
-                if (getEntries[num] == null)
-                {
-                    await SendMessage(Client, $"Entry number {num} not found.");
-                    return;
-                }
+            var result = Deadline.DeleteDeadline(Context.Guild.Id, channel.Id, Context.User.Id, num, channel.Name);
 
-                message = string.Empty;
-                var ud = getEntries[num];
-                string deadlineType = ud.DeadlineType.ToString().ToUpper();
-                message += $"\"{ud.Id}\"";
+            await SendMessage(Client, result);
+        }
 
-                if (ud.DeadlineType == DeadlineEnum.Countdown && message.Contains(Countdown.Key))
-                {
-                    string daysLeft = message.Split(Countdown.Key)[^1];
-                    message = message.Replace($"{Countdown.Key}{daysLeft}", "");
-                }
+        public virtual async Task DeleteAllInChannelDeadlineAsync(
+            [Summary("Channel", "Lists your entries in the specified channel. Default is this channel.")]
+            [ChannelTypes(ChannelType.Text)] IChannel channel = null)
+        {
+            channel ??= Context.Channel;
+            var result = Deadline.DeleteAllInChannelDeadline(Context.Guild.Id, channel.Id, Context.User.Id, channel.Name);
 
-                var embed = new EmbedBuilder()
-                    .WithAuthor(Context.User.Username)
-                    .WithDescription(message)
-                    .WithTitle(deadlineType)
-                    .WithColor(Color.Red)
-                    .Build();
-                await SendMessage(Client, embed);
-            }
-            else
-                await SendMessage(Client, message);
+            await SendMessage(Client, result);
+        }
+
+        public virtual async Task DeleteAllInGuildDeadlineAsync()
+        {
+            var result = Deadline.DeleteAllInGuildDeadline(Context.Guild.Id, Context.User.Id, Context.User.Username);
+
+            await SendMessage(Client, result);
         }
 
         protected virtual async Task HandleSendMessage(DeadlineUserData ud, string description)
