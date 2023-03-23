@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using System.Timers;
 using ChronoBot.Enums;
 using Discord;
-using Google.Apis.YouTube.v3.Data;
+using Microsoft.Win32.SafeHandles;
 
 namespace ChronoBot.Utilities.Tools.Deadlines
 {
@@ -30,9 +30,11 @@ namespace ChronoBot.Utilities.Tools.Deadlines
                 Interval = 1000
             };
             timer.Elapsed += DeadlineCheck;
+
+            LoadOrCreateFromFile();
         }
 
-        protected virtual void LoadOrCreateFromFile()
+        private void LoadOrCreateFromFile()
         {
             Users = FileSystem.Load().Cast<DeadlineUserData>().ToList();
         }
@@ -44,7 +46,16 @@ namespace ChronoBot.Utilities.Tools.Deadlines
 
         public virtual DeadlineUserData SetDeadline(string message, DateTime dateTime, ulong guildId, ulong channelId, string user, ulong userId)
         {
-            return null;
+            string typeName = (new System.Diagnostics.StackTrace()).GetFrame(1)?.GetMethod()?.Name;
+            DeadlineEnum type = DeadlineEnum.Reminder;
+            foreach (var de in Enum.GetValues(typeof(DeadlineEnum)))
+            {
+                if(typeName != de.ToString())
+                    continue;
+                type = (DeadlineEnum)de;
+            }
+
+            return CreateDeadlineUserData(message, dateTime, guildId, channelId, user, userId, type);
         }
 
         public virtual string GetDeadlines(ulong guildId, ulong channelId, ulong userId, int num, string username, string channelName, out Embed embed)

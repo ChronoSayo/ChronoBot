@@ -59,12 +59,12 @@ namespace ChronoBot.Tests.SocialMedias
                 Directory.Delete(path, true);
             var users = new List<SocialMediaUserData>()
             {
-                new SocialMediaUserData
+                new()
                 {
                     ChannelId = 987654321, GuildId = 123456789, Id = "1", Name = "Test1",
                     SocialMedia = SocialMediaEnum.Twitter
                 },
-                new SocialMediaUserData
+                new()
                 {
                     ChannelId = 123456789, GuildId = 987654321, Id = "2", Name = "Test2",
                     SocialMedia = SocialMediaEnum.Twitch

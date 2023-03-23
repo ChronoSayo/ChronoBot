@@ -17,13 +17,6 @@ namespace ChronoBot.Utilities.Tools.Deadlines
         public Countdown(DiscordSocketClient client, DeadlineFileSystem fileSystem, IEnumerable<DeadlineUserData> users) :
             base(client, fileSystem, users)
         {
-            LoadOrCreateFromFile();
-        }
-
-        public override DeadlineUserData SetDeadline(string message, DateTime dateTime, ulong guildId, ulong channelId, string user,
-            ulong userId)
-        {
-            return CreateDeadlineUserData(message, dateTime, guildId, channelId, user, userId, DeadlineEnum.Countdown);
         }
 
         protected override async void DeadlineCheck(object sender, ElapsedEventArgs e)
