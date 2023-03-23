@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using System.Timers;
 using ChronoBot.Enums;
 using Discord;
-using Microsoft.Win32.SafeHandles;
 
 namespace ChronoBot.Utilities.Tools.Deadlines
 {

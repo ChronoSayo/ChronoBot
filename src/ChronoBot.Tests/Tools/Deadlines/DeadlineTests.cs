@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using ChronoBot.Common.Systems;
 using ChronoBot.Common.UserDatas;
-using ChronoBot.Tests.Fakes;
-using ChronoBot.Utilities.SocialMedias;
 using ChronoBot.Utilities.Tools.Deadlines;
 using Discord;
 using Discord.WebSocket;
