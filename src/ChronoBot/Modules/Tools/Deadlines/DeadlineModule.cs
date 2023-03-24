@@ -27,7 +27,8 @@ namespace ChronoBot.Modules.Tools.Deadlines
                 [ChannelTypes(ChannelType.Text)] IChannel channel = null)
         {
             channel ??= Context.Channel;
-            DeadlineUserData newEntry = Deadline.SetDeadline(message, time, Context.Guild.Id, channel.Id, Context.User.Username, Context.User.Id);
+            DeadlineUserData newEntry = Deadline.SetDeadline(message, time, Context.Guild.Id, channel.Id,
+                Context.User.Username, Context.User.Id, GetDeadlineType());
             await HandleSendMessage(newEntry, $"Created a {newEntry.DeadlineType}.\n{newEntry.Id}");
         }
 
@@ -38,7 +39,7 @@ namespace ChronoBot.Modules.Tools.Deadlines
         {
             channel ??= Context.Channel;
             var result = Deadline.GetDeadlines(Context.Guild.Id, channel.Id, Context.User.Id, num,
-                Context.User.Username, channel.Name, out Embed embed);
+                Context.User.Username, channel.Name, GetDeadlineType(), out Embed embed);
             if (result != "ok")
             {
                 await SendMessage(Client, result);
@@ -53,7 +54,7 @@ namespace ChronoBot.Modules.Tools.Deadlines
         {
             channel ??= Context.Channel;
             var result = Deadline.ListDeadlines(Context.Guild.Id, channel.Id, Context.User.Id,
-                Context.User.Username, channel.Name, out Embed embed);
+                Context.User.Username, channel.Name, GetDeadlineType(), out Embed embed);
             if (result != "ok")
             {
                 await SendMessage(Client, result);
@@ -69,7 +70,7 @@ namespace ChronoBot.Modules.Tools.Deadlines
             [ChannelTypes(ChannelType.Text)] IChannel channel = null)
         {
             channel ??= Context.Channel;
-            var result = Deadline.DeleteDeadline(Context.Guild.Id, channel.Id, Context.User.Id, num, channel.Name);
+            var result = Deadline.DeleteDeadline(Context.Guild.Id, channel.Id, Context.User.Id, num, channel.Name, GetDeadlineType());
 
             await SendMessage(Client, result);
         }
@@ -79,14 +80,14 @@ namespace ChronoBot.Modules.Tools.Deadlines
             [ChannelTypes(ChannelType.Text)] IChannel channel = null)
         {
             channel ??= Context.Channel;
-            var result = Deadline.DeleteAllInChannelDeadline(Context.Guild.Id, channel.Id, Context.User.Id, channel.Name);
+            var result = Deadline.DeleteAllInChannelDeadline(Context.Guild.Id, channel.Id, Context.User.Id, channel.Name, GetDeadlineType());
 
             await SendMessage(Client, result);
         }
 
         public virtual async Task DeleteAllInGuildDeadlineAsync()
         {
-            var result = Deadline.DeleteAllInGuildDeadline(Context.Guild.Id, Context.User.Id, Context.User.Username);
+            var result = Deadline.DeleteAllInGuildDeadline(Context.Guild.Id, Context.User.Id, Context.User.Username, GetDeadlineType());
 
             await SendMessage(Client, result);
         }
@@ -109,6 +110,19 @@ namespace ChronoBot.Modules.Tools.Deadlines
                 .WithFields(new EmbedFieldBuilder { IsInline = true, Name = "Date", Value = ud.Deadline })
                 .WithColor(Color.Green)
                 .Build();
+        }
+
+        private DeadlineEnum GetDeadlineType()
+        {
+            string typeName = (new System.Diagnostics.StackTrace()).GetFrame(1)?.GetMethod()?.Name;
+            DeadlineEnum type = DeadlineEnum.Reminder;
+            foreach (var de in Enum.GetValues(typeof(DeadlineEnum)))
+            {
+                if (typeName != de.ToString())
+                    continue;
+                type = (DeadlineEnum)de;
+            }
+            return type;
         }
     }
 }

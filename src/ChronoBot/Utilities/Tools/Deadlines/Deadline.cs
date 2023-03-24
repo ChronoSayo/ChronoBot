@@ -43,31 +43,25 @@ namespace ChronoBot.Utilities.Tools.Deadlines
             await Task.CompletedTask;
         }
 
-        public virtual DeadlineUserData SetDeadline(string message, DateTime dateTime, ulong guildId, ulong channelId, string user, ulong userId)
+        public virtual DeadlineUserData SetDeadline(string message, DateTime dateTime, ulong guildId, ulong channelId,
+            string user, ulong userId, DeadlineEnum type)
         {
-            string typeName = (new System.Diagnostics.StackTrace()).GetFrame(1)?.GetMethod()?.Name;
-            DeadlineEnum type = DeadlineEnum.Reminder;
-            foreach (var de in Enum.GetValues(typeof(DeadlineEnum)))
-            {
-                if(typeName != de.ToString())
-                    continue;
-                type = (DeadlineEnum)de;
-            }
-
             return CreateDeadlineUserData(message, dateTime, guildId, channelId, user, userId, type);
         }
 
-        public virtual string GetDeadlines(ulong guildId, ulong channelId, ulong userId, int num, string username, string channelName, out Embed embed)
+        public virtual string GetDeadlines(ulong guildId, ulong channelId, ulong userId, int num, string username,
+            string channelName, DeadlineEnum type, out Embed embed)
         {
             embed = null;
-            var getEntries = Users.FindAll(x => x.GuildId == guildId && x.ChannelId == channelId && x.UserId == userId);
+            var getEntries = Users.FindAll(x =>
+                x.GuildId == guildId && x.ChannelId == channelId && x.UserId == userId && x.DeadlineType == type);
 
             if (getEntries.Count == 0)
                 return $"Nothing found in {channelName}.";
             int i = num - 1;
             if (i >= getEntries.Count)
                 return $"Entry number {num} not found.";
-            
+
             var ud = getEntries[i];
             string deadlineType = ud.DeadlineType.ToString().ToUpper();
             string message = $"\"{ud.Id}\"";
@@ -88,10 +82,12 @@ namespace ChronoBot.Utilities.Tools.Deadlines
             return "ok";
         }
 
-        public virtual string ListDeadlines(ulong guildId, ulong channelId, ulong userId, string username, string channelName, out Embed embed)
+        public virtual string ListDeadlines(ulong guildId, ulong channelId, ulong userId, string username,
+            string channelName, DeadlineEnum type, out Embed embed)
         {
             embed = null;
-            var getEntries = Users.FindAll(x => x.GuildId == guildId && x.ChannelId == channelId && x.UserId == userId);
+            var getEntries = Users.FindAll(x =>
+                x.GuildId == guildId && x.ChannelId == channelId && x.UserId == userId && x.DeadlineType == type);
             if (getEntries.Count == 0)
                 return $"Nothing found in {channelName}.";
 
@@ -100,8 +96,9 @@ namespace ChronoBot.Utilities.Tools.Deadlines
             for (int i = 0; i < getEntries.Count; i++)
             {
                 var ud = getEntries[i];
-                message += $"{i + 1}. \"{ud.Id}\" - {ud.Deadline} \n";
+                message += $"{i + 1}. \"{ud.Id}\" - {ud.Deadline}\n";
             }
+
             message = message.TrimEnd();
 
             embed = new EmbedBuilder()
@@ -114,9 +111,10 @@ namespace ChronoBot.Utilities.Tools.Deadlines
             return "ok";
         }
 
-        public virtual string DeleteDeadline(ulong guildId, ulong channelId, ulong userId, int num, string channelName)
+        public virtual string DeleteDeadline(ulong guildId, ulong channelId, ulong userId, int num, string channelName, DeadlineEnum type)
         {
-            var getEntries = Users.FindAll(x => x.GuildId == guildId && x.ChannelId == channelId && x.UserId == userId);
+            var getEntries = Users.FindAll(x =>
+                x.GuildId == guildId && x.ChannelId == channelId && x.UserId == userId && x.DeadlineType == type);
 
             if (getEntries.Count == 0)
                 return $"Nothing found in {channelName}.";
@@ -124,26 +122,27 @@ namespace ChronoBot.Utilities.Tools.Deadlines
             return i >= getEntries.Count ? $"Entry number {num} not found." : $"Deleted entry number {num}.";
         }
 
-        public virtual string DeleteAllInChannelDeadline(ulong guildId, ulong channelId, ulong userId, string channelName)
+        public virtual string DeleteAllInChannelDeadline(ulong guildId, ulong channelId, ulong userId, string channelName, DeadlineEnum type)
         {
-            var getEntries = Users.FindAll(x => x.GuildId == guildId && x.ChannelId == channelId && x.UserId == userId);
+            var getEntries = Users.FindAll(x =>
+                x.GuildId == guildId && x.ChannelId == channelId && x.UserId == userId && x.DeadlineType == type);
 
             if (getEntries.Count == 0)
                 return $"Nothing found in {channelName}.";
 
-            string type = getEntries[0].DeadlineType.ToString().ToLower();
-            return $"All {type}s have been deleted from {channelName}.";
+            string typeName = getEntries[0].DeadlineType.ToString().ToLower();
+            return $"All {typeName}s have been deleted from {channelName}.";
         }
 
-        public virtual string DeleteAllInGuildDeadline(ulong guildId, ulong userId, string guildName)
+        public virtual string DeleteAllInGuildDeadline(ulong guildId, ulong userId, string guildName, DeadlineEnum type)
         {
             var getEntries = Users.FindAll(x => x.GuildId == guildId && x.UserId == userId);
 
             if (getEntries.Count == 0)
                 return $"Nothing found in {guildName}.";
 
-            string type = getEntries[0].DeadlineType.ToString().ToLower();
-            return $"All {type}s have been deleted from {guildName}.";
+            string typeName = getEntries[0].DeadlineType.ToString().ToLower();
+            return $"All {typeName}s have been deleted from {guildName}.";
         }
 
         protected virtual DeadlineUserData CreateDeadlineUserData(string message, DateTime dateTime, ulong guildId, 

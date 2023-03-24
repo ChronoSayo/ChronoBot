@@ -1,5 +1,4 @@
 ﻿using System;
-using System.IO;
 using System.Threading.Tasks;
 using System.Threading;
 using ChronoBot.Helpers;
@@ -9,8 +8,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
-using Discord.Net;
-using System.Linq;
 
 namespace ChronoBot
 {
