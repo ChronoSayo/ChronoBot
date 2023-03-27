@@ -118,8 +118,16 @@ namespace ChronoBot.Utilities.Tools.Deadlines
 
             if (getEntries.Count == 0)
                 return $"Nothing found in {channelName}.";
+
             int i = num - 1;
-            return i >= getEntries.Count ? $"Entry number {num} not found." : $"Deleted entry number {num}.";
+            if (i >= getEntries.Count)
+                return $"Entry number {num} not found.";
+
+            bool ok = FileSystem.DeleteInFile(Users[i]);
+            if(ok) 
+                Users.RemoveAt(i);
+                
+            return ok ? "ok" : "Something went wrong with deleting from file.";
         }
 
         public virtual string DeleteAllInChannelDeadline(ulong guildId, ulong channelId, ulong userId, string channelName, DeadlineEnum type)
@@ -131,6 +139,18 @@ namespace ChronoBot.Utilities.Tools.Deadlines
                 return $"Nothing found in {channelName}.";
 
             string typeName = getEntries[0].DeadlineType.ToString().ToLower();
+
+            List<DeadlineUserData> removeDatas = new List<DeadlineUserData>();
+            foreach (DeadlineUserData ud in getEntries)
+            {
+                bool ok = FileSystem.DeleteInFile(ud);
+                if(ok)
+                    removeDatas.Add(ud);
+            }
+
+            foreach (DeadlineUserData ud in removeDatas)
+                Users.Remove(ud);
+
             return $"All {typeName}s have been deleted from {channelName}.";
         }
 
@@ -141,7 +161,19 @@ namespace ChronoBot.Utilities.Tools.Deadlines
             if (getEntries.Count == 0)
                 return $"Nothing found in {guildName}.";
 
-            string typeName = getEntries[0].DeadlineType.ToString().ToLower();
+            string typeName = getEntries[0].DeadlineType.ToString().ToLower(); 
+            
+            List<DeadlineUserData> removeDatas = new List<DeadlineUserData>();
+            foreach (DeadlineUserData ud in getEntries)
+            {
+                bool ok = FileSystem.DeleteInFile(ud);
+                if (ok)
+                    removeDatas.Add(ud);
+            }
+
+            foreach (DeadlineUserData ud in removeDatas)
+                Users.Remove(ud);
+
             return $"All {typeName}s have been deleted from {guildName}.";
         }
 
