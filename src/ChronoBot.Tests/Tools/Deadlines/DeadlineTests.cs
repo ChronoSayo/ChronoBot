@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 using ChronoBot.Common.Systems;
 using ChronoBot.Common.UserDatas;
 using ChronoBot.Enums;
@@ -51,6 +52,19 @@ namespace ChronoBot.Tests.Tools.Deadlines
             Assert.Equal(embed.Author.Value.ToString(), "Countdown1");
             Assert.Equal(embed.Description, "\"Countdown message 1\"");
             Assert.Equal(embed.Title, "COUNTDOWN");
+        }
+
+        [Fact]
+        public void Countdown_DaysLeft_Success()
+        {
+            var deadline = CreateNewCountdown(out _);
+            var tomorrow = DateTime.Now.AddDays(1);
+            var user = deadline.SetDeadline("TestCountdown", tomorrow, 987654324, 134679,
+                "CountdownUser", 9001, DeadlineEnum.Countdown);
+
+            Thread.Sleep(3000);
+
+            Assert.Equal(user.DaysLeft, 1);
         }
 
         [Fact]

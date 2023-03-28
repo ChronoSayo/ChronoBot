@@ -5,11 +5,10 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using ChronoBot.Common.UserDatas;
 using System.Xml.Linq;
 using ChronoBot.Enums;
 using ChronoBot.Interfaces;
-using ChronoBot.Utilities.SocialMedias;
+using ChronoBot.Common.UserDatas;
 
 namespace ChronoBot.Common.Systems
 {
@@ -43,6 +42,7 @@ namespace ChronoBot.Common.Systems
             string deadline = deadlineUserData.Deadline.ToString(CultureInfo.InvariantCulture);
             string userId = deadlineUserData.UserId.ToString();
             string deadlineType = deadlineUserData.DeadlineType.ToString();
+            string daysLeft = deadlineUserData.DaysLeft.ToString();
 
             XElement user = new XElement("User");
             XAttribute newName = new XAttribute("Name", name);
@@ -51,7 +51,9 @@ namespace ChronoBot.Common.Systems
             XAttribute newDeadline = new XAttribute("Deadline", deadline);
             XAttribute newUserId = new XAttribute("UserID", userId);
             XAttribute newDeadlineType = new XAttribute("DeadlineType", deadlineType);
-            user.Add(newName, newChannelId, newId, newDeadline, newUserId, newDeadlineType);
+            XAttribute newDaysLeft = new XAttribute("DaysLeft", daysLeft);
+
+            user.Add(newName, newChannelId, newId, newDeadline, newUserId, newDeadlineType, newDaysLeft);
 
             XDocument xDoc;
             string guildPath = Path.Combine(PathToSaveFile, guildId + ".xml");
@@ -136,6 +138,7 @@ namespace ChronoBot.Common.Systems
                     user.Deadline = DateTime.Parse(e.Attribute("Deadline")?.Value ?? string.Empty);
                     user.UserId = ulong.Parse(e.Attribute("UserID")?.Value ?? string.Empty);
                     user.DeadlineType = deadlineType;
+                    user.DaysLeft = int.Parse(e.Attribute("DaysLeft")?.Value ?? string.Empty);
                     ud.Add(user);
                 }
             }
@@ -168,6 +171,7 @@ namespace ChronoBot.Common.Systems
                         found.Attributes("ID").First().Value = deadlineUserData.Id;
                         found.Attributes("Deadline").First().Value = deadlineUserData.Deadline.ToShortDateString();
                         found.Attributes("UserID").First().Value = deadlineUserData.UserId.ToString();
+                        found.Attributes("DaysLeft").First().Value = deadlineUserData.DaysLeft.ToString();
                         updated = true;
                         break;
                     }

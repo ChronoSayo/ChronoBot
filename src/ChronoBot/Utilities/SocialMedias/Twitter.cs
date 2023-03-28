@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using ChronoBot.Common.Systems;
-using ChronoBot.Common.UserDatas;
 using ChronoBot.Enums;
 using ChronoBot.Helpers;
 using Discord;
@@ -13,7 +12,7 @@ using Microsoft.Extensions.Configuration;
 using TweetSharp;
 using System.Globalization;
 using Color = Discord.Color;
-
+using ChronoBot.Common.UserDatas;
 
 namespace ChronoBot.Utilities.SocialMedias
 {

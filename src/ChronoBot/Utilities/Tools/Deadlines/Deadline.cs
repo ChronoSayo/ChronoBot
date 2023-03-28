@@ -1,5 +1,4 @@
 ﻿using ChronoBot.Common.Systems;
-using ChronoBot.Common.UserDatas;
 using Discord.WebSocket;
 using System;
 using System.Collections.Generic;
@@ -8,6 +7,7 @@ using System.Threading.Tasks;
 using System.Timers;
 using ChronoBot.Enums;
 using Discord;
+using ChronoBot.Common.UserDatas;
 
 namespace ChronoBot.Utilities.Tools.Deadlines
 {
@@ -22,7 +22,7 @@ namespace ChronoBot.Utilities.Tools.Deadlines
             Client = client;
             FileSystem = fileSystem;
             Users = users.ToList();
-            var timer = new Timer()
+            var timer = new Timer
             {
                 AutoReset = true,
                 Enabled = true,
@@ -65,12 +65,6 @@ namespace ChronoBot.Utilities.Tools.Deadlines
             var ud = getEntries[i];
             string deadlineType = ud.DeadlineType.ToString().ToUpper();
             string message = $"\"{ud.Id}\"";
-
-            if (ud.DeadlineType == DeadlineEnum.Countdown && message.Contains(Countdown.Key))
-            {
-                string daysLeft = message.Split(Countdown.Key)[^1];
-                message = message.Replace($"{Countdown.Key}{daysLeft}", "");
-            }
 
             embed = new EmbedBuilder()
                 .WithAuthor(username)

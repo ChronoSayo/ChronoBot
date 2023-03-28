@@ -80,6 +80,7 @@ namespace ChronoBot.Utilities.SocialMedias
             try
             {
                 isLive = await _api.IsLive(ud.Name);
+                ud.Live = isLive;
             }
             catch(BadScopeException ex)
             {
@@ -121,22 +122,16 @@ namespace ChronoBot.Utilities.SocialMedias
                 try
                 {
                     isLive = await _api.IsLive(user.Name);
+                    user.Live = isLive;
                 }
                 catch (BadScopeException ex)
                 {
                     await Statics.SendMessageToLogChannel(Client, ex.Message);
                 }
-                string oldId = user.Id;
-                if (isLive)
-                {
-                    if(user.Id.Contains("online"))
-                        continue;
-                    user.Id = await GetStreamInfo(user.Name);
-                }
-                else
-                    user.Id = "offline";
 
-                if (user.Id == oldId)
+                if (isLive)
+                    user.Id = await GetStreamInfo(user.Name);
+                else
                     continue;
 
                 Users[i] = user;
@@ -154,7 +149,7 @@ namespace ChronoBot.Utilities.SocialMedias
         {
             string displayName = await _api.DisplayName(name);
             string gameName = await _api.GameName(name);
-            return $"online|{displayName} is playing {gameName}";
+            return $"{displayName} is playing {gameName}";
         }
     }
 }

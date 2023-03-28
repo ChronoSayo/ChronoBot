@@ -6,10 +6,10 @@ using Xunit;
 using ChronoBot.Common.Systems;
 using System.IO;
 using System.Threading;
-using ChronoBot.Common.UserDatas;
 using ChronoBot.Utilities.Tools.Deadlines;
+using ChronoBot.Common.UserDatas;
 
-namespace ChronoBot.Tests.Tools.Deadline
+namespace ChronoBot.Tests.Tools.Deadlines
 {
     public class ReminderTests
     {

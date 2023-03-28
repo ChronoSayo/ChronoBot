@@ -14,5 +14,6 @@ namespace ChronoBot.Common.UserDatas
         public string Id { get; set; }
         public SocialMediaEnum SocialMedia { get; set; }
         public string Options { get; set; }
+        public bool Live { get; set; }
     }
 }

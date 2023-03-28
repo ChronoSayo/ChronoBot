@@ -13,5 +13,6 @@ namespace ChronoBot.Common.UserDatas
         public DateTime Deadline { get; set; }
         public ulong UserId { get; set; }
         public DeadlineEnum DeadlineType { get; set; }
+        public int DaysLeft { get; set; }
     }
 }
