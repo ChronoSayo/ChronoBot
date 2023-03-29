@@ -138,7 +138,15 @@ namespace ChronoBot.Common.Systems
                     user.Deadline = DateTime.Parse(e.Attribute("Deadline")?.Value ?? string.Empty);
                     user.UserId = ulong.Parse(e.Attribute("UserID")?.Value ?? string.Empty);
                     user.DeadlineType = deadlineType;
-                    user.DaysLeft = int.Parse(e.Attribute("DaysLeft")?.Value ?? string.Empty);
+                    try
+                    {
+                        user.DaysLeft = int.Parse(e.Attribute("DaysLeft")?.Value ?? string.Empty);
+                    }
+                    catch
+                    {
+                        //Continue
+                    }
+                    
                     ud.Add(user);
                 }
             }

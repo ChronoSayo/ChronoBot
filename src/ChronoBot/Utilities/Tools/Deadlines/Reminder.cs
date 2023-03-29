@@ -12,8 +12,8 @@ namespace ChronoBot.Utilities.Tools.Deadlines
 {
     public sealed class Reminder : Deadline
     {
-        public Reminder(DiscordSocketClient client, DeadlineFileSystem fileSystem, IEnumerable<DeadlineUserData> users) :
-            base(client, fileSystem, users)
+        public Reminder(DiscordSocketClient client, DeadlineFileSystem fileSystem, IEnumerable<DeadlineUserData> users, int seconds = 60) :
+            base(client, fileSystem, users, seconds)
         {
         }
 

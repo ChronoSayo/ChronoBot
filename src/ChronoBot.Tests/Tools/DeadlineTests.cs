@@ -8,11 +8,10 @@ using ChronoBot.Enums;
 using ChronoBot.Utilities.Tools.Deadlines;
 using Discord;
 using Discord.WebSocket;
-using Google.Apis.YouTube.v3.Data;
 using Moq;
 using Xunit;
 
-namespace ChronoBot.Tests.Tools.Deadlines
+namespace ChronoBot.Tests.Tools
 {
     public class DeadlineTests
     {
@@ -35,8 +34,8 @@ namespace ChronoBot.Tests.Tools.Deadlines
 
             Assert.Equal(user.Id, "TestCountdown");
             Assert.Equal(user.Deadline, tomorrow);
-            Assert.Equal((int) user.GuildId, 987654321);
-            Assert.Equal((int) user.ChannelId, 134679);
+            Assert.Equal((int)user.GuildId, 987654321);
+            Assert.Equal((int)user.ChannelId, 134679);
             Assert.Equal(user.Name, "CountdownUser");
             Assert.Equal((double)user.UserId, 9001);
         }
@@ -48,23 +47,83 @@ namespace ChronoBot.Tests.Tools.Deadlines
             var result = deadline.GetDeadlines(DefaultGuildId, DefaultChannelId, 69, 1,
                 "Countdown1", "ChannelName", DeadlineEnum.Countdown, out Embed embed);
 
-            Assert.Equal(result, "ok");
-            Assert.Equal(embed.Author.Value.ToString(), "Countdown1");
-            Assert.Equal(embed.Description, "\"Countdown message 1\"");
-            Assert.Equal(embed.Title, "COUNTDOWN");
+            Assert.Equal("ok", result);
+            Assert.Equal("Countdown1", embed.Author.Value.ToString());
+            Assert.Equal("\"Countdown message 1\"", embed.Description);
+            Assert.Equal("COUNTDOWN", embed.Title);
         }
 
         [Fact]
         public void Countdown_DaysLeft_Success()
         {
-            var deadline = CreateNewCountdown(out _);
+            var deadline = CreateNewCountdown(out var fileSystem, "DaysLeft", 1);
             var tomorrow = DateTime.Now.AddDays(1);
             var user = deadline.SetDeadline("TestCountdown", tomorrow, 987654324, 134679,
                 "CountdownUser", 9001, DeadlineEnum.Countdown);
 
-            Thread.Sleep(3000);
+            Thread.Sleep(1500);
+            var users = (List<DeadlineUserData>)fileSystem.Load();
+            var actualUser = users.Find(x => x.UserId == user.UserId && x.Id == user.Id && x.GuildId == user.GuildId);
 
-            Assert.Equal(user.DaysLeft, 1);
+            Assert.Equal(1, actualUser.DaysLeft);
+
+            File.Delete(Path.Combine(fileSystem.PathToSaveFile, "987654324.xml"));
+        }
+
+        [Fact]
+        public void Countdown_CountingDown_Success()
+        {
+            var deadline = CreateNewCountdown(out var fileSystem, "CheckDaysLeft", 1);
+            var overmorrow = DateTime.Now.AddDays(2);
+            var user = deadline.SetDeadline("TestCountdown", overmorrow, 987654324, 134679,
+                "CountdownUser", 9001, DeadlineEnum.Countdown);
+            user.DaysLeft = 1;
+
+            Thread.Sleep(1500);
+            var users = (List<DeadlineUserData>)fileSystem.Load();
+            var actualUser = users.Find(x => x.UserId == user.UserId && x.Id == user.Id && x.GuildId == user.GuildId);
+
+            Assert.Equal(2, actualUser.DaysLeft);
+
+            File.Delete(Path.Combine(fileSystem.PathToSaveFile, "987654324.xml"));
+        }
+
+        [Fact]
+        public void Countdown_CountedDown_Success()
+        {
+            var deadline = CreateNewCountdown(out var fileSystem, "CountedDown", 1);
+            var tomorrow = DateTime.Now.AddDays(1);
+            var user = deadline.SetDeadline("TestCountdown", tomorrow, 987654324, 134679,
+                "CountdownUser", 9001, DeadlineEnum.Countdown);
+            user.DaysLeft = 0;
+
+            Thread.Sleep(1500);
+            var users = (List<DeadlineUserData>)fileSystem.Load();
+            var actualUser = users.Find(x => x.UserId == user.UserId && x.Id == user.Id && x.GuildId == user.GuildId);
+
+            Assert.Equal(null, actualUser);
+
+            File.Delete(Path.Combine(fileSystem.PathToSaveFile, "987654324.xml"));
+        }
+
+        [Fact]
+        public void Countdown_ReminderUser_Success()
+        {
+            var deadline = CreateNewCountdown(out var fileSystem, "ReminderInCountdown", 1);
+            var tomorrow = DateTime.Now.AddDays(1);
+            var reminderUser = deadline.SetDeadline("TestCountdown", tomorrow, 987654324, 134679,
+                "CountdownUser", 9001, DeadlineEnum.Reminder);
+            var countdownUser = deadline.SetDeadline("TestCountdown", tomorrow, 987654324, 134679,
+                "CountdownUser", 9001, DeadlineEnum.Countdown);
+
+            Thread.Sleep(1500);
+            var users = (List<DeadlineUserData>)fileSystem.Load();
+            var actualUser = users.Find(x => x.UserId == countdownUser.UserId && x.Id == countdownUser.Id && x.GuildId == countdownUser.GuildId);
+
+            Assert.Equal(DeadlineEnum.Reminder, reminderUser.DeadlineType);
+            Assert.Equal(DeadlineEnum.Countdown, countdownUser.DeadlineType);
+
+            File.Delete(Path.Combine(fileSystem.PathToSaveFile, "987654324.xml"));
         }
 
         [Fact]
@@ -74,7 +133,7 @@ namespace ChronoBot.Tests.Tools.Deadlines
             var result = deadline.GetDeadlines(DefaultGuildId, 5, 69, 1,
                 "Countdown1", "ChannelName", DeadlineEnum.Countdown, out Embed embed);
 
-            Assert.Equal(result, "Nothing found in ChannelName.");
+            Assert.Equal("Nothing found in ChannelName.", result);
         }
 
         [Fact]
@@ -90,7 +149,7 @@ namespace ChronoBot.Tests.Tools.Deadlines
         [Fact]
         public void ListCountdown_Test_Success()
         {
-            var deadline = CreateNewCountdown(out _, "List");
+            var deadline = CreateNewCountdown(out var fileSystem, "List");
             DateTime tomorrow = DateTime.Now.AddDays(1);
             var countdown1 = deadline.SetDeadline("TestCountdown List 1", tomorrow, 456, 1,
                 "CountdownUser", 9001, DeadlineEnum.Countdown);
@@ -98,7 +157,7 @@ namespace ChronoBot.Tests.Tools.Deadlines
                 "CountdownUser", 9001, DeadlineEnum.Countdown);
             var countdown3 = deadline.SetDeadline("TestCountdown List 3", tomorrow, 456, 1,
                 "CountdownUser", 9001, DeadlineEnum.Countdown);
-            var resultList = deadline.ListDeadlines(456,  1, 9001,
+            var resultList = deadline.ListDeadlines(456, 1, 9001,
                 "CountdownUser", "ChannelName", DeadlineEnum.Countdown, out Embed embed);
 
             Assert.Equal(resultList, "ok");
@@ -113,6 +172,8 @@ namespace ChronoBot.Tests.Tools.Deadlines
             Assert.True(embed.Description.Contains("3."));
             Assert.Equal(embed.Author.Value.ToString(), "CountdownUser");
             Assert.Equal(embed.Title, "COUNTDOWN");
+
+            File.Delete(Path.Combine(fileSystem.PathToSaveFile, "456.xml"));
         }
 
         [Fact]
@@ -135,7 +196,7 @@ namespace ChronoBot.Tests.Tools.Deadlines
             var countdown2 = deadline.SetDeadline("TestCountdown List 1", tomorrow, 666, 777,
                 "CountdownUser", 9001, DeadlineEnum.Countdown);
             string result = deadline.DeleteDeadline(666, 777, 9001, 2, "ChannelName", DeadlineEnum.Countdown);
-            
+
             Assert.Equal(result, "ok");
 
             File.Delete(Path.Combine(fileSystem.PathToSaveFile, "666.xml"));
@@ -181,7 +242,7 @@ namespace ChronoBot.Tests.Tools.Deadlines
                 "CountdownUser", 9001, DeadlineEnum.Countdown);
             string result = deadline.DeleteAllInChannelDeadline(646, 777, 9001, "ChannelName", DeadlineEnum.Countdown);
 
-            var users = (List<DeadlineUserData>) fileSystem.Load();
+            var users = (List<DeadlineUserData>)fileSystem.Load();
             var expectUser1 = users.Find(x => x.UserId == 9001 && x.Id == "TestCountdown List 1" && x.GuildId == 666);
             var expectUser2 = users.Find(x => x.UserId == 9001 && x.Id == "TestCountdown List 2" && x.GuildId == 666);
             var expectUser3 = users.Find(x => x.UserId == 9001 && x.Id == "TestCountdown List 3" && x.GuildId == 646);
@@ -202,7 +263,7 @@ namespace ChronoBot.Tests.Tools.Deadlines
         public void DeleteCountdown_NotFoundAnyChannels_Fail()
         {
             var deadline = CreateNewCountdown(out var fileSystem, "DeleteNotFoundAnyChannels");
-            string result = deadline.DeleteAllInChannelDeadline(666, 777, 9001,"ChannelName", DeadlineEnum.Countdown);
+            string result = deadline.DeleteAllInChannelDeadline(666, 777, 9001, "ChannelName", DeadlineEnum.Countdown);
 
             Assert.Equal(result, "Nothing found in ChannelName.");
 
@@ -260,21 +321,21 @@ namespace ChronoBot.Tests.Tools.Deadlines
             File.Delete(Path.Combine(fileSystem.PathToSaveFile, "666.xml"));
         }
 
-        private Countdown CreateNewCountdown(out DeadlineFileSystem fileSystem, string folderName = "New")
+        private Countdown CreateNewCountdown(out DeadlineFileSystem fileSystem, string folderName = "New", int seconds = 60)
         {
             string path = Path.Combine(Directory.GetCurrentDirectory(), "Test Files", GetType().Name, folderName);
             if (Directory.Exists(path))
                 Directory.Delete(path, true);
             fileSystem = new DeadlineFileSystem(path);
 
-            return new Countdown(_mockClient.Object, fileSystem, new List<DeadlineUserData>());
+            return new Countdown(_mockClient.Object, fileSystem, new List<DeadlineUserData>(), seconds);
         }
 
-        private Countdown LoadCountdown(out DeadlineFileSystem fileSystem)
+        private Countdown LoadCountdown(out DeadlineFileSystem fileSystem, int seconds = 60)
         {
             fileSystem = new DeadlineFileSystem(Path.Combine(Directory.GetCurrentDirectory(), "Test Files", GetType().Name, "Load"));
 
-            return new Countdown(_mockClient.Object, fileSystem, new List<DeadlineUserData>());
+            return new Countdown(_mockClient.Object, fileSystem, new List<DeadlineUserData>(), seconds);
         }
 
         [Fact]

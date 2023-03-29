@@ -12,8 +12,8 @@ namespace ChronoBot.Utilities.Tools.Deadlines
 {
     public sealed class Countdown : Deadline
     {
-        public Countdown(DiscordSocketClient client, DeadlineFileSystem fileSystem, IEnumerable<DeadlineUserData> users) :
-            base(client, fileSystem, users)
+        public Countdown(DiscordSocketClient client, DeadlineFileSystem fileSystem, IEnumerable<DeadlineUserData> users, int seconds = 60) :
+            base(client, fileSystem, users, seconds)
         {
         }
 
@@ -26,7 +26,7 @@ namespace ChronoBot.Utilities.Tools.Deadlines
                 if (user.DeadlineType != DeadlineEnum.Countdown)
                     continue;
                 
-                int daysLeft = Convert.ToInt32((user.Deadline - now).TotalDays);
+                int daysLeft = TotalDaysLeft(user.Deadline);
                 if(user.DaysLeft == daysLeft)
                     continue;
 

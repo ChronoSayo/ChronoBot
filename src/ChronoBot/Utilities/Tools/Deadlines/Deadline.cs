@@ -17,7 +17,7 @@ namespace ChronoBot.Utilities.Tools.Deadlines
         protected readonly DeadlineFileSystem FileSystem;
         protected List<DeadlineUserData> Users;
 
-        public Deadline(DiscordSocketClient client, DeadlineFileSystem fileSystem, IEnumerable<DeadlineUserData> users)
+        public Deadline(DiscordSocketClient client, DeadlineFileSystem fileSystem, IEnumerable<DeadlineUserData> users, int seconds = 60)
         {
             Client = client;
             FileSystem = fileSystem;
@@ -26,7 +26,7 @@ namespace ChronoBot.Utilities.Tools.Deadlines
             {
                 AutoReset = true,
                 Enabled = true,
-                Interval = 1000
+                Interval = seconds * 1000
             };
             timer.Elapsed += DeadlineCheck;
 
@@ -43,10 +43,15 @@ namespace ChronoBot.Utilities.Tools.Deadlines
             await Task.CompletedTask;
         }
 
+        protected virtual int TotalDaysLeft(DateTime deadline)
+        {
+            return Convert.ToInt32((deadline - DateTime.Now).TotalDays);
+        }
+
         public virtual DeadlineUserData SetDeadline(string message, DateTime dateTime, ulong guildId, ulong channelId,
             string user, ulong userId, DeadlineEnum type)
         {
-            return CreateDeadlineUserData(message, dateTime, guildId, channelId, user, userId, type);
+            return CreateDeadlineUserData(message, dateTime, guildId, channelId, user, userId, type, TotalDaysLeft(dateTime));
         }
 
         public virtual string GetDeadlines(ulong guildId, ulong channelId, ulong userId, int num, string username,
@@ -172,7 +177,7 @@ namespace ChronoBot.Utilities.Tools.Deadlines
         }
 
         protected virtual DeadlineUserData CreateDeadlineUserData(string message, DateTime dateTime, ulong guildId, 
-            ulong channelId, string user, ulong userId, DeadlineEnum deadlineType)
+            ulong channelId, string user, ulong userId, DeadlineEnum deadlineType, int daysLeft)
         {
             DeadlineUserData temp = new DeadlineUserData
             {
@@ -182,7 +187,8 @@ namespace ChronoBot.Utilities.Tools.Deadlines
                 Deadline = dateTime,
                 Id = message,
                 UserId = userId,
-                DeadlineType = deadlineType
+                DeadlineType = deadlineType,
+                DaysLeft = daysLeft
             };
             Users.Add(temp);
 
