@@ -245,11 +245,7 @@ namespace ChronoBot.Utilities.SocialMedias
         //Display text for Twitch.
         protected virtual string GetStreamerUrlAndGame(SocialMediaUserData ud)
         {
-            string[] split = ud.Id.Split('|');
-            string result = string.Empty;
-            if (split.Length > 1)
-                result = $"{split[1]}\n";
-            result += $"{Hyperlink}{ud.Name}\n\n";
+            string result = $"{ud.Id}\n{Hyperlink}{ud.Name}\n\n";
             return result;
         }
 

@@ -12,16 +12,9 @@ namespace ChronoBot.Utilities.Tools.Deadlines
 {
     public sealed class Reminder : Deadline
     {
-        public Reminder(DiscordSocketClient client, DeadlineFileSystem fileSystem, IEnumerable<DeadlineUserData> users) :
-            base(client, fileSystem, users)
+        public Reminder(DiscordSocketClient client, DeadlineFileSystem fileSystem, IEnumerable<DeadlineUserData> users, int seconds = 60) :
+            base(client, fileSystem, users, seconds)
         {
-            LoadOrCreateFromFile();
-        }
-
-        public override DeadlineUserData SetDeadline(string message, DateTime dateTime, ulong guildId, ulong channelId, string user,
-            ulong userId)
-        {
-            return CreateDeadlineUserData(message, dateTime, guildId, channelId, user, userId, DeadlineEnum.Reminder);
         }
 
         protected override async void DeadlineCheck(object sender, ElapsedEventArgs e)
@@ -30,7 +23,7 @@ namespace ChronoBot.Utilities.Tools.Deadlines
             List<DeadlineUserData> remindedUsers = new List<DeadlineUserData>();
             foreach (DeadlineUserData user in Users)
             {
-                if (user.DeadlineType != DeadlineEnum.Reminder && now < user.Deadline)
+                if (user.DeadlineType != DeadlineEnum.Reminder || now < user.Deadline)
                     continue;
 
                 try

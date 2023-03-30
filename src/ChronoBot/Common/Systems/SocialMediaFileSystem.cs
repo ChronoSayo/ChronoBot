@@ -7,6 +7,7 @@ using System.Xml.Linq;
 using ChronoBot.Common.UserDatas;
 using ChronoBot.Enums;
 using ChronoBot.Interfaces;
+using ChronoBot.Utilities.SocialMedias;
 
 namespace ChronoBot.Common.Systems
 {
@@ -39,13 +40,16 @@ namespace ChronoBot.Common.Systems
             string id = socialMediaUserData.Id ?? string.Empty;
             string socialMedia = socialMediaUserData.SocialMedia.ToString();
             string options = socialMediaUserData.Options ?? string.Empty;
+            string live = socialMediaUserData.Live ? "1" : "0";
 
             XElement user = new XElement("User");
             XAttribute newName = new XAttribute("Name", name);
             XAttribute newChannelId = new XAttribute("ChannelID", channelId);
             XAttribute newId = new XAttribute("ID", id);
             XAttribute newOptions = new XAttribute("Options", options);
-            user.Add(newName, newChannelId, newId, newOptions);
+            XAttribute newLive = new XAttribute("Live", live);
+
+            user.Add(newName, newChannelId, newId, newOptions, newLive);
 
             XDocument xDoc;
             string guildPath = Path.Combine(PathToSaveFile, guildId + ".xml");
@@ -129,6 +133,7 @@ namespace ChronoBot.Common.Systems
                     user.Id = e.Attribute("ID")?.Value;
                     user.SocialMedia = socialMedia;
                     user.Options = e.Attribute("Options")?.Value;
+                    user.Live = e.Attribute("Live")?.Value == "1";
                     ud.Add(user);
                 }
             }
@@ -160,6 +165,7 @@ namespace ChronoBot.Common.Systems
                     found.Attributes("ID").First().Value = socialMediaUserData.Id;
                     if(!string.IsNullOrEmpty(socialMediaUserData.Options))
                         found.Attributes("Options").First().Value = socialMediaUserData.Options;
+                    ud.Live = found.Attribute("Live")?.Value == "1";
                     updated = true;
                     break;
                 }

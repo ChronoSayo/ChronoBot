@@ -17,7 +17,7 @@ namespace ChronoBot.Modules.SocialMedias
         }
 
         [SlashCommand("twitter-options", "Choose an option on how to handle Tweeter.", runMode: RunMode.Async)]
-        public override Task HandleTwitterOption(Options option, 
+        public override Task SetTwitterOption(Options option, 
             [Summary("Tweeter", "Insert Twitter handle.")] string user,
             [Summary("Where", "To which channel should this be posted. Default is this channel.")] 
                 [ChannelTypes(ChannelType.Text)] IChannel channel = null,
@@ -31,7 +31,7 @@ namespace ChronoBot.Modules.SocialMedias
             [Choice("Video", "mv")]
             [Choice("All", "")] string filter = "")
         {
-            return base.HandleTwitterOption(option, user, channel, filter);
+            return base.SetTwitterOption(option, user, channel, filter);
         }
 
         [SlashCommand("show-twitter-video", "Use this if embedded video didn't work from the tweet.", runMode: RunMode.Async)]

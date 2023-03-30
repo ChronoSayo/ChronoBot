@@ -28,7 +28,38 @@ namespace ChronoBot.Modules.SocialMedias
             SocialMedia = socialMedia;
         }
 
-        public virtual async Task HandleOptions(Options option, string user, [ChannelTypes(ChannelType.Text)] IChannel channel = null)
+        public virtual async Task SetOptions(Options option, string user, [ChannelTypes(ChannelType.Text)] IChannel channel = null)
+        {
+            await HandleOption(option, user, channel);
+        }
+
+        public virtual async Task SetTwitterOption(Options option,
+            [Summary("Tweeter", "Insert Twitter handle.")] string user,
+            [Summary("Where", "To which channel should this be posted. Default is this channel.")]
+                [ChannelTypes(ChannelType.Text)] IChannel channel = null,
+            [Summary("Filter", "Choose which the bot should filter the Tweeter's posts by.")] [Choice("Posts", "p")]
+            [Choice("Retweets", "r")]
+            [Choice("Likes", "l")]
+            [Choice("QuoteTweets", "q")]
+            [Choice("AllMedia", "m")]
+            [Choice("Pictures", "mp")]
+            [Choice("GIF", "mg")]
+            [Choice("Video", "mv")]
+            [Choice("All", "")] string filter = "")
+        {
+            await HandleOption(option, user, channel, filter);
+        }
+
+        protected virtual async Task SendFileWithLogo(Embed result, string socialMedia)
+        {
+            string thumbnail = Path.Combine(Environment.CurrentDirectory, $@"Resources\Images\SocialMedia\{socialMedia}.png");
+            if (Statics.Debug)
+                await Statics.DebugSendFileToChannelAsync(Client, result, thumbnail);
+            else
+                await RespondWithFileAsync(thumbnail, embed: result);
+        }
+
+        private async Task HandleOption(Options option, string user, [ChannelTypes(ChannelType.Text)] IChannel channel = null, string filter = "")
         {
             ulong guildId = Context.Guild.Id;
             ulong channelId = Context.Channel.Id;
@@ -39,7 +70,7 @@ namespace ChronoBot.Modules.SocialMedias
                 case Options.Add:
                     try
                     {
-                        result = await SocialMedia.AddSocialMediaUser(guildId, channelId, user, sendToChannel);
+                        result = await SocialMedia.AddSocialMediaUser(guildId, channelId, user, sendToChannel, filter);
                         await SendMessage(Client, result, sendToChannel);
                     }
                     catch (Exception e)
@@ -68,44 +99,6 @@ namespace ChronoBot.Modules.SocialMedias
                     await SendMessage(Client, result);
                     break;
             }
-        }
-
-        public virtual async Task HandleTwitterOption(Options option,
-            [Summary("Tweeter", "Insert Twitter handle.")] string user,
-            [Summary("Where", "To which channel should this be posted. Default is this channel.")]
-                [ChannelTypes(ChannelType.Text)] IChannel channel = null,
-            [Summary("Filter", "Choose which the bot should filter the Tweeter's posts by.")] [Choice("Posts", "p")]
-            [Choice("Retweets", "r")]
-            [Choice("Likes", "l")]
-            [Choice("QuoteTweets", "q")]
-            [Choice("AllMedia", "m")]
-            [Choice("Pictures", "mp")]
-            [Choice("GIF", "mg")]
-            [Choice("Video", "mv")]
-            [Choice("All", "")] string filter = "")
-        {
-            try
-            {
-                ulong guildId = Context.Guild.Id;
-                ulong channelId = Context.Channel.Id;
-                ulong sendToChannel = channel?.Id ?? channelId;  
-                string result = await SocialMedia.AddSocialMediaUser(guildId, channelId, user, sendToChannel);
-                await SendMessage(Client, result, sendToChannel);
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-                throw;
-            }
-        }
-
-        protected virtual async Task SendFileWithLogo(Embed result, string socialMedia)
-        {
-            string thumbnail = Path.Combine(Environment.CurrentDirectory, $@"Resources\Images\SocialMedia\{socialMedia}.png");
-            if (Statics.Debug)
-                await Statics.DebugSendFileToChannelAsync(Client, result, thumbnail);
-            else
-                await RespondWithFileAsync(thumbnail, embed: result);
         }
     }
 }

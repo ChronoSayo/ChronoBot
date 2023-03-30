@@ -14,13 +14,13 @@
     <User UserID="420" ChannelID="4" Plays="100" TotalPlays="15" Wins="55" Losses="44" Draws="11" Ratio="10" Resets="2" Rocks="22" Papers="55" Scissors="33" CurrentStreak="44" BestStreak="25" Coins="15" UserIDOpponent="69" Actor="Paper" Deadline="08/28/2021 19:34:39" />
   </RockPaperScissors>
 	<Reminder>
-		<User UserID="69" Name="Reminder1" ChannelID="4" ID="Remind message 1" Deadline="08/28/2023 19:34:39"/>
-		<User UserID="420" Name="Reminder2" ChannelID="4" ID="Remind message 2" Deadline="08/28/2023 19:34:39"/>
+		<User UserID="69" Name="Reminder1" ChannelID="4" ID="Remind message 1" Deadline="08/28/2023 19:34:39" DaysLeft="0"/>
+		<User UserID="420" Name="Reminder2" ChannelID="4" ID="Remind message 2" Deadline="08/28/2023 19:34:39" DaysLeft="0"/>
 	</Reminder>
 	<Countdown>
-		<User UserID="69" Name="Countdown1" ChannelID="4" ID="Countdown message 1" Deadline="08/28/2023 19:34:39"/>
-		<User UserID="420" Name="Countdown2" ChannelID="4" ID="Countdown message 2" Deadline="08/28/2023 19:34:39"/>
-		<User UserID="9001" Name="Countdown3" ChannelID="4" ID="Countdown message 3€5" Deadline="08/28/2023 19:34:39"/>
+		<User UserID="69" Name="Countdown1" ChannelID="4" ID="Countdown message 1" Deadline="08/28/2023 19:34:39" DaysLeft="12"/>
+		<User UserID="420" Name="Countdown2" ChannelID="4" ID="Countdown message 2" Deadline="08/28/2023 19:34:39" DaysLeft="13"/>
+		<User UserID="9001" Name="Countdown3" ChannelID="4" ID="Countdown message 3" Deadline="08/28/2023 19:34:39" DaysLeft="14"/>
 	</Countdown>
   <Music>
     <Music Title="Pumpkin Hill" ChannelID="5" ID="" />
