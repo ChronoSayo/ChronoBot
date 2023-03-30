@@ -31,7 +31,7 @@ namespace ChronoBot.Utilities.Tools.Deadlines
                     continue;
 
                 string message = user.Id;
-                if (user.DaysLeft > 0)
+                if (daysLeft > 0)
                 {
                     message =
                         $"***{daysLeft} day" + (daysLeft > 1 ? "s" : string.Empty) + $"** left until:*\n{message}";

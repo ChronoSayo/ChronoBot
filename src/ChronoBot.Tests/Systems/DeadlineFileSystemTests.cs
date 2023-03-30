@@ -44,7 +44,7 @@ namespace ChronoBot.Tests.Systems
             List<DeadlineUserData> users = fileSystem.Load().Cast<DeadlineUserData>().ToList();
 
             Assert.True(File.Exists(Path.Combine(fileSystem.PathToSaveFile, "123456789.xml")));
-            Assert.Equal(4, users.Count);
+            Assert.Equal(5, users.Count);
             EqualUser1(users[0]);
             EqualUser2(users[1]);
         }
@@ -62,7 +62,7 @@ namespace ChronoBot.Tests.Systems
 
             Assert.True(File.Exists(file1));
             Assert.True(File.Exists(file2));
-            Assert.Equal(8, users.Count);
+            Assert.Equal(10, users.Count);
             EqualUser1(users[0]);
             EqualUser2(users[1]);
             EqualUser1(users[2], guildId: 987654321);
@@ -84,7 +84,7 @@ namespace ChronoBot.Tests.Systems
 
             Assert.True(File.Exists(file1));
             Assert.True(File.Exists(file2));
-            Assert.Equal(4, users.Count);
+            Assert.Equal(5, users.Count);
             EqualUser1(users[0], guildId: 123456789);
             EqualUser2(users[1], guildId: 123456789);
 
@@ -203,7 +203,7 @@ namespace ChronoBot.Tests.Systems
 
             Assert.True(File.Exists(file));
             Assert.True(ok);
-            Assert.True(users.Count == 3);
+            Assert.Equal(4, users.Count);
             EqualUser2(users[0]);
         }
         [Fact]

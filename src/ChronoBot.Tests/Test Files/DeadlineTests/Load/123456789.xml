@@ -20,7 +20,7 @@
 	<Countdown>
 		<User UserID="69" Name="Countdown1" ChannelID="4" ID="Countdown message 1" Deadline="08/28/2023 19:34:39" DaysLeft="12"/>
 		<User UserID="420" Name="Countdown2" ChannelID="4" ID="Countdown message 2" Deadline="08/28/2023 19:34:39" DaysLeft="13"/>
-		<User UserID="9001" Name="Countdown3" ChannelID="4" ID="Countdown message 3€5" Deadline="08/28/2023 19:34:39" DaysLeft="14"/>
+		<User UserID="9001" Name="Countdown3" ChannelID="4" ID="Countdown message 3" Deadline="08/28/2023 19:34:39" DaysLeft="14"/>
 	</Countdown>
   <Music>
     <Music Title="Pumpkin Hill" ChannelID="5" ID="" />

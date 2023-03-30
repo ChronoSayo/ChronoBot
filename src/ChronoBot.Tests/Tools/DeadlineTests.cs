@@ -117,8 +117,6 @@ namespace ChronoBot.Tests.Tools
                 "CountdownUser", 9001, DeadlineEnum.Countdown);
 
             Thread.Sleep(1500);
-            var users = (List<DeadlineUserData>)fileSystem.Load();
-            var actualUser = users.Find(x => x.UserId == countdownUser.UserId && x.Id == countdownUser.Id && x.GuildId == countdownUser.GuildId);
 
             Assert.Equal(DeadlineEnum.Reminder, reminderUser.DeadlineType);
             Assert.Equal(DeadlineEnum.Countdown, countdownUser.DeadlineType);
@@ -222,7 +220,7 @@ namespace ChronoBot.Tests.Tools
                 "CountdownUser", 9001, DeadlineEnum.Countdown);
             string result = deadline.DeleteDeadline(666, 777, 9001, 2, "ChannelName", DeadlineEnum.Countdown);
 
-            Assert.Equal(result, "Entry number 2 not found.");
+            Assert.Equal("Entry number 2 not found.", result);
 
             File.Delete(Path.Combine(fileSystem.PathToSaveFile, "666.xml"));
         }
@@ -243,17 +241,17 @@ namespace ChronoBot.Tests.Tools
             string result = deadline.DeleteAllInChannelDeadline(646, 777, 9001, "ChannelName", DeadlineEnum.Countdown);
 
             var users = (List<DeadlineUserData>)fileSystem.Load();
-            var expectUser1 = users.Find(x => x.UserId == 9001 && x.Id == "TestCountdown List 1" && x.GuildId == 666);
-            var expectUser2 = users.Find(x => x.UserId == 9001 && x.Id == "TestCountdown List 2" && x.GuildId == 666);
-            var expectUser3 = users.Find(x => x.UserId == 9001 && x.Id == "TestCountdown List 3" && x.GuildId == 646);
-            var expectUser4 = users.Find(x => x.UserId == 9001 && x.Id == "TestCountdown List 4" && x.GuildId == 646);
+            var actualUser1 = users.Find(x => x.UserId == 9001 && x.Id == "TestCountdown List 1" && x.GuildId == 666);
+            var actualUser2 = users.Find(x => x.UserId == 9001 && x.Id == "TestCountdown List 2" && x.GuildId == 666);
+            var actualUser3 = users.Find(x => x.UserId == 9001 && x.Id == "TestCountdown List 3" && x.GuildId == 646);
+            var actualUser4 = users.Find(x => x.UserId == 9001 && x.Id == "TestCountdown List 4" && x.GuildId == 646);
 
-            Assert.Equal(result, "All countdowns have been deleted from ChannelName.");
-            Assert.Equal(users.Count, 2);
-            Assert.Equal(expectUser1.Id, countdown1.Id);
-            Assert.Equal(expectUser2.Id, countdown2.Id);
-            Assert.Equal(expectUser3, null);
-            Assert.Equal(expectUser4, null);
+            Assert.Equal("All countdowns have been deleted from ChannelName.", result);
+            Assert.Equal(2, users.Count);
+            Assert.Equal(countdown1.Id, actualUser1.Id);
+            Assert.Equal(countdown2.Id, actualUser2.Id);
+            Assert.Equal(null, actualUser3);
+            Assert.Equal(null, actualUser4);
 
             File.Delete(Path.Combine(fileSystem.PathToSaveFile, "666.xml"));
             File.Delete(Path.Combine(fileSystem.PathToSaveFile, "646.xml"));
@@ -265,7 +263,7 @@ namespace ChronoBot.Tests.Tools
             var deadline = CreateNewCountdown(out var fileSystem, "DeleteNotFoundAnyChannels");
             string result = deadline.DeleteAllInChannelDeadline(666, 777, 9001, "ChannelName", DeadlineEnum.Countdown);
 
-            Assert.Equal(result, "Nothing found in ChannelName.");
+            Assert.Equal("Nothing found in ChannelName.", result);
 
             File.Delete(Path.Combine(fileSystem.PathToSaveFile, "666.xml"));
         }
@@ -290,21 +288,21 @@ namespace ChronoBot.Tests.Tools
             string result = deadline.DeleteAllInGuildDeadline(666, 9001, "GuildName", DeadlineEnum.Countdown);
 
             var users = (List<DeadlineUserData>)fileSystem.Load();
-            var expectUser1 = users.Find(x => x.UserId == 9001 && x.Id == "TestCountdown List 1" && x.GuildId == 666);
-            var expectUser2 = users.Find(x => x.UserId == 9001 && x.Id == "TestCountdown List 2" && x.GuildId == 666);
-            var expectUser3 = users.Find(x => x.UserId == 9001 && x.Id == "TestCountdown List 3" && x.GuildId == 666);
-            var expectUser4 = users.Find(x => x.UserId == 9001 && x.Id == "TestCountdown List 4" && x.GuildId == 666);
-            var expectUser5 = users.Find(x => x.UserId == 9001 && x.Id == "TestCountdown List 5" && x.GuildId == 646);
-            var expectUser6 = users.Find(x => x.UserId == 9001 && x.Id == "TestCountdown List 6" && x.GuildId == 646);
+            var actualUser1 = users.Find(x => x.UserId == 9001 && x.Id == "TestCountdown List 1" && x.GuildId == 666);
+            var actualUser2 = users.Find(x => x.UserId == 9001 && x.Id == "TestCountdown List 2" && x.GuildId == 666);
+            var actualUser3 = users.Find(x => x.UserId == 9001 && x.Id == "TestCountdown List 3" && x.GuildId == 666);
+            var actualUser4 = users.Find(x => x.UserId == 9001 && x.Id == "TestCountdown List 4" && x.GuildId == 666);
+            var actualUser5 = users.Find(x => x.UserId == 9001 && x.Id == "TestCountdown List 5" && x.GuildId == 646);
+            var actualUser6 = users.Find(x => x.UserId == 9001 && x.Id == "TestCountdown List 6" && x.GuildId == 646);
 
-            Assert.Equal(result, "All countdowns have been deleted from GuildName.");
-            Assert.Equal(users.Count, 2);
-            Assert.Equal(expectUser1, null);
-            Assert.Equal(expectUser2, null);
-            Assert.Equal(expectUser3, null);
-            Assert.Equal(expectUser4, null);
-            Assert.Equal(expectUser5.Id, countdown5.Id);
-            Assert.Equal(expectUser6.Id, countdown6.Id);
+            Assert.Equal("All countdowns have been deleted from GuildName.", result);
+            Assert.Equal(2, users.Count);
+            Assert.Equal(null, actualUser1);
+            Assert.Equal(null, actualUser2);
+            Assert.Equal(null, actualUser3);
+            Assert.Equal(null, actualUser4);
+            Assert.Equal(countdown5.Id, actualUser5.Id);
+            Assert.Equal(countdown6.Id, actualUser6.Id);
 
             File.Delete(Path.Combine(fileSystem.PathToSaveFile, "666.xml"));
             File.Delete(Path.Combine(fileSystem.PathToSaveFile, "646.xml"));
@@ -316,7 +314,7 @@ namespace ChronoBot.Tests.Tools
             var deadline = CreateNewCountdown(out var fileSystem, "DeleteNotFoundInGuild");
             string result = deadline.DeleteAllInGuildDeadline(666, 9001, "GuildName", DeadlineEnum.Countdown);
 
-            Assert.Equal(result, "Nothing found in GuildName.");
+            Assert.Equal("Nothing found in GuildName.", result);
 
             File.Delete(Path.Combine(fileSystem.PathToSaveFile, "666.xml"));
         }
@@ -341,47 +339,297 @@ namespace ChronoBot.Tests.Tools
         [Fact]
         public void SetReminder_Test_Success()
         {
-            var deadline = CreateNewCountdown(out _);
+            var deadline = CreateNewReminder(out _);
             var tomorrow = DateTime.Now.AddDays(1);
             var user = deadline.SetDeadline("TestReminder", tomorrow, 741852963, 147258,
                 "ReminderUser", 9001, DeadlineEnum.Reminder);
 
-            Assert.True(user.Id == "TestReminder");
-            Assert.True(user.Deadline == tomorrow);
-            Assert.True(user.GuildId == 741852963);
-            Assert.True(user.ChannelId == 147258);
-            Assert.True(user.Name == "ReminderUser");
-            Assert.True(user.UserId == 9001);
+            Assert.Equal("TestReminder", user.Id);
+            Assert.Equal(tomorrow, user.Deadline);
+            Assert.Equal(741852963, (int)user.GuildId);
+            Assert.Equal(147258, (int) user.ChannelId);
+            Assert.Equal("ReminderUser", user.Name);
+            Assert.Equal(9001, (int) user.UserId);
         }
 
         [Fact]
         public void GetReminder_Test_Success()
         {
-            var deadline = LoadCountdown(out _);
+            var deadline = LoadReminder(out _);
             var result = deadline.GetDeadlines(DefaultGuildId, DefaultChannelId, 69, 1,
                 "Reminder1", "ChannelName", DeadlineEnum.Reminder, out Embed embed);
 
-            Assert.True(result == "ok");
-            Assert.True(embed.Author.Value.ToString() == "Reminder1");
-            Assert.True(embed.Description == "\"Remind message 1\"");
-            Assert.True(embed.Title == "REMINDER");
+            Assert.Equal("ok", result);
+            Assert.Equal("Reminder1", embed.Author.Value.ToString());
+            Assert.Equal("\"Remind message 1\"", embed.Description);
+            Assert.Equal("REMINDER", embed.Title);
+        }
+        [Fact]
+        public void Reminder_NotReminded_Success()
+        {
+            var deadline = CreateNewReminder(out var fileSystem, "NotReminded", 1);
+            var tomorrow = DateTime.Now.AddDays(1);
+            var user = deadline.SetDeadline("TestReminder", tomorrow, 987654324, 134679,
+                "ReminderUser", 9001, DeadlineEnum.Reminder);
+
+            Thread.Sleep(1500);
+            var users = (List<DeadlineUserData>)fileSystem.Load();
+            var actualUser = users.Find(x => x.UserId == user.UserId && x.Id == user.Id && x.GuildId == user.GuildId);
+
+            Assert.Equal((ulong)987654324, actualUser.GuildId);
+            Assert.Equal((ulong)134679, actualUser.ChannelId);
+            Assert.Equal((ulong)9001, actualUser.UserId);
+            Assert.Equal("TestReminder", actualUser.Id);
+            Assert.Equal("ReminderUser", actualUser.Name);
+
+            File.Delete(Path.Combine(fileSystem.PathToSaveFile, "987654324.xml"));
         }
 
-        private Reminder CreateNewReminder(out DeadlineFileSystem fileSystem, string folderName = "New")
+        [Fact]
+        public void Reminder_Reminded_Success()
+        {
+            var deadline = CreateNewReminder(out var fileSystem, "Reminded", 1);
+            var now = DateTime.Now;
+            var user = deadline.SetDeadline("TestReminder", now, 987654324, 134679,
+                "ReminderUser", 9001, DeadlineEnum.Reminder);
+
+            Thread.Sleep(1500);
+            var users = (List<DeadlineUserData>)fileSystem.Load();
+            var actualUser = users.Find(x => x.UserId == user.UserId && x.Id == user.Id && x.GuildId == user.GuildId);
+
+            Assert.Equal(null, actualUser);
+
+            File.Delete(Path.Combine(fileSystem.PathToSaveFile, "987654324.xml"));
+        }
+
+        [Fact]
+        public void Reminder_CountdownUser_Success()
+        {
+            var deadline = CreateNewCountdown(out var fileSystem, "CountdownInReminder", 1);
+            var tomorrow = DateTime.Now.AddDays(1);
+            var countdownUser = deadline.SetDeadline("TestReminder", tomorrow, 987654324, 134679,
+                "CountdownUser", 9001, DeadlineEnum.Countdown);
+            var reminderUser = deadline.SetDeadline("TestReminder", tomorrow, 987654324, 134679,
+                "ReminderUser", 9001, DeadlineEnum.Reminder);
+
+            Thread.Sleep(1500);
+
+            Assert.Equal(DeadlineEnum.Reminder, reminderUser.DeadlineType);
+            Assert.Equal(DeadlineEnum.Countdown, countdownUser.DeadlineType);
+
+            File.Delete(Path.Combine(fileSystem.PathToSaveFile, "987654324.xml"));
+        }
+
+        [Fact]
+        public void GetReminder_NoneFound_Fail()
+        {
+            var deadline = LoadReminder(out _);
+            var result = deadline.GetDeadlines(DefaultGuildId, 5, 69, 1,
+                "Reminder1", "ChannelName", DeadlineEnum.Reminder, out Embed embed);
+
+            Assert.Equal("Nothing found in ChannelName.", result);
+        }
+
+        [Fact]
+        public void GetReminder_ChosenNotFound_Fail()
+        {
+            var deadline = LoadReminder(out _);
+            var result = deadline.GetDeadlines(DefaultGuildId, DefaultChannelId, 69, 10,
+                "Reminder1", "ChannelName", DeadlineEnum.Reminder, out Embed embed);
+
+            Assert.Equal(result, "Entry number 10 not found.");
+        }
+
+        [Fact]
+        public void ListReminder_Test_Success()
+        {
+            var deadline = CreateNewReminder(out var fileSystem, "List");
+            DateTime tomorrow = DateTime.Now.AddDays(1);
+            var countdown1 = deadline.SetDeadline("TestReminder List 1", tomorrow, 456, 1,
+                "ReminderUser", 9001, DeadlineEnum.Reminder);
+            var countdown2 = deadline.SetDeadline("TestReminder List 2", tomorrow, 456, 1,
+                "ReminderUser", 9001, DeadlineEnum.Reminder);
+            var countdown3 = deadline.SetDeadline("TestReminder List 3", tomorrow, 456, 1,
+                "ReminderUser", 9001, DeadlineEnum.Reminder);
+            var resultList = deadline.ListDeadlines(456, 1, 9001,
+                "ReminderUser", "ChannelName", DeadlineEnum.Reminder, out Embed embed);
+
+            Assert.Equal(resultList, "ok");
+            Assert.NotNull(countdown1);
+            Assert.NotNull(countdown2);
+            Assert.NotNull(countdown3);
+            Assert.Equal(countdown1.Deadline, tomorrow);
+            Assert.Equal(countdown2.Deadline, tomorrow);
+            Assert.True(countdown3.Deadline == tomorrow);
+            Assert.True(embed.Description.Contains("1."));
+            Assert.True(embed.Description.Contains("2."));
+            Assert.True(embed.Description.Contains("3."));
+            Assert.Equal(embed.Author.Value.ToString(), "ReminderUser");
+            Assert.Equal(embed.Title, "REMINDER");
+
+            File.Delete(Path.Combine(fileSystem.PathToSaveFile, "456.xml"));
+        }
+
+        [Fact]
+        public void ListReminder_NoneFound_Fail()
+        {
+            var deadline = LoadReminder(out _);
+            var result = deadline.ListDeadlines(DefaultGuildId, DefaultChannelId, 8,
+                "None", "ChannelName", DeadlineEnum.Reminder, out Embed embed);
+
+            Assert.Equal(result, "Nothing found in ChannelName.");
+        }
+
+        [Fact]
+        public void DeleteReminder_Test_Success()
+        {
+            var deadline = CreateNewReminder(out var fileSystem, "Delete");
+            DateTime tomorrow = DateTime.Now.AddDays(1);
+            var countdown1 = deadline.SetDeadline("TestReminder List 1", tomorrow, 666, 777,
+                "ReminderUser", 9001, DeadlineEnum.Reminder);
+            var countdown2 = deadline.SetDeadline("TestReminder List 1", tomorrow, 666, 777,
+                "ReminderUser", 9001, DeadlineEnum.Reminder);
+            string result = deadline.DeleteDeadline(666, 777, 9001, 2, "ChannelName", DeadlineEnum.Reminder);
+
+            Assert.Equal(result, "ok");
+
+            File.Delete(Path.Combine(fileSystem.PathToSaveFile, "666.xml"));
+        }
+
+        [Fact]
+        public void DeleteReminder_NotFound_Fail()
+        {
+            var deadline = CreateNewReminder(out var fileSystem, "DeleteNotFound");
+            string result = deadline.DeleteDeadline(666, 777, 9001, 2, "ChannelName", DeadlineEnum.Reminder);
+
+            Assert.Equal(result, "Nothing found in ChannelName.");
+
+            File.Delete(Path.Combine(fileSystem.PathToSaveFile, "666.xml"));
+        }
+
+        [Fact]
+        public void DeleteReminder_ChosenNotFound_Fail()
+        {
+            var deadline = CreateNewReminder(out var fileSystem, "DeleteNotFound");
+            DateTime tomorrow = DateTime.Now.AddDays(1);
+            var countdown1 = deadline.SetDeadline("TestReminder List 1", tomorrow, 666, 777,
+                "ReminderUser", 9001, DeadlineEnum.Reminder);
+            string result = deadline.DeleteDeadline(666, 777, 9001, 2, "ChannelName", DeadlineEnum.Reminder);
+
+            Assert.Equal("Entry number 2 not found.", result);
+
+            File.Delete(Path.Combine(fileSystem.PathToSaveFile, "666.xml"));
+        }
+
+        [Fact]
+        public void DeleteReminder_AllInChannel_Success()
+        {
+            var deadline = CreateNewReminder(out var fileSystem, "DeleteInChannel");
+            DateTime tomorrow = DateTime.Now.AddDays(1);
+            var countdown1 = deadline.SetDeadline("TestReminder List 1", tomorrow, 666, 777,
+                "ReminderUser", 9001, DeadlineEnum.Reminder);
+            var countdown2 = deadline.SetDeadline("TestReminder List 2", tomorrow, 666, 777,
+                "ReminderUser", 9001, DeadlineEnum.Reminder);
+            var countdown3 = deadline.SetDeadline("TestReminder List 3", tomorrow, 646, 777,
+                "ReminderUser", 9001, DeadlineEnum.Reminder);
+            var countdown4 = deadline.SetDeadline("TestReminder List 4", tomorrow, 646, 777,
+                "ReminderUser", 9001, DeadlineEnum.Reminder);
+            string result = deadline.DeleteAllInChannelDeadline(646, 777, 9001, "ChannelName", DeadlineEnum.Reminder);
+
+            var users = (List<DeadlineUserData>)fileSystem.Load();
+            var actualUser1 = users.Find(x => x.UserId == 9001 && x.Id == "TestReminder List 1" && x.GuildId == 666);
+            var actualUser2 = users.Find(x => x.UserId == 9001 && x.Id == "TestReminder List 2" && x.GuildId == 666);
+            var actualUser3 = users.Find(x => x.UserId == 9001 && x.Id == "TestReminder List 3" && x.GuildId == 646);
+            var actualUser4 = users.Find(x => x.UserId == 9001 && x.Id == "TestReminder List 4" && x.GuildId == 646);
+
+            Assert.Equal("All reminders have been deleted from ChannelName.", result);
+            Assert.Equal(2, users.Count);
+            Assert.Equal(countdown1.Id, actualUser1.Id);
+            Assert.Equal(countdown2.Id, actualUser2.Id);
+            Assert.Equal(null, actualUser3);
+            Assert.Equal(null, actualUser4);
+
+            File.Delete(Path.Combine(fileSystem.PathToSaveFile, "666.xml"));
+            File.Delete(Path.Combine(fileSystem.PathToSaveFile, "646.xml"));
+        }
+
+        [Fact]
+        public void DeleteReminder_NotFoundAnyChannels_Fail()
+        {
+            var deadline = CreateNewReminder(out var fileSystem, "DeleteNotFoundAnyChannels");
+            string result = deadline.DeleteAllInChannelDeadline(666, 777, 9001, "ChannelName", DeadlineEnum.Reminder);
+
+            Assert.Equal("Nothing found in ChannelName.", result);
+
+            File.Delete(Path.Combine(fileSystem.PathToSaveFile, "666.xml"));
+        }
+
+        [Fact]
+        public void DeleteReminder_AllInGuild_Success()
+        {
+            var deadline = CreateNewReminder(out var fileSystem, "DeleteInGuild");
+            DateTime tomorrow = DateTime.Now.AddDays(1);
+            var countdown1 = deadline.SetDeadline("TestReminder List 1", tomorrow, 666, 777,
+                "ReminderUser", 9001, DeadlineEnum.Reminder);
+            var countdown2 = deadline.SetDeadline("TestReminder List 2", tomorrow, 666, 777,
+                "ReminderUser", 9001, DeadlineEnum.Reminder);
+            var countdown3 = deadline.SetDeadline("TestReminder List 3", tomorrow, 666, 767,
+                "ReminderUser", 9001, DeadlineEnum.Reminder);
+            var countdown4 = deadline.SetDeadline("TestReminder List 4", tomorrow, 666, 767,
+                "ReminderUser", 9001, DeadlineEnum.Reminder);
+            var countdown5 = deadline.SetDeadline("TestReminder List 5", tomorrow, 646, 767,
+                "ReminderUser", 9001, DeadlineEnum.Reminder);
+            var countdown6 = deadline.SetDeadline("TestReminder List 6", tomorrow, 646, 767,
+                "ReminderUser", 9001, DeadlineEnum.Reminder);
+            string result = deadline.DeleteAllInGuildDeadline(666, 9001, "GuildName", DeadlineEnum.Reminder);
+
+            var users = (List<DeadlineUserData>)fileSystem.Load();
+            var actualUser1 = users.Find(x => x.UserId == 9001 && x.Id == "TestReminder List 1" && x.GuildId == 666);
+            var actualUser2 = users.Find(x => x.UserId == 9001 && x.Id == "TestReminder List 2" && x.GuildId == 666);
+            var actualUser3 = users.Find(x => x.UserId == 9001 && x.Id == "TestReminder List 3" && x.GuildId == 666);
+            var actualUser4 = users.Find(x => x.UserId == 9001 && x.Id == "TestReminder List 4" && x.GuildId == 666);
+            var actualUser5 = users.Find(x => x.UserId == 9001 && x.Id == "TestReminder List 5" && x.GuildId == 646);
+            var actualUser6 = users.Find(x => x.UserId == 9001 && x.Id == "TestReminder List 6" && x.GuildId == 646);
+
+            Assert.Equal("All reminders have been deleted from GuildName.", result);
+            Assert.Equal(2, users.Count);
+            Assert.Equal(null, actualUser1);
+            Assert.Equal(null, actualUser2);
+            Assert.Equal(null, actualUser3);
+            Assert.Equal(null, actualUser4);
+            Assert.Equal(countdown5.Id, actualUser5.Id);
+            Assert.Equal(countdown6.Id, actualUser6.Id);
+
+            File.Delete(Path.Combine(fileSystem.PathToSaveFile, "666.xml"));
+            File.Delete(Path.Combine(fileSystem.PathToSaveFile, "646.xml"));
+        }
+
+        [Fact]
+        public void DeleteReminder_NotFoundInGuild_Fail()
+        {
+            var deadline = CreateNewReminder(out var fileSystem, "DeleteNotFoundInGuild");
+            string result = deadline.DeleteAllInGuildDeadline(666, 9001, "GuildName", DeadlineEnum.Reminder);
+
+            Assert.Equal("Nothing found in GuildName.", result);
+
+            File.Delete(Path.Combine(fileSystem.PathToSaveFile, "666.xml"));
+        }
+
+        private Reminder CreateNewReminder(out DeadlineFileSystem fileSystem, string folderName = "New", int seconds = 60)
         {
             string path = Path.Combine(Directory.GetCurrentDirectory(), "Test Files", GetType().Name, folderName);
             if (Directory.Exists(path))
                 Directory.Delete(path, true);
             fileSystem = new DeadlineFileSystem(path);
 
-            return new Reminder(_mockClient.Object, fileSystem, new List<DeadlineUserData>());
+            return new Reminder(_mockClient.Object, fileSystem, new List<DeadlineUserData>(), seconds);
         }
 
-        private Reminder LoadReminder(out DeadlineFileSystem fileSystem)
+        private Reminder LoadReminder(out DeadlineFileSystem fileSystem, int seconds = 60)
         {
             fileSystem = new DeadlineFileSystem(Path.Combine(Directory.GetCurrentDirectory(), "Test Files", GetType().Name, "Load"));
 
-            return new Reminder(_mockClient.Object, fileSystem, new List<DeadlineUserData>());
+            return new Reminder(_mockClient.Object, fileSystem, new List<DeadlineUserData>(), seconds);
         }
     }
 }

@@ -114,11 +114,11 @@ namespace ChronoBot.Modules.Tools.Deadlines
 
         private DeadlineEnum GetDeadlineType()
         {
-            string typeName = (new System.Diagnostics.StackTrace()).GetFrame(1)?.GetMethod()?.Name;
+            var typeName = ((SocketCommandBase)Context.Interaction).CommandName;
             DeadlineEnum type = DeadlineEnum.Reminder;
             foreach (var de in Enum.GetValues(typeof(DeadlineEnum)))
             {
-                if (typeName != de.ToString())
+                if (typeName != de.ToString()?.ToLower())
                     continue;
                 type = (DeadlineEnum)de;
             }

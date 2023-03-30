@@ -23,7 +23,7 @@ namespace ChronoBot.Utilities.Tools.Deadlines
             List<DeadlineUserData> remindedUsers = new List<DeadlineUserData>();
             foreach (DeadlineUserData user in Users)
             {
-                if (user.DeadlineType != DeadlineEnum.Reminder && now < user.Deadline)
+                if (user.DeadlineType != DeadlineEnum.Reminder || now < user.Deadline)
                     continue;
 
                 try

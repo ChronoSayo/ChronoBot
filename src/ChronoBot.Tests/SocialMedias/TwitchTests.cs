@@ -118,7 +118,7 @@ namespace ChronoBot.Tests.SocialMedias
             user = users.Find(x => x.Name == "postupdate1");
 
             Assert.NotNull(user);
-            Assert.Equal("online|PostUpdate1 is playing Game", user.Id);
+            Assert.Equal("PostUpdate1 is playing Game", user.Id);
 
             File.Delete(Path.Combine(fileSystem.PathToSaveFile, "123456789.xml"));
         }
