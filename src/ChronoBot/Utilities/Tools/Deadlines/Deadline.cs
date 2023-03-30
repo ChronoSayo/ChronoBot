@@ -126,7 +126,7 @@ namespace ChronoBot.Utilities.Tools.Deadlines
             if(ok) 
                 Users.RemoveAt(i);
                 
-            return ok ? "ok" : "Something went wrong with deleting from file.";
+            return ok ? $"{type} has been deleted." : "Something went wrong with deleting from file.";
         }
 
         public virtual string DeleteAllInChannelDeadline(ulong guildId, ulong channelId, ulong userId, string channelName, DeadlineEnum type)

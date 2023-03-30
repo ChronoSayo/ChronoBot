@@ -92,10 +92,10 @@ namespace ChronoBot.Tests.Tools
         public void Countdown_CountedDown_Success()
         {
             var deadline = CreateNewCountdown(out var fileSystem, "CountedDown", 1);
-            var tomorrow = DateTime.Now.AddDays(1);
-            var user = deadline.SetDeadline("TestCountdown", tomorrow, 987654324, 134679,
+            var yesterday = DateTime.Now.AddDays(-1);
+            var user = deadline.SetDeadline("TestCountdown", yesterday, 987654324, 134679,
                 "CountdownUser", 9001, DeadlineEnum.Countdown);
-            user.DaysLeft = 0;
+            user.DaysLeft = 1;
 
             Thread.Sleep(1500);
             var users = (List<DeadlineUserData>)fileSystem.Load();
@@ -195,7 +195,7 @@ namespace ChronoBot.Tests.Tools
                 "CountdownUser", 9001, DeadlineEnum.Countdown);
             string result = deadline.DeleteDeadline(666, 777, 9001, 2, "ChannelName", DeadlineEnum.Countdown);
 
-            Assert.Equal(result, "ok");
+            Assert.Equal(result, "Countdown has been deleted.");
 
             File.Delete(Path.Combine(fileSystem.PathToSaveFile, "666.xml"));
         }
@@ -491,7 +491,7 @@ namespace ChronoBot.Tests.Tools
                 "ReminderUser", 9001, DeadlineEnum.Reminder);
             string result = deadline.DeleteDeadline(666, 777, 9001, 2, "ChannelName", DeadlineEnum.Reminder);
 
-            Assert.Equal(result, "ok");
+            Assert.Equal(result, "Reminder has been deleted.");
 
             File.Delete(Path.Combine(fileSystem.PathToSaveFile, "666.xml"));
         }
