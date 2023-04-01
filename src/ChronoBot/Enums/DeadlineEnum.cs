@@ -3,6 +3,7 @@
     public enum DeadlineEnum
     {
         Reminder,
-        Countdown
+        Countdown,
+        Repeater
     }
 }

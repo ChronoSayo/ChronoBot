@@ -19,7 +19,6 @@ namespace ChronoBot.Utilities.Tools.Deadlines
 
         protected override async void DeadlineCheck(object sender, ElapsedEventArgs e)
         {
-            DateTime now = DateTime.Now;
             List<DeadlineUserData> countedDownUsers = new List<DeadlineUserData>();
             foreach (DeadlineUserData user in Users)
             {

@@ -12,6 +12,7 @@ namespace ChronoBot.Modules.Tools.Deadlines
 {
     public class DeadlineModule : ChronoInteractionModuleBase
     {
+        protected const string Get = 
         protected readonly DiscordSocketClient Client;
         protected Deadline Deadline;
         protected DeadlineEnum DeadlineType;
@@ -107,7 +108,15 @@ namespace ChronoBot.Modules.Tools.Deadlines
                 .WithDescription(description)
                 .WithAuthor(channel.GetUser(ud.UserId).Username)
                 .WithTitle(ud.DeadlineType.ToString().ToUpper())
-                .WithFields(new EmbedFieldBuilder { IsInline = true, Name = "Date", Value = ud.Deadline })
+                .WithFields(new EmbedFieldBuilder
+                    {
+                        IsInline = true, Name = "End", Value = ud.Deadline
+                    },
+                    new EmbedFieldBuilder
+                    {
+                        IsInline = true, Name = "Time", Value = DateTime.Now
+                    }
+                )
                 .WithColor(Color.Green)
                 .Build();
         }
