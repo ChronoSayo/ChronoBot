@@ -40,7 +40,7 @@ namespace ChronoBot.Modules.Tools.Deadlines
             channel ??= Context.Channel;
             DeadlineUserData newEntry = Deadline.SetRepeater(message, day, Context.Guild.Id, channel.Id,
                 Context.User.Username, Context.User.Id, GetDeadlineType());
-            await HandleSendMessage(newEntry, $"Created a {newEntry.DeadlineType}.\n{newEntry.Id}");
+            await HandleSendMessage(newEntry, $"\"{newEntry.Id}\"");
         }
 
         public virtual async Task GetDeadlineAsync(
@@ -117,10 +117,13 @@ namespace ChronoBot.Modules.Tools.Deadlines
             return new EmbedBuilder()
                 .WithDescription(description)
                 .WithAuthor(channel.GetUser(ud.UserId).Username)
-                .WithTitle(ud.DeadlineType.ToString().ToUpper())
+                .WithTitle($"{ud.DeadlineType.ToString().ToUpper()} CREATED")
                 .WithFields(new EmbedFieldBuilder
                     {
-                        IsInline = true, Name = "End", Value = ud.Deadline
+                        IsInline = true, Name = ud.DeadlineType == DeadlineEnum.Repeater ? "Day" : "End",
+                        Value = ud.DeadlineType == DeadlineEnum.Repeater
+                            ? ud.Deadline.DayOfWeek.ToString()
+                            : ud.Deadline
                     },
                     new EmbedFieldBuilder
                     {

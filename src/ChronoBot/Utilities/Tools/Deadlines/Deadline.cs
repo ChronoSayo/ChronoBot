@@ -58,10 +58,9 @@ namespace ChronoBot.Utilities.Tools.Deadlines
         public virtual DeadlineUserData SetRepeater(string message, DayOfWeek day, ulong guildId, ulong channelId,
             string user, ulong userId, DeadlineEnum type)
         {
-            DateTime dateTime = new DateTime(1969, 04, 20);
-            dateTime = dateTime.AddDays(-(int)DateTime.Today.DayOfWeek + (int)day);
-
-            return CreateDeadlineUserData(message, dateTime, guildId, channelId, user, userId, type, TotalDaysLeft(dateTime));
+            DateTime dateTime = DateTime.Now.AddDays(-(int) DateTime.Today.DayOfWeek + (int) day);
+            return CreateDeadlineUserData(message, dateTime, guildId, channelId, user, userId, type,
+                TotalDaysLeft(dateTime));
         }
 
         public virtual string GetDeadlines(ulong guildId, ulong channelId, ulong userId, int num, string username,
