@@ -12,7 +12,6 @@ namespace ChronoBot.Modules.Tools.Deadlines
 {
     public class DeadlineModule : ChronoInteractionModuleBase
     {
-        protected const string Get = 
         protected readonly DiscordSocketClient Client;
         protected Deadline Deadline;
         protected DeadlineEnum DeadlineType;
@@ -29,6 +28,17 @@ namespace ChronoBot.Modules.Tools.Deadlines
         {
             channel ??= Context.Channel;
             DeadlineUserData newEntry = Deadline.SetDeadline(message, time, Context.Guild.Id, channel.Id,
+                Context.User.Username, Context.User.Id, GetDeadlineType());
+            await HandleSendMessage(newEntry, $"Created a {newEntry.DeadlineType}.\n{newEntry.Id}");
+        }
+
+        public virtual async Task SetRepeaterAsync(string message,
+            [Summary("When", "Choose day of the week.")] DayOfWeek day,
+            [Summary("Where", "To which channel should this be posted. Default is this channel.")]
+            [ChannelTypes(ChannelType.Text)] IChannel channel = null)
+        {
+            channel ??= Context.Channel;
+            DeadlineUserData newEntry = Deadline.SetRepeater(message, day, Context.Guild.Id, channel.Id,
                 Context.User.Username, Context.User.Id, GetDeadlineType());
             await HandleSendMessage(newEntry, $"Created a {newEntry.DeadlineType}.\n{newEntry.Id}");
         }

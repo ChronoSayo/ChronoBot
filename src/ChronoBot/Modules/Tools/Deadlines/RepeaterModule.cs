@@ -4,6 +4,7 @@ using System;
 using System.Threading.Tasks;
 using ChronoBot.Utilities.Tools.Deadlines;
 using Discord.WebSocket;
+using ChronoBot.Enums;
 
 namespace ChronoBot.Modules.Tools.Deadlines;
 
@@ -12,15 +13,17 @@ public class RepeaterModule : DeadlineModule
 {
     public RepeaterModule(DiscordSocketClient client, Deadline deadline) : base(client, deadline)
     {
+        Deadline = deadline;
+        DeadlineType = DeadlineEnum.Repeater;
     }
 
     [SlashCommand("repeater", "Set repeater.", runMode: RunMode.Async)]
-    public override Task SetDeadlineAsync(string message,
-        [Summary("When", "Name or number of the day. Sunday = 0.")] DateTime time,
+    public override Task SetRepeaterAsync(string message,
+        [Summary("When", "Choose day of the week.")] DayOfWeek day,
         [Summary("Where", "To which channel should this be posted. Default is this channel.")]
         [ChannelTypes(ChannelType.Text)] IChannel channel = null)
     {
-        return base.SetDeadlineAsync(message, time, channel);
+        return base.SetRepeaterAsync(message, day, channel);
     }
 
     [SlashCommand("repeater-get", "Get repeater.", runMode: RunMode.Async)]
