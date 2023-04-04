@@ -17,7 +17,7 @@ namespace ChronoBot.Utilities.SocialMedias
 
         public Twitch(ChronoTwitch.ChronoTwitch api, DiscordSocketClient client, IConfiguration config,
             IEnumerable<SocialMediaUserData> users, IEnumerable<string> availableOptions,
-            SocialMediaFileSystem fileSystem, int seconds = 5) :
+            SocialMediaFileSystem fileSystem, int seconds = 120) :
             base(client, config, users, availableOptions, fileSystem)
         {
             _api = api;
