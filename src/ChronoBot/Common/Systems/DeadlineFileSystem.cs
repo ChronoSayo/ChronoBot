@@ -119,6 +119,7 @@ namespace ChronoBot.Common.Systems
             List<DeadlineUserData> ud = new List<DeadlineUserData>();
             ud.AddRange(CollectUserData(xmls, DeadlineEnum.Reminder));
             ud.AddRange(CollectUserData(xmls, DeadlineEnum.Countdown));
+            ud.AddRange(CollectUserData(xmls, DeadlineEnum.Repeater));
             return ud;
         }
 

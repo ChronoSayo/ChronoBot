@@ -537,13 +537,13 @@ namespace ChronoBot.Tests.Tools
         {
             var deadline = CreateNewReminder(out var fileSystem, "DeleteInChannel");
             DateTime tomorrow = DateTime.Now.AddDays(1);
-            var countdown1 = deadline.SetDeadline("TestReminder List 1", tomorrow, 666, 777,
+            var reminder1 = deadline.SetDeadline("TestReminder List 1", tomorrow, 666, 777,
                 "ReminderUser", 9001, DeadlineEnum.Reminder);
-            var countdown2 = deadline.SetDeadline("TestReminder List 2", tomorrow, 666, 777,
+            var reminder2 = deadline.SetDeadline("TestReminder List 2", tomorrow, 666, 777,
                 "ReminderUser", 9001, DeadlineEnum.Reminder);
-            var countdown3 = deadline.SetDeadline("TestReminder List 3", tomorrow, 646, 777,
+            var reminder3 = deadline.SetDeadline("TestReminder List 3", tomorrow, 646, 777,
                 "ReminderUser", 9001, DeadlineEnum.Reminder);
-            var countdown4 = deadline.SetDeadline("TestReminder List 4", tomorrow, 646, 777,
+            var reminder4 = deadline.SetDeadline("TestReminder List 4", tomorrow, 646, 777,
                 "ReminderUser", 9001, DeadlineEnum.Reminder);
             string result = deadline.DeleteAllInChannelDeadline(646, 777, 9001, "ChannelName", DeadlineEnum.Reminder);
 
@@ -555,8 +555,8 @@ namespace ChronoBot.Tests.Tools
 
             Assert.Equal("All reminders have been deleted from ChannelName.", result);
             Assert.Equal(2, users.Count);
-            Assert.Equal(countdown1.Id, actualUser1.Id);
-            Assert.Equal(countdown2.Id, actualUser2.Id);
+            Assert.Equal(reminder1.Id, actualUser1.Id);
+            Assert.Equal(reminder2.Id, actualUser2.Id);
             Assert.Null(actualUser3);
             Assert.Null(actualUser4);
 
@@ -672,7 +672,7 @@ namespace ChronoBot.Tests.Tools
 
             Assert.Equal("ok", result);
             Assert.Equal("Repeater1", embed.Author.Value.ToString());
-            Assert.Equal("\"Repeat message 1\"", embed.Description);
+            Assert.Equal("\"Repeater message 1\"", embed.Description);
             Assert.Equal("REPEATER", embed.Title);
         }
         
@@ -803,26 +803,26 @@ namespace ChronoBot.Tests.Tools
         {
             var deadline = CreateNewRepeater(out var fileSystem, "DeleteInChannel");
             DateTime tomorrow = DateTime.Now.AddDays(1);
-            var repeater1 = deadline.SetDeadline("TestRepeater List 1", tomorrow, 666, 777,
+            var countdown1 = deadline.SetDeadline("TestRepeater List 1", tomorrow, 666, 777,
                 "RepeaterUser", 9001, DeadlineEnum.Repeater);
-            var repeater2 = deadline.SetDeadline("TestRepeater List 2", tomorrow, 666, 777,
+            var countdown2 = deadline.SetDeadline("TestRepeater List 2", tomorrow, 666, 777,
                 "RepeaterUser", 9001, DeadlineEnum.Repeater);
-            var repeater3 = deadline.SetDeadline("TestRepeater List 3", tomorrow, 646, 777,
+            var countdown3 = deadline.SetDeadline("TestRepeater List 3", tomorrow, 646, 777,
                 "RepeaterUser", 9001, DeadlineEnum.Repeater);
-            var repeater4 = deadline.SetDeadline("TestRepeater List 4", tomorrow, 646, 777,
+            var countdown4 = deadline.SetDeadline("TestRepeater List 4", tomorrow, 646, 777,
                 "RepeaterUser", 9001, DeadlineEnum.Repeater);
             string result = deadline.DeleteAllInChannelDeadline(646, 777, 9001, "ChannelName", DeadlineEnum.Repeater);
 
             var users = (List<DeadlineUserData>)fileSystem.Load();
-            var actualUser1 = users.Find(x => x.UserId == repeater1.UserId && x.Id == repeater1.Id && x.GuildId == repeater1.GuildId);
-            var actualUser2 = users.Find(x => x.UserId == repeater2.UserId && x.Id == repeater2.Id && x.GuildId == repeater2.GuildId);
-            var actualUser3 = users.Find(x => x.UserId == repeater3.UserId && x.Id == repeater3.Id && x.GuildId == repeater3.GuildId);
-            var actualUser4 = users.Find(x => x.UserId == repeater4.UserId && x.Id == repeater4.Id && x.GuildId == repeater4.GuildId);
+            var actualUser1 = users.Find(x => x.UserId == 9001 && x.Id == "TestRepeater List 1" && x.GuildId == 666);
+            var actualUser2 = users.Find(x => x.UserId == 9001 && x.Id == "TestRepeater List 2" && x.GuildId == 666);
+            var actualUser3 = users.Find(x => x.UserId == 9001 && x.Id == "TestRepeater List 3" && x.GuildId == 646);
+            var actualUser4 = users.Find(x => x.UserId == 9001 && x.Id == "TestRepeater List 4" && x.GuildId == 646);
 
             Assert.Equal("All repeaters have been deleted from ChannelName.", result);
             Assert.Equal(2, users.Count);
-            Assert.Equal(repeater1.Id, actualUser1.Id);
-            Assert.Equal(repeater2.Id, actualUser2.Id);
+            Assert.Equal(countdown1.Id, actualUser1.Id);
+            Assert.Equal(countdown2.Id, actualUser2.Id);
             Assert.Null(actualUser3);
             Assert.Null(actualUser4);
 

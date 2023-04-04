@@ -17,7 +17,7 @@ namespace ChronoBot.Utilities.SocialMedias
 
         public Twitch(ChronoTwitch.ChronoTwitch api, DiscordSocketClient client, IConfiguration config,
             IEnumerable<SocialMediaUserData> users, IEnumerable<string> availableOptions,
-            SocialMediaFileSystem fileSystem, int seconds = 120) :
+            SocialMediaFileSystem fileSystem, int seconds = 5) :
             base(client, config, users, availableOptions, fileSystem)
         {
             _api = api;
@@ -119,9 +119,13 @@ namespace ChronoBot.Utilities.SocialMedias
                     continue;
 
                 bool isLive = false;
+                string streamInfo = string.Empty;
                 try
                 {
                     isLive = await _api.IsLive(user.Name);
+                    streamInfo = await GetStreamInfo(user.Name);
+                    if (user.Live == isLive && user.Id == streamInfo)
+                        continue;
                     user.Live = isLive;
                 }
                 catch (BadScopeException ex)
@@ -130,12 +134,12 @@ namespace ChronoBot.Utilities.SocialMedias
                 }
 
                 if (isLive)
-                    user.Id = await GetStreamInfo(user.Name);
-                else
-                    continue;
+                {
+                    user.Id = streamInfo;
+                    Users[i] = user;
+                    live.Add(Users[i]);
+                }
 
-                Users[i] = user;
-                live.Add(Users[i]);
                 FileSystem.UpdateFile(user);
             }
 
