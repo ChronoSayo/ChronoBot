@@ -45,7 +45,8 @@ namespace ChronoBot.Services
                 .AddSingleton<Deadline>()
                 .AddSingleton<DeadlineFileSystem>()
                 .AddSingleton<Reminder>()
-                .AddSingleton<Countdown>();
+                .AddSingleton<Countdown>()
+                .AddSingleton<Repeater>();
         }
 
         private static IServiceCollection AddSocialMediaServiceCollection(this IServiceCollection services)

@@ -4,6 +4,7 @@ using Discord.Interactions;
 using Discord.WebSocket;
 using System.IO;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using TwitchLib.Communication.Interfaces;
 
@@ -16,14 +17,14 @@ namespace ChronoBot.Common
             if (Statics.Debug)
                 await Statics.DebugSendMessageToChannelAsync(client, result);
             else
-                await ReplyAsync(result);
+                await RespondAsync(result);
         }
         protected virtual async Task SendMessage(DiscordSocketClient client, Embed result)
         {
             if (Statics.Debug)
                 await Statics.DebugSendMessageToChannelAsync(client, result);
             else
-                await ReplyAsync(embed: result);
+                await RespondAsync(embed: result);
         }
         protected virtual async Task SendMessage(DiscordSocketClient client, string result, ulong sendToChannel = 0)
         {

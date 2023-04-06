@@ -36,24 +36,22 @@ namespace ChronoBot
 
         public async Task MainAsync()
         {
-            using (var services = GetConfigureServices())
-            {
-                _client = services.GetRequiredService<DiscordSocketClient>();
-                _commands = services.GetRequiredService<InteractionService>();
+            await using var services = GetConfigureServices();
+            _client = services.GetRequiredService<DiscordSocketClient>();
+            _commands = services.GetRequiredService<InteractionService>();
 
-                _client.Log += LogAsync;
-                _commands.Log += LogAsync;
-                _client.Ready += ReadyAsync;
+            _client.Log += LogAsync;
+            _commands.Log += LogAsync;
+            _client.Ready += ReadyAsync;
 
-                var f = _config[Statics.DiscordToken];
+            var f = _config[Statics.DiscordToken];
 
-                await _client.LoginAsync(TokenType.Bot, _config[Statics.DiscordToken]);
-                await _client.StartAsync();
+            await _client.LoginAsync(TokenType.Bot, _config[Statics.DiscordToken]);
+            await _client.StartAsync();
 
-                await services.GetRequiredService<CommandHandler>().InitializeAsync();
+            await services.GetRequiredService<CommandHandler>().InitializeAsync();
 
-                await Task.Delay(Timeout.Infinite);
-            }
+            await Task.Delay(Timeout.Infinite);
         }
 
         private Task LogAsync(LogMessage log)

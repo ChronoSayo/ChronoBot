@@ -39,10 +39,6 @@ namespace ChronoBot.Services
                 Console.WriteLine(ex);
                 await Statics.SendMessageToLogChannel(_client, ex.Message);
             }
-
-            var message = await socketInteraction.GetOriginalResponseAsync();
-            if(message != null)
-                await message.DeleteAsync();
         }
     }
 }

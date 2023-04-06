@@ -32,6 +32,17 @@ namespace ChronoBot.Modules.Tools.Deadlines
             await HandleSendMessage(newEntry, $"Created a {newEntry.DeadlineType}.\n{newEntry.Id}");
         }
 
+        public virtual async Task SetRepeaterAsync(string message,
+            [Summary("When", "Choose day of the week.")] DayOfWeek day,
+            [Summary("Where", "To which channel should this be posted. Default is this channel.")]
+            [ChannelTypes(ChannelType.Text)] IChannel channel = null)
+        {
+            channel ??= Context.Channel;
+            DeadlineUserData newEntry = Deadline.SetRepeater(message, day, Context.Guild.Id, channel.Id,
+                Context.User.Username, Context.User.Id, GetDeadlineType());
+            await HandleSendMessage(newEntry, $"\"{newEntry.Id}\"");
+        }
+
         public virtual async Task GetDeadlineAsync(
             [Summary("Get", "Gets the specified entry based on the numbered list (see /List command).")] int num,
             [Summary("Channel", "Get an entry from specified channel. Default is this channel.")]
@@ -106,8 +117,19 @@ namespace ChronoBot.Modules.Tools.Deadlines
             return new EmbedBuilder()
                 .WithDescription(description)
                 .WithAuthor(channel.GetUser(ud.UserId).Username)
-                .WithTitle(ud.DeadlineType.ToString().ToUpper())
-                .WithFields(new EmbedFieldBuilder { IsInline = true, Name = "Date", Value = ud.Deadline })
+                .WithTitle($"{ud.DeadlineType.ToString().ToUpper()} CREATED")
+                .WithFields(new EmbedFieldBuilder
+                    {
+                        IsInline = true, Name = ud.DeadlineType == DeadlineEnum.Repeater ? "Day" : "End",
+                        Value = ud.DeadlineType == DeadlineEnum.Repeater
+                            ? ud.Deadline.DayOfWeek.ToString()
+                            : ud.Deadline
+                    },
+                    new EmbedFieldBuilder
+                    {
+                        IsInline = true, Name = "Time", Value = DateTime.Now
+                    }
+                )
                 .WithColor(Color.Green)
                 .Build();
         }
