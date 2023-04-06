@@ -30,6 +30,7 @@ namespace ChronoBot.Modules.SocialMedias
 
         public virtual async Task SetOptions(Options option, string user, [ChannelTypes(ChannelType.Text)] IChannel channel = null)
         {
+            await DeferAsync();
             await HandleOption(option, user, channel);
         }
 

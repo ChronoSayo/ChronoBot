@@ -31,7 +31,7 @@ namespace ChronoBot.Utilities.SocialMedias
 
             Hyperlink = "https://www.youtube.com/watch?v=";
 
-            _channelLink = "https://www.youtube.com/user/";
+            _channelLink = "https://www.youtube.com/@";
             _quotaReached = false;
             _newDay = DateTime.MinValue;
 
@@ -56,7 +56,7 @@ namespace ChronoBot.Utilities.SocialMedias
                 switch (searchResult.Id.Kind)
                 {
                     case "youtube#channel":
-                        channelInfo.Add(searchResult.Snippet.Title);
+                        channelInfo.Add(searchResult.Snippet.ChannelTitle);
                         channelInfo.Add(searchResult.Id.ChannelId);
                         channelInfo.Add(searchResult.Snippet.ChannelId);
                         break;

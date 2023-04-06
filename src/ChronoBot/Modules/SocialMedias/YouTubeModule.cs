@@ -19,7 +19,7 @@ namespace ChronoBot.Modules.SocialMedias
 
         [SlashCommand("youtube", "Notifies when a YouTuber uploads a video.", runMode: RunMode.Async)]
         public override Task SetOptions(Options option,
-            [Summary("YouTuber", "Insert YouTuber's channel.")] string user,
+            [Summary("Youtuber", "Insert YouTuber's channel.")] string user,
             [Summary("Where", "To which channel should this be posted. Default is this channel.")]
                 [ChannelTypes(new[] { ChannelType.Text })] IChannel channel = null)
         {
