@@ -16,7 +16,7 @@ namespace ChronoBot.Utilities.SocialMedias
     public sealed class YouTube : SocialMedia
     {
         private readonly YouTubeService _service;
-        private readonly string _channelLink;
+        private readonly string _channelLink, _videoLink;
         private bool _quotaReached;
         private DateTime _newDay;
 
@@ -32,6 +32,7 @@ namespace ChronoBot.Utilities.SocialMedias
             Hyperlink = "https://www.youtube.com/watch?v=";
 
             _channelLink = "https://www.youtube.com/@";
+            _videoLink = "https://www.youtube.com/watch?v=";
             _quotaReached = false;
             _newDay = DateTime.MinValue;
 
@@ -42,7 +43,7 @@ namespace ChronoBot.Utilities.SocialMedias
             TypeOfSocialMedia = SocialMediaEnum.YouTube.ToString().ToLowerInvariant();
         }
 
-        private async Task<List<string>> SearchForYouTuber(string user)
+        private async Task<string> SearchForYouTuber(string user)
         {
             List<string> channelInfo = new List<string>();
 
@@ -56,14 +57,53 @@ namespace ChronoBot.Utilities.SocialMedias
                 switch (searchResult.Id.Kind)
                 {
                     case "youtube#channel":
-                        channelInfo.Add(searchResult.Snippet.ChannelTitle);
-                        channelInfo.Add(searchResult.Id.ChannelId);
-                        channelInfo.Add(searchResult.Snippet.ChannelId);
+                        return await Task.FromResult(searchResult.Snippet.ChannelTitle);
+                }
+            }
+
+            return await Task.FromResult(string.Empty);
+        }
+
+        private async Task<string> SearchForVideo(string user)
+        {
+            List<string> channelInfo = new List<string>();
+
+            var searchListRequest = _service.Search.List("snippet");
+            searchListRequest.Q = user;
+            searchListRequest.MaxResults = 5;
+
+            var searchListResponse = await searchListRequest.ExecuteAsync();
+            string channelId = string.Empty;
+            foreach (var searchResult in searchListResponse.Items)
+            {
+                switch (searchResult.Id.Kind)
+                {
+                    case "youtube#channel":
+                        channelId = searchResult.Snippet.ChannelId;
                         break;
                 }
             }
 
-            return await Task.FromResult(channelInfo);
+            if(string.IsNullOrEmpty(channelId))
+                return await Task.FromResult(string.Empty);
+
+            searchListRequest = _service.Search.List("snippet");
+            searchListRequest.MaxResults = 5;
+            searchListRequest.ChannelId = channelId;
+            searchListRequest.Type = "video";
+            searchListResponse = await searchListRequest.ExecuteAsync();
+
+            foreach (var searchResult in searchListResponse.Items)
+            {
+                switch (searchResult.Id.Kind)
+                {
+                    case "youtube#video":
+                        return await Task.FromResult(searchResult.Id.VideoId);
+                        break;
+                }
+            }
+
+            return await Task.FromResult(string.Empty);
         }
 
         public override async Task<string> AddSocialMediaUser(ulong guildId, ulong channelId, string username, ulong sendToChannelId = 0, string options = "")
@@ -77,10 +117,12 @@ namespace ChronoBot.Utilities.SocialMedias
             if (_newDay != DateTime.Today)
                 _quotaReached = false;
 
-            List<string> channelInfo;
+            string youtuber;
+            string videoId;
             try
             {
-                channelInfo = await SearchForYouTuber(username);
+                youtuber = await SearchForYouTuber(username);
+                videoId = await SearchForVideo(youtuber);
             }
             catch
             {
@@ -89,17 +131,16 @@ namespace ChronoBot.Utilities.SocialMedias
                 await Statics.SendMessageToLogChannel(Client, "YouTube quota has been reached.");
                 return await Task.FromResult("Cannot use YouTube service. Try again tomorrow.");
             }
-            if (channelInfo.Count <= 0)
+            if (string.IsNullOrEmpty(youtuber))
                 return await Task.FromResult("Can't find " + username);
-
-            string name = channelInfo[0];
+            
             if (sendToChannelId == 0)
                 sendToChannelId = Statics.Debug ? Statics.DebugChannelId : channelId;
 
-            if (!CreateSocialMediaUser(username, guildId, sendToChannelId, "0", SocialMediaEnum.YouTube))
-                return await Task.FromResult($"Failed to add {name}.");
+            if (!CreateSocialMediaUser(username, guildId, sendToChannelId, youtuber, SocialMediaEnum.YouTube))
+                return await Task.FromResult($"Failed to add {youtuber}.");
 
-            return await Task.FromResult($"Successfully added {name} \n{_channelLink + channelInfo[1]}");
+            return await Task.FromResult($"Successfully added {youtuber} \n{_channelLink + youtuber}\nLatest video:\n{_videoLink + videoId}");
 
         }
 
@@ -115,10 +156,10 @@ namespace ChronoBot.Utilities.SocialMedias
             if (_newDay != DateTime.Today)
                 _quotaReached = false;
 
-            List<string> channelInfo;
+            string youtuber;
             try
             {
-                channelInfo = await SearchForYouTuber(username);
+                youtuber = await SearchForYouTuber(username);
             }
             catch
             {
@@ -127,7 +168,7 @@ namespace ChronoBot.Utilities.SocialMedias
                 await Statics.SendMessageToLogChannel(Client, "YouTube quota has been reached.");
                 return string.Empty;
             }
-            if (channelInfo.Count > 0)
+            if (string.IsNullOrEmpty(youtuber))
                 return await Task.FromResult(GetYouTuber(Users[i]));
 
 
@@ -160,10 +201,10 @@ namespace ChronoBot.Utilities.SocialMedias
                 if (user.SocialMedia != SocialMediaEnum.YouTube || user.GuildId != guildId)
                     continue;
 
-                List<string> channelInfo;
+                string youtuber;
                 try
                 {
-                    channelInfo = await SearchForYouTuber(user.Name);
+                    youtuber = await SearchForYouTuber(user.Name);
                 }
                 catch
                 {
@@ -174,12 +215,12 @@ namespace ChronoBot.Utilities.SocialMedias
                     return string.Empty;
                 }
                 
-                if (channelInfo.Count == 0)
+                if (string.IsNullOrEmpty(youtuber))
                     continue;
-                if (channelInfo[0] == user.Id)
-                    continue;
+                //if (1231231232130 == user.Id)
+                //    continue;
 
-                user.Id = channelInfo[0];
+                //user.Id = channelInfo[0];
                 Users[i] = user;
                 newVideos.Add(Users[i]);
                 FileSystem.UpdateFile(user);

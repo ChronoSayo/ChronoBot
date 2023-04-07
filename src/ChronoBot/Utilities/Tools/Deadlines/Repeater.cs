@@ -12,7 +12,7 @@ namespace ChronoBot.Utilities.Tools.Deadlines
 {
     public class Repeater : Deadline
     {
-        public Repeater(DiscordSocketClient client, DeadlineFileSystem fileSystem, IEnumerable<DeadlineUserData> users, int seconds = 60) :
+        public Repeater(DiscordSocketClient client, DeadlineFileSystem fileSystem, IEnumerable<DeadlineUserData> users, int seconds = 5) :
             base(client, fileSystem, users, seconds)
         {
         }
@@ -22,7 +22,7 @@ namespace ChronoBot.Utilities.Tools.Deadlines
             DateTime now = DateTime.Now;
             foreach (DeadlineUserData user in Users)
             {
-                if ((user.DeadlineType != DeadlineEnum.Repeater || now.DayOfWeek != user.Deadline.DayOfWeek) &&
+                if (user.DeadlineType != DeadlineEnum.Repeater || now.DayOfWeek != user.Deadline.DayOfWeek ||
                     now.Day == user.Deadline.Day)
                     continue;
 

@@ -57,7 +57,7 @@ namespace ChronoBot.Modules.SocialMedias
             if (Statics.Debug)
                 await Statics.DebugSendFileToChannelAsync(Client, result, thumbnail);
             else
-                await RespondWithFileAsync(thumbnail, embed: result);
+                await FollowupWithFileAsync(thumbnail, embed: result);
         }
 
         private async Task HandleOption(Options option, string user, [ChannelTypes(ChannelType.Text)] IChannel channel = null, string filter = "")
