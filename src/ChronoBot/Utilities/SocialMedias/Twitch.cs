@@ -69,7 +69,7 @@ namespace ChronoBot.Utilities.SocialMedias
             return await Task.FromResult($"Successfully added {displayName} \n{Hyperlink}{loginName}");
         }
 
-        public override async Task<string> GetSocialMediaUser(ulong guildId, ulong channelId, string username)
+        public override async Task<string> GetSocialMediaUser(ulong guildId, string username)
         {
             int i = FindIndexByName(guildId, username, SocialMediaEnum.Twitch);
             if (i <= -1)

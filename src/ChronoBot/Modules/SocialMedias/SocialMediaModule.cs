@@ -16,6 +16,11 @@ namespace ChronoBot.Modules.SocialMedias
         protected readonly DiscordSocketClient Client;
         protected SocialMedia SocialMedia;
         protected SocialMediaEnum SocialMediaType;
+        protected const string AddCommand = "add";
+        protected const string DeleteCommand = "delete";
+        protected const string GetCommand = "get";
+        protected const string ListCommand = "list";
+        protected const string UpdateCommand = "update";
 
         public enum Options
         {
@@ -61,29 +66,19 @@ namespace ChronoBot.Modules.SocialMedias
             await HandleOption(Options.Delete, user);
         }
 
-        public virtual async Task GetSocialMediaUser(
-            string user,
-            [Summary("Where", "To which channel should this be posted. Default is this channel.")]
-            [ChannelTypes(ChannelType.Text)]
-            IChannel channel = null)
+        public virtual async Task GetSocialMediaUser(string user)
         {
-            await HandleOption(Options.Get, user, channel);
+            await HandleOption(Options.Get, user);
         }
 
-        public virtual async Task ListSocialMediaUser(
-            [Summary("Where", "List users from which channel. Default is this channel.")]
-            [ChannelTypes(ChannelType.Text)]
-            IChannel channel = null)
+        public virtual async Task ListSocialMediaUser()
         {
-            await HandleOption(Options.List, channel: channel);
+            await HandleOption(Options.List, null);
         }
 
-        public virtual async Task UpdateSocialMediaUser(
-            [Summary("Where", "Update users from which channel. Default is this channel.")]
-            [ChannelTypes(ChannelType.Text)]
-            IChannel channel = null)
+        public virtual async Task UpdateSocialMediaUser()
         {
-            await HandleOption(Options.Update, channel: channel);
+            await HandleOption(Options.Update, null);
         }
 
         protected virtual async Task SendFileWithLogo(Embed result, string socialMedia)
@@ -98,6 +93,7 @@ namespace ChronoBot.Modules.SocialMedias
         private async Task HandleOption(Options option, string user = "", [ChannelTypes(ChannelType.Text)] IChannel channel = null, string filter = "")
         {
             await DeferAsync();
+
             ulong guildId = Context.Guild.Id;
             ulong channelId = Context.Channel.Id;
             ulong sendToChannel = channel?.Id ?? channelId;
@@ -121,11 +117,12 @@ namespace ChronoBot.Modules.SocialMedias
                     await SendMessage(Client, result);
                     break;
                 case Options.Get:
-                    result = await SocialMedia.GetSocialMediaUser(guildId, channelId, user);
+                    result = await SocialMedia.GetSocialMediaUser(guildId, user);
                     await SendMessage(Client, result);
                     break;
                 case Options.List:
-                    result = await SocialMedia.ListSavedSocialMediaUsers(guildId, SocialMediaType, sendToChannel.ToString());
+                    result = await SocialMedia.ListSavedSocialMediaUsers(guildId, SocialMediaType,
+                        Client.GetGuild(guildId).GetTextChannel(sendToChannel).Mention);
                     var embed = new EmbedBuilder()
                         .WithDescription(result)
                         .Build();

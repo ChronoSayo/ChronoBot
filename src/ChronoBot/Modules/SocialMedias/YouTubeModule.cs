@@ -17,7 +17,7 @@ namespace ChronoBot.Modules.SocialMedias
             SocialMediaType = SocialMediaEnum.YouTube;
         }
 
-        [SlashCommand("youtube-add", "Adds YouTuber to the list of updates.", runMode: RunMode.Async)]
+        [SlashCommand(AddCommand, "Adds YouTuber to the list of updates.", runMode: RunMode.Async)]
         public override Task AddSocialMediaUser(
             [Summary("Youtuber", "Insert YouTuber's name.")] string user,
             [Summary("Where", "To which channel should this be updated to. Default is this channel.")]
@@ -26,11 +26,31 @@ namespace ChronoBot.Modules.SocialMedias
             return base.AddSocialMediaUser(user, channel);
         }
 
-        [SlashCommand("youtube-delete", "Deletes YouTuber to the list of updates.", runMode: RunMode.Async)]
+        [SlashCommand(DeleteCommand, "Deletes YouTuber to the list of updates.", runMode: RunMode.Async)]
         public override Task DeleteSocialMediaUser(
             [Summary("Youtuber", "Insert YouTuber's name.")] string user)
         {
             return base.DeleteSocialMediaUser(user);
+        }
+
+        [SlashCommand(GetCommand, "Posts YouTuber's latest video.", runMode: RunMode.Async)]
+        public override Task GetSocialMediaUser(
+            [Summary("Youtuber", "Insert YouTuber's name.")]
+            string user)
+        {
+            return base.GetSocialMediaUser(user);
+        }
+
+        [SlashCommand(ListCommand, "Gets a list of added YouTubers.", runMode: RunMode.Async)]
+        public override Task ListSocialMediaUser()
+        {
+            return base.ListSocialMediaUser();
+        }
+
+        [SlashCommand(UpdateCommand, "Updates all listed YouTubers in the server.", runMode: RunMode.Async)]
+        public override Task UpdateSocialMediaUser()
+        {
+            return base.UpdateSocialMediaUser();
         }
     }
 }

@@ -40,7 +40,7 @@ namespace ChronoBot.Utilities.SocialMedias
         }
 
         protected virtual bool CreateSocialMediaUser(string name, ulong guildId, ulong channelId, string id,
-            SocialMediaEnum socialMedia, string options = "")
+            SocialMediaEnum socialMedia, string options = "", bool live = false)
         {
             SocialMediaUserData temp = new SocialMediaUserData
             {
@@ -49,7 +49,8 @@ namespace ChronoBot.Utilities.SocialMedias
                 ChannelId = channelId,
                 Id = id,
                 SocialMedia = socialMedia,
-                Options = options
+                Options = options,
+                Live = live
             };
             Users.Add(temp);
 
@@ -122,10 +123,6 @@ namespace ChronoBot.Utilities.SocialMedias
             return $"Failed to delete {user}";
         }
 
-        public virtual async Task<string> GetSocialMediaUser(ulong guildId, ulong channelId, string username)
-        {
-            return await Task.FromResult(string.Empty);
-        }
         public virtual async Task<string> GetSocialMediaUser(ulong guildId, string username)
         {
             return await Task.FromResult(string.Empty);
@@ -149,7 +146,7 @@ namespace ChronoBot.Utilities.SocialMedias
                     continue;
 
                 string name = user.Name;
-                line += $"■ {name} {(channelMention ?? "***Missing channel info.***")}\n";
+                line += $"■ {name} {channelMention ?? "***Missing channel info.***"}\n";
             }
 
             return await Task.FromResult(line);
@@ -287,7 +284,7 @@ namespace ChronoBot.Utilities.SocialMedias
         protected virtual int FindIndexByName(ulong guildId, string name, SocialMediaEnum socialMedia)
         {
             return Users.FindIndex(x =>
-                x.GuildId == guildId && string.Equals(x.Name, name, StringComparison.InvariantCultureIgnoreCase) &&
+                x.GuildId == guildId && string.Equals(x.Name, name, StringComparison.CurrentCultureIgnoreCase) &&
                 x.SocialMedia == socialMedia);
         }
     }

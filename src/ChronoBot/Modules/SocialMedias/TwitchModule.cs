@@ -15,14 +15,5 @@ namespace ChronoBot.Modules.SocialMedias
             SocialMedia = socialMedia;
             SocialMediaType = SocialMediaEnum.Twitch;
         }
-
-        [SlashCommand("twitch-options", "Choose an option on how to handle streamer.", runMode: RunMode.Async)]
-        public override Task SetOptions(Options option,
-            [Summary("Streamer", "Insert streamer's name.")] string user,
-            [Summary("Where", "To which channel should this be posted. Default is this channel.")]
-                [ChannelTypes(new[] { ChannelType.Text })] IChannel channel = null)
-        {
-            return base.SetOptions(option, user, channel);
-        }
     }
 }
