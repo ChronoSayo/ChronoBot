@@ -28,16 +28,21 @@ namespace ChronoBot.Modules.SocialMedias
             SocialMedia = socialMedia;
         }
 
-        public virtual async Task SetOptions(Options option, string user, [ChannelTypes(ChannelType.Text)] IChannel channel = null)
+        public virtual async Task AddSocialMediaUser(
+            string user,
+            [Summary("Where", "To which channel should this be posted. Default is this channel.")]
+            [ChannelTypes(ChannelType.Text)]
+            IChannel channel = null)
         {
-            await DeferAsync();
-            await HandleOption(option, user, channel);
+            await HandleOption(Options.Add, user, channel);
         }
 
-        public virtual async Task SetTwitterOption(Options option,
-            [Summary("Tweeter", "Insert Twitter handle.")] string user,
+        public virtual async Task AddTwitterUser(
+            [Summary("Tweeter", "Insert Twitter handle.")]
+            string user,
             [Summary("Where", "To which channel should this be posted. Default is this channel.")]
-                [ChannelTypes(ChannelType.Text)] IChannel channel = null,
+            [ChannelTypes(ChannelType.Text)]
+            IChannel channel = null,
             [Summary("Filter", "Choose which the bot should filter the Tweeter's posts by.")] [Choice("Posts", "p")]
             [Choice("Retweets", "r")]
             [Choice("Likes", "l")]
@@ -48,7 +53,37 @@ namespace ChronoBot.Modules.SocialMedias
             [Choice("Video", "mv")]
             [Choice("All", "")] string filter = "")
         {
-            await HandleOption(option, user, channel, filter);
+            await HandleOption(Options.Add, user, channel, filter);
+        }
+
+        public virtual async Task DeleteSocialMediaUser(string user)
+        {
+            await HandleOption(Options.Delete, user);
+        }
+
+        public virtual async Task GetSocialMediaUser(
+            string user,
+            [Summary("Where", "To which channel should this be posted. Default is this channel.")]
+            [ChannelTypes(ChannelType.Text)]
+            IChannel channel = null)
+        {
+            await HandleOption(Options.Get, user, channel);
+        }
+
+        public virtual async Task ListSocialMediaUser(
+            [Summary("Where", "List users from which channel. Default is this channel.")]
+            [ChannelTypes(ChannelType.Text)]
+            IChannel channel = null)
+        {
+            await HandleOption(Options.List, channel: channel);
+        }
+
+        public virtual async Task UpdateSocialMediaUser(
+            [Summary("Where", "Update users from which channel. Default is this channel.")]
+            [ChannelTypes(ChannelType.Text)]
+            IChannel channel = null)
+        {
+            await HandleOption(Options.Update, channel: channel);
         }
 
         protected virtual async Task SendFileWithLogo(Embed result, string socialMedia)
@@ -60,8 +95,9 @@ namespace ChronoBot.Modules.SocialMedias
                 await FollowupWithFileAsync(thumbnail, embed: result);
         }
 
-        private async Task HandleOption(Options option, string user, [ChannelTypes(ChannelType.Text)] IChannel channel = null, string filter = "")
+        private async Task HandleOption(Options option, string user = "", [ChannelTypes(ChannelType.Text)] IChannel channel = null, string filter = "")
         {
+            await DeferAsync();
             ulong guildId = Context.Guild.Id;
             ulong channelId = Context.Channel.Id;
             ulong sendToChannel = channel?.Id ?? channelId;

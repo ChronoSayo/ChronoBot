@@ -17,21 +17,9 @@ namespace ChronoBot.Modules.SocialMedias
         }
 
         [SlashCommand("twitter-options", "Choose an option on how to handle Tweeter.", runMode: RunMode.Async)]
-        public override Task SetTwitterOption(Options option, 
-            [Summary("Tweeter", "Insert Twitter handle.")] string user,
-            [Summary("Where", "To which channel should this be posted. Default is this channel.")] 
-                [ChannelTypes(ChannelType.Text)] IChannel channel = null,
-            [Summary("Filter", "Choose which the bot should filter the Tweeter's posts by.")] [Choice("Posts", "p")]
-            [Choice("Retweets", "r")]
-            [Choice("Likes", "l")]
-            [Choice("QuoteTweets", "q")]
-            [Choice("AllMedia", "m")]
-            [Choice("Pictures", "mp")]
-            [Choice("GIF", "mg")]
-            [Choice("Video", "mv")]
-            [Choice("All", "")] string filter = "")
+        public override Task AddTwitterUser(string user, IChannel channel = null, string filter = "")
         {
-            return base.SetTwitterOption(option, user, channel, filter);
+            return base.AddTwitterUser(user, channel, filter);
         }
 
         [SlashCommand("show-twitter-video", "Use this if embedded video didn't work from the tweet.", runMode: RunMode.Async)]

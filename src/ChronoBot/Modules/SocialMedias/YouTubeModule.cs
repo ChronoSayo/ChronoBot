@@ -17,13 +17,20 @@ namespace ChronoBot.Modules.SocialMedias
             SocialMediaType = SocialMediaEnum.YouTube;
         }
 
-        [SlashCommand("youtube", "Notifies when a YouTuber uploads a video.", runMode: RunMode.Async)]
-        public override Task SetOptions(Options option,
-            [Summary("Youtuber", "Insert YouTuber's channel.")] string user,
-            [Summary("Where", "To which channel should this be posted. Default is this channel.")]
-                [ChannelTypes(new[] { ChannelType.Text })] IChannel channel = null)
+        [SlashCommand("youtube-add", "Adds YouTuber to the list of updates.", runMode: RunMode.Async)]
+        public override Task AddSocialMediaUser(
+            [Summary("Youtuber", "Insert YouTuber's name.")] string user,
+            [Summary("Where", "To which channel should this be updated to. Default is this channel.")]
+                [ChannelTypes(ChannelType.Text)] IChannel channel = null)
         {
-            return base.SetOptions(option, user, channel);
+            return base.AddSocialMediaUser(user, channel);
+        }
+
+        [SlashCommand("youtube-delete", "Deletes YouTuber to the list of updates.", runMode: RunMode.Async)]
+        public override Task DeleteSocialMediaUser(
+            [Summary("Youtuber", "Insert YouTuber's name.")] string user)
+        {
+            return base.DeleteSocialMediaUser(user);
         }
     }
 }
