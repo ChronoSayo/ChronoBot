@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using ChronoBot.Enums;
 using ChronoBot.Utilities.SocialMedias;
 using Discord;
@@ -26,7 +25,7 @@ namespace ChronoBot.Modules.SocialMedias
             return base.AddSocialMediaUser(user, channel);
         }
 
-        [SlashCommand(DeleteCommand, "Deletes YouTuber to the list of updates.", runMode: RunMode.Async)]
+        [SlashCommand(DeleteCommand, "Deletes YouTuber from the list of updates.", runMode: RunMode.Async)]
         public override Task DeleteSocialMediaUser(
             [Summary("Youtuber", "Insert YouTuber's name.")] string user)
         {

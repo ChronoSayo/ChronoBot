@@ -85,7 +85,7 @@ namespace ChronoBot.Tests.SocialMedias
         {
             var twitch = LoadTwitch(out _);
 
-            var result = twitch.GetSocialMediaUser(123456789, 2, "streamer2").GetAwaiter().GetResult();
+            var result = twitch.GetSocialMediaUser(123456789, "streamer2").GetAwaiter().GetResult();
 
             Assert.Equal("https://www.twitch.com/streamer2", result);
         }
@@ -95,7 +95,7 @@ namespace ChronoBot.Tests.SocialMedias
         {
             var twitch = LoadTwitch(out _);
 
-            var result = twitch.GetSocialMediaUser(123456789, 3, "streamer3").GetAwaiter().GetResult();
+            var result = twitch.GetSocialMediaUser(123456789, "streamer3").GetAwaiter().GetResult();
 
             Assert.Equal("Streamer3 is playing The Game\nhttps://www.twitch.com/streamer3\n\n", result);
         }
@@ -128,7 +128,7 @@ namespace ChronoBot.Tests.SocialMedias
         {
             var twitch = LoadTwitch(out _);
 
-            var result = twitch.GetSocialMediaUser(123456789, 5, "Fail").GetAwaiter().GetResult();
+            var result = twitch.GetSocialMediaUser(123456789, "Fail").GetAwaiter().GetResult();
 
             Assert.Equal("Can't find streamer.", result);
         }
@@ -253,7 +253,7 @@ namespace ChronoBot.Tests.SocialMedias
             fileSystem = new SocialMediaFileSystem(path);
 
             return new Twitch(new FakeChronoTwitch(), _mockClient.Object, _config.Object,
-                new List<SocialMediaUserData>(), new List<string>(), fileSystem, seconds);
+                new List<SocialMediaUserData>(), fileSystem, seconds);
         }
 
         private Twitch LoadTwitch(out SocialMediaFileSystem fileSystem)
@@ -261,7 +261,7 @@ namespace ChronoBot.Tests.SocialMedias
             fileSystem = new SocialMediaFileSystem(Path.Combine(Directory.GetCurrentDirectory(), "Test Files", GetType().Name, "Load"));
 
             return new Twitch(new FakeChronoTwitch(), _mockClient.Object, _config.Object,
-                new List<SocialMediaUserData>(), new List<string>(), fileSystem);
+                new List<SocialMediaUserData>(), fileSystem);
         }
     }
 }

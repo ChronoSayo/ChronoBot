@@ -577,7 +577,7 @@ namespace ChronoBot.Tests.SocialMedias
             fileSystem = new SocialMediaFileSystem(path);
 
             return new Twitter(new FakeTwitterService(), _mockClient.Object, _config.Object,
-                new List<SocialMediaUserData>(), new List<string>(), fileSystem, seconds);
+                new List<SocialMediaUserData>(), fileSystem, seconds);
         }
 
         private Twitter LoadTwitter(out SocialMediaFileSystem fileSystem, int seconds = 10)
@@ -585,7 +585,7 @@ namespace ChronoBot.Tests.SocialMedias
             fileSystem = new SocialMediaFileSystem(Path.Combine(Directory.GetCurrentDirectory(), "Test Files", GetType().Name, "Load"));
 
             return new Twitter(new FakeTwitterService(), _mockClient.Object, _config.Object,
-                new List<SocialMediaUserData>(), new List<string>(), fileSystem, seconds);
+                new List<SocialMediaUserData>(), fileSystem, seconds);
         }
     }
 }

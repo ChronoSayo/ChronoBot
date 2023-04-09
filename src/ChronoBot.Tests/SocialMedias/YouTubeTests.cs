@@ -67,7 +67,7 @@ namespace ChronoBot.Tests.SocialMedias
             var fileSystem = new SocialMediaFileSystem(Path.Combine(Directory.GetCurrentDirectory(), "Test Files", GetType().Name, "Load"));
 
             return new YouTube(_fakeYouTube, _mockClient.Object, _config.Object, new List<SocialMediaUserData>(),
-                new List<string>(), fileSystem);
+                fileSystem);
         }
         
         private YouTube LoadCopyYouTubeService(out SocialMediaFileSystem fileSystem)
@@ -81,7 +81,7 @@ namespace ChronoBot.Tests.SocialMedias
             fileSystem = new SocialMediaFileSystem(path);
 
             return new YouTube(_fakeYouTube, _mockClient.Object, _config.Object, new List<SocialMediaUserData>(),
-                new List<string>(), fileSystem);
+                fileSystem);
         }
     }
 }

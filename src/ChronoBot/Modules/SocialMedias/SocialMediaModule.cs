@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using ChronoBot.Common;
@@ -35,7 +36,6 @@ namespace ChronoBot.Modules.SocialMedias
 
         public virtual async Task AddSocialMediaUser(
             string user,
-            [Summary("Where", "To which channel should this be posted. Default is this channel.")]
             [ChannelTypes(ChannelType.Text)]
             IChannel channel = null)
         {
@@ -43,22 +43,25 @@ namespace ChronoBot.Modules.SocialMedias
         }
 
         public virtual async Task AddTwitterUser(
-            [Summary("Tweeter", "Insert Twitter handle.")]
             string user,
-            [Summary("Where", "To which channel should this be posted. Default is this channel.")]
-            [ChannelTypes(ChannelType.Text)]
-            IChannel channel = null,
-            [Summary("Filter", "Choose which the bot should filter the Tweeter's posts by.")] [Choice("Posts", "p")]
-            [Choice("Retweets", "r")]
-            [Choice("Likes", "l")]
-            [Choice("QuoteTweets", "q")]
-            [Choice("AllMedia", "m")]
-            [Choice("Pictures", "mp")]
-            [Choice("GIF", "mg")]
-            [Choice("Video", "mv")]
-            [Choice("All", "")] string filter = "")
+            TwitterFiltersEnum.TwitterFilters filter1 = TwitterFiltersEnum.TwitterFilters.All,
+            TwitterFiltersEnum.TwitterFilters filter2 = TwitterFiltersEnum.TwitterFilters.All,
+            TwitterFiltersEnum.TwitterFilters filter3 = TwitterFiltersEnum.TwitterFilters.All,
+            TwitterFiltersEnum.TwitterFilters filter4 = TwitterFiltersEnum.TwitterFilters.All,
+            TwitterFiltersEnum.TwitterFilters filter5 = TwitterFiltersEnum.TwitterFilters.All,
+            TwitterFiltersEnum.TwitterFilters filter6 = TwitterFiltersEnum.TwitterFilters.All,
+            [ChannelTypes(ChannelType.Text)] IChannel channel = null)
         {
-            await HandleOption(Options.Add, user, channel, filter);
+            List<string> filters = new List<string>
+            {
+                TwitterFiltersEnum.ConvertEnumToFilter(filter1),
+                TwitterFiltersEnum.ConvertEnumToFilter(filter2),
+                TwitterFiltersEnum.ConvertEnumToFilter(filter3),
+                TwitterFiltersEnum.ConvertEnumToFilter(filter4),
+                TwitterFiltersEnum.ConvertEnumToFilter(filter5),
+                TwitterFiltersEnum.ConvertEnumToFilter(filter6)
+            };
+            await HandleOption(Options.Add, user, channel, string.Join(" ", filters).TrimEnd());
         }
 
         public virtual async Task DeleteSocialMediaUser(string user)
@@ -90,7 +93,7 @@ namespace ChronoBot.Modules.SocialMedias
                 await FollowupWithFileAsync(thumbnail, embed: result);
         }
 
-        private async Task HandleOption(Options option, string user = "", [ChannelTypes(ChannelType.Text)] IChannel channel = null, string filter = "")
+        private async Task HandleOption(Options option, string user = "", [ChannelTypes(ChannelType.Text)] IChannel channel = null, string options = "")
         {
             await DeferAsync();
 
@@ -103,7 +106,7 @@ namespace ChronoBot.Modules.SocialMedias
                 case Options.Add:
                     try
                     {
-                        result = await SocialMedia.AddSocialMediaUser(guildId, channelId, user, sendToChannel, filter);
+                        result = await SocialMedia.AddSocialMediaUser(guildId, channelId, user, sendToChannel, options);
                         await SendMessage(Client, result, sendToChannel);
                     }
                     catch (Exception e)
@@ -125,6 +128,7 @@ namespace ChronoBot.Modules.SocialMedias
                         Client.GetGuild(guildId).GetTextChannel(sendToChannel).Mention);
                     var embed = new EmbedBuilder()
                         .WithDescription(result)
+                        .WithColor(GetSocialMediaColor(SocialMediaType))
                         .Build();
                     await SendMessage(Client, embed);
                     break;
@@ -132,6 +136,21 @@ namespace ChronoBot.Modules.SocialMedias
                     result = await SocialMedia.GetUpdatedSocialMediaUsers(guildId);
                     await SendMessage(Client, result);
                     break;
+            }
+        }
+
+        private Color GetSocialMediaColor(SocialMediaEnum type)
+        {
+            switch (type)
+            {
+                case SocialMediaEnum.Twitter:
+                    return new Color(29, 161, 242);
+                case SocialMediaEnum.Twitch:
+                    return new Color(100, 65, 165);
+                case SocialMediaEnum.YouTube:
+                    return new Color(255, 0, 0);
+                default:
+                    return Color.Green;
             }
         }
     }

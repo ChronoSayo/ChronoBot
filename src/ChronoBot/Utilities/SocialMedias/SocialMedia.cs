@@ -22,15 +22,13 @@ namespace ChronoBot.Utilities.SocialMedias
         protected string Hyperlink;
         protected string TypeOfSocialMedia;
         protected List<SocialMediaUserData> Users;
-        protected List<string> AvailableOptions;
 
-        public SocialMedia(DiscordSocketClient client, IConfiguration config, IEnumerable<SocialMediaUserData> users, 
-            IEnumerable<string> availableOptions, SocialMediaFileSystem fileSystem, int seconds = 60)
+        public SocialMedia(DiscordSocketClient client, IConfiguration config, IEnumerable<SocialMediaUserData> users,
+            SocialMediaFileSystem fileSystem, int seconds = 60)
         {
             Client = client;
             Config = config;
             Users = users.ToList();
-            AvailableOptions = availableOptions.ToList();
             FileSystem = fileSystem;
         }
 
@@ -257,7 +255,7 @@ namespace ChronoBot.Utilities.SocialMedias
         //Display text for YouTube.
         protected virtual string GetYouTuber(SocialMediaUserData ud)
         {
-            string message = Hyperlink + ud.Id;
+            string message = (ud.Live ? "LIVE:\n" : string.Empty) + Hyperlink + ud.Options;
             return message + "\n\n";
         }
 
@@ -271,7 +269,8 @@ namespace ChronoBot.Utilities.SocialMedias
                     continue;
 
                 if (ud.GuildId != guildId ||
-                    !string.Equals(ud.Name, name, StringComparison.CurrentCultureIgnoreCase)) 
+                    !string.Equals(ud.Name, name, StringComparison.CurrentCultureIgnoreCase) ||
+                    ud.SocialMedia != socialMedia) 
                     continue;
 
                 duplicate = true;

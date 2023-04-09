@@ -21,37 +21,33 @@ namespace ChronoBot.Utilities.SocialMedias
         private readonly TwitterService _service;
         private readonly Dictionary<List<SocialMediaUserData>, int> _groupedUsers;
         private readonly Dictionary<string, List<TwitterStatus>> _history;
-        private const string OnlyPosts = "p";
-        private const string OnlyRetweets = "r";
-        private const string OnlyLikes = "l";
-        private const string OnlyQuoteTweets = "q";
-        private const string OnlyAllMedia = "m";
-        private const string OnlyPicMedia = "mp";
-        private const string OnlyGifMedia = "mg";
-        private const string OnlyVidMedia = "mv";
+        private readonly List<string> _availableOptions;
         private DateTime _rateLimitResetTime;
 
         public Twitter(TwitterService service, DiscordSocketClient client, IConfiguration config,
-            IEnumerable<SocialMediaUserData> users, IEnumerable<string> availableOptions,
+            IEnumerable<SocialMediaUserData> users,
             SocialMediaFileSystem fileSystem, int seconds = 10) :
-            base(client, config, users, availableOptions, fileSystem, seconds)
+            base(client, config, users, fileSystem, seconds)
         {
             _service = service;
 
             Authenticate();
-            
+
             OnUpdateTimerAsync(seconds);
 
             Hyperlink = "https://twitter.com/@name/status/@id";
-
+            
             LoadOrCreateFromFile();
 
             TypeOfSocialMedia = SocialMediaEnum.Twitter.ToString().ToLowerInvariant();
 
-            AvailableOptions = new List<string>
+            _availableOptions = new List<string>();
+            foreach (TwitterFiltersEnum.TwitterFilters filter in TwitterFiltersEnum.FiltersList())
             {
-                OnlyPosts, OnlyRetweets, OnlyQuoteTweets, OnlyLikes, OnlyAllMedia, OnlyGifMedia, OnlyVidMedia, OnlyPicMedia
-            };
+                if(filter == TwitterFiltersEnum.TwitterFilters.All)
+                    continue;
+                _availableOptions.Add(TwitterFiltersEnum.ConvertEnumToFilter(filter));
+            }
 
             _groupedUsers = new Dictionary<List<SocialMediaUserData>, int>();
             GroupTwitterUsers();
@@ -63,8 +59,8 @@ namespace ChronoBot.Utilities.SocialMedias
 
         private async Task<TwitterStatus> GetLatestTweet(SocialMediaUserData ud)
         {
-            List<string> options = GetLegitOptions(ud.Options).ToList();
-            if (options.Count == 1 && options[0] == OnlyLikes)
+            List<string> options = ud.Options.Split(" ").ToList();
+            if (options.Count == 1 && TwitterFiltersEnum.ConvertStringToEnum(options[0]) == TwitterFiltersEnum.TwitterFilters.Likes)
                 return await GetLatestLike(ud);
 
             var timeLineOptions = new ListTweetsOnUserTimelineOptions
@@ -108,25 +104,26 @@ namespace ChronoBot.Utilities.SocialMedias
             foreach (string option in options)
             {
                 TwitterStatus found = null;
-                switch (option)
+                var filter = TwitterFiltersEnum.ConvertStringToEnum(option);
+                switch (filter)
                 {
-                    case OnlyPosts:
+                    case TwitterFiltersEnum.TwitterFilters.Posts:
                         found = tweets.Value.ToList()
                             .FirstOrDefault(x =>
                                 !x.IsRetweeted && !x.IsQuoteStatus && !x.IsFavorited && x.RetweetedStatus == null &&
                                 x.QuotedStatus == null);
                         break;
-                    case OnlyRetweets:
+                    case TwitterFiltersEnum.TwitterFilters.Retweets:
                         found = tweets.Value.ToList().FirstOrDefault(x => x.IsRetweeted || x.RetweetedStatus != null);
                         break;
-                    case OnlyQuoteTweets:
+                    case TwitterFiltersEnum.TwitterFilters.QuoteRetweets:
                         found = tweets.Value.ToList().FirstOrDefault(x => x.IsQuoteStatus || x.QuotedStatus != null);
                         break;
-                    case OnlyPicMedia:
-                    case OnlyGifMedia:
-                    case OnlyVidMedia:
-                        TwitterMediaType media = option == OnlyPicMedia ? TwitterMediaType.Photo :
-                            option == OnlyGifMedia ? TwitterMediaType.AnimatedGif : TwitterMediaType.Video;
+                    case TwitterFiltersEnum.TwitterFilters.Pictures:
+                    case TwitterFiltersEnum.TwitterFilters.Gif:
+                    case TwitterFiltersEnum.TwitterFilters.Video:
+                        TwitterMediaType media = filter == TwitterFiltersEnum.TwitterFilters.Pictures ? TwitterMediaType.Photo :
+                            filter == TwitterFiltersEnum.TwitterFilters.Gif ? TwitterMediaType.AnimatedGif : TwitterMediaType.Video;
                         found = tweets.Value.ToList().FirstOrDefault(x =>
                             x.ExtendedEntities != null && x.ExtendedEntities.Any() &&
                             x.ExtendedEntities.Media.Any() &&
@@ -134,14 +131,14 @@ namespace ChronoBot.Utilities.SocialMedias
                             !x.IsQuoteStatus && !x.IsFavorited && x.RetweetedStatus == null &&
                             x.QuotedStatus == null);
                         break;
-                    case OnlyAllMedia:
+                    case TwitterFiltersEnum.TwitterFilters.AllMedia:
                         found = tweets.Value.ToList().FirstOrDefault(x =>
                             x.ExtendedEntities != null && x.ExtendedEntities.Any() &&
                             x.ExtendedEntities.Media.Any() && !x.IsRetweeted && !x.IsQuoteStatus && !x.IsFavorited &&
                             x.RetweetedStatus == null &&
                             x.QuotedStatus == null);
                         break;
-                    case OnlyLikes:
+                    case TwitterFiltersEnum.TwitterFilters.Likes:
                         found = await GetLatestLike(ud);
                         break;
                 }
@@ -242,7 +239,7 @@ namespace ChronoBot.Utilities.SocialMedias
                 bool isLegit = legit.Item2;
                 if (!isLegit)
                     return await Task.FromResult("Can't find " + username);
-                List<string> legitOptions = GetLegitOptions(options).ToList();
+                List<string> legitOptions = GetLegitFilters(options).ToList();
                 if (!legitOptions.Any())
                     return await Task.FromResult($"Unrecognizable option: \"{options}\"");
                 if (sendToChannelId == 0)
@@ -511,27 +508,26 @@ namespace ChronoBot.Utilities.SocialMedias
             }
         }
 
-        private IEnumerable<string> GetLegitOptions(string options)
+        private IEnumerable<string> GetLegitFilters(string filters)
         {
-            if (string.IsNullOrWhiteSpace(options))
+            if (string.IsNullOrWhiteSpace(filters))
             {
                 List<string> returnDefaults = new List<string>();
-                returnDefaults.AddRange(AvailableOptions);
-                int i = returnDefaults.FindIndex(x => x == OnlyAllMedia);
+                returnDefaults.AddRange(_availableOptions);
+                int i = returnDefaults.FindIndex(x => TwitterFiltersEnum.ConvertStringToEnum(x) == TwitterFiltersEnum.TwitterFilters.AllMedia);
                 returnDefaults.RemoveRange(i + 1, 3);
                 return returnDefaults;
             }
 
-            IEnumerable<string> optionsList = options.Split(" ").ToList();
-            List<string> legitOptions = new List<string>();
-
-            foreach (string option in optionsList)
+            IEnumerable<string> filtersList = filters.Split(" ").ToList();
+            List<string> legitFilters = new List<string>();
+            foreach (string filter in filtersList)
             {
-                if (AvailableOptions.Any(x => x == option))
-                    legitOptions.Add(option);
+                if (_availableOptions.Any(x => x == filter))
+                    legitFilters.Add(filter);
             }
 
-            return legitOptions;
+            return legitFilters;
         }
 
         private void GroupTwitterUsers()

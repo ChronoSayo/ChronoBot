@@ -42,6 +42,7 @@ namespace ChronoBot.Utilities.Tools.Deadlines
                 finally
                 {
                     user.Deadline = now;
+                    FileSystem.UpdateFile(user);
                 }
             }
         }
