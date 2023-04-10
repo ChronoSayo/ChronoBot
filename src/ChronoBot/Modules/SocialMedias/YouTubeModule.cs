@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using ChronoBot.Enums;
 using ChronoBot.Utilities.SocialMedias;
 using Discord;
@@ -17,13 +16,40 @@ namespace ChronoBot.Modules.SocialMedias
             SocialMediaType = SocialMediaEnum.YouTube;
         }
 
-        [SlashCommand("youtube", "Notifies when a YouTuber uploads a video.", runMode: RunMode.Async)]
-        public override Task SetOptions(Options option,
-            [Summary("YouTuber", "Insert YouTuber's channel.")] string user,
-            [Summary("Where", "To which channel should this be posted. Default is this channel.")]
-                [ChannelTypes(new[] { ChannelType.Text })] IChannel channel = null)
+        [SlashCommand(AddCommand, "Adds YouTuber to the list of updates.", runMode: RunMode.Async)]
+        public override Task AddSocialMediaUser(
+            [Summary("Youtuber", "Insert YouTuber's name.")] string user,
+            [Summary("Where", "To which channel should this be updated to. Default is this channel.")]
+                [ChannelTypes(ChannelType.Text)] IChannel channel = null)
         {
-            return base.SetOptions(option, user, channel);
+            return base.AddSocialMediaUser(user, channel);
+        }
+
+        [SlashCommand(DeleteCommand, "Deletes YouTuber from the list of updates.", runMode: RunMode.Async)]
+        public override Task DeleteSocialMediaUser(
+            [Summary("Youtuber", "Insert YouTuber's name.")] string user)
+        {
+            return base.DeleteSocialMediaUser(user);
+        }
+
+        [SlashCommand(GetCommand, "Posts YouTuber's latest video.", runMode: RunMode.Async)]
+        public override Task GetSocialMediaUser(
+            [Summary("Youtuber", "Insert YouTuber's name.")]
+            string user)
+        {
+            return base.GetSocialMediaUser(user);
+        }
+
+        [SlashCommand(ListCommand, "Gets a list of added YouTubers.", runMode: RunMode.Async)]
+        public override Task ListSocialMediaUser()
+        {
+            return base.ListSocialMediaUser();
+        }
+
+        [SlashCommand(UpdateCommand, "Updates all listed YouTubers in the server.", runMode: RunMode.Async)]
+        public override Task UpdateSocialMediaUser()
+        {
+            return base.UpdateSocialMediaUser();
         }
     }
 }

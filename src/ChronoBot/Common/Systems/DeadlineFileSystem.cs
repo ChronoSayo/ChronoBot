@@ -39,7 +39,7 @@ namespace ChronoBot.Common.Systems
             string name = deadlineUserData.Name ?? string.Empty;
             string channelId = deadlineUserData.ChannelId.ToString();
             string id = deadlineUserData.Id ?? string.Empty;
-            string deadline = deadlineUserData.Deadline.ToString(CultureInfo.InvariantCulture);
+            string deadline = deadlineUserData.Deadline.ToString(CultureInfo.CurrentCulture);
             string userId = deadlineUserData.UserId.ToString();
             string deadlineType = deadlineUserData.DeadlineType.ToString();
             string daysLeft = deadlineUserData.DaysLeft.ToString();
@@ -174,11 +174,12 @@ namespace ChronoBot.Common.Systems
                     try
                     {
                         XElement found = xml.Descendants("Service").Descendants(ud.DeadlineType.ToString()).Descendants("User")
-                            .First(x => x.Attributes("UserID").First().Value == deadlineUserData.UserId.ToString());
+                            .First(x => x.Attributes("UserID").First().Value == deadlineUserData.UserId.ToString() &&
+                                        x.Attributes("ID").First().Value == deadlineUserData.Id);
                         found.Attributes("Name").First().Value = deadlineUserData.Name;
                         found.Attributes("ChannelID").First().Value = deadlineUserData.ChannelId.ToString();
                         found.Attributes("ID").First().Value = deadlineUserData.Id;
-                        found.Attributes("Deadline").First().Value = deadlineUserData.Deadline.ToShortDateString();
+                        found.Attributes("Deadline").First().Value = deadlineUserData.Deadline.ToString(CultureInfo.CurrentCulture);
                         found.Attributes("UserID").First().Value = deadlineUserData.UserId.ToString();
                         found.Attributes("DaysLeft").First().Value = deadlineUserData.DaysLeft.ToString();
                         updated = true;

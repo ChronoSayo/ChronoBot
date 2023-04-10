@@ -34,7 +34,7 @@ namespace ChronoBot.Tests.SocialMedias
             _config.SetupGet(x => x[It.Is<string>(y => y == "IDs:TextChannel")]).Returns("1");
             Statics.Config = _config.Object;
 
-            _fakeYouTube = new FakeYouTubeService();
+            _fakeYouTube = new FakeYouTubeService(null);
             _mockClient = new Mock<DiscordSocketClient>(MockBehavior.Loose);
         }
 
@@ -44,7 +44,9 @@ namespace ChronoBot.Tests.SocialMedias
             var youtube = LoadYouTubeService();
             var result = youtube.ListSavedSocialMediaUsers(123456789, SocialMediaEnum.YouTube).GetAwaiter().GetResult();
             
-            Assert.Equal("■ YouTuber1 \n■ YouTuber2 \n■ YouTuber3 \n", result);
+            Assert.Equal("■ YouTuber1 (https://www.youtube.com/@YouTuber1) \n" +
+                         "■ YouTuber2 (https://www.youtube.com/@YouTuber2) \n" +
+                         "■ YouTuber3 (https://www.youtube.com/@YouTuber3) \n", result);
         }
 
         [Fact]
@@ -67,7 +69,7 @@ namespace ChronoBot.Tests.SocialMedias
             var fileSystem = new SocialMediaFileSystem(Path.Combine(Directory.GetCurrentDirectory(), "Test Files", GetType().Name, "Load"));
 
             return new YouTube(_fakeYouTube, _mockClient.Object, _config.Object, new List<SocialMediaUserData>(),
-                new List<string>(), fileSystem);
+                fileSystem);
         }
         
         private YouTube LoadCopyYouTubeService(out SocialMediaFileSystem fileSystem)
@@ -81,7 +83,7 @@ namespace ChronoBot.Tests.SocialMedias
             fileSystem = new SocialMediaFileSystem(path);
 
             return new YouTube(_fakeYouTube, _mockClient.Object, _config.Object, new List<SocialMediaUserData>(),
-                new List<string>(), fileSystem);
+                fileSystem);
         }
     }
 }

@@ -11,7 +11,7 @@ namespace ChronoBot.Modules.Tools.Deadlines;
 [Group("repeater", "Notifies you the chosen day of the week.")]
 public class RepeaterModule : DeadlineModule
 {
-    public RepeaterModule(DiscordSocketClient client, Deadline deadline) : base(client, deadline)
+    public RepeaterModule(DiscordSocketClient client, Repeater deadline) : base(client, deadline)
     {
         Deadline = deadline;
         DeadlineType = DeadlineEnum.Repeater;

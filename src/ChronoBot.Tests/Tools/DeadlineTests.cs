@@ -472,9 +472,9 @@ namespace ChronoBot.Tests.Tools
             Assert.Equal(countdown1.Deadline, tomorrow);
             Assert.Equal(countdown2.Deadline, tomorrow);
             Assert.True(countdown3.Deadline == tomorrow);
-            Assert.True(embed.Description.Contains("1."));
-            Assert.True(embed.Description.Contains("2."));
-            Assert.True(embed.Description.Contains("3."));
+            Assert.Contains("1.", embed.Description);
+            Assert.Contains("2.", embed.Description);
+            Assert.Contains("3.", embed.Description);
             Assert.Equal("ReminderUser", embed.Author.Value.ToString());
             Assert.Equal("REMINDER", embed.Title);
 

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using ChronoBot.Common.Systems;
 using ChronoBot.Common.UserDatas;
@@ -16,9 +15,9 @@ namespace ChronoBot.Utilities.SocialMedias
         private readonly ChronoTwitch.ChronoTwitch _api;
 
         public Twitch(ChronoTwitch.ChronoTwitch api, DiscordSocketClient client, IConfiguration config,
-            IEnumerable<SocialMediaUserData> users, IEnumerable<string> availableOptions,
+            IEnumerable<SocialMediaUserData> users,
             SocialMediaFileSystem fileSystem, int seconds = 120) :
-            base(client, config, users, availableOptions, fileSystem)
+            base(client, config, users, fileSystem)
         {
             _api = api;
             _api.Authenticate(Config[Statics.TwitchClientId], Config[Statics.TwitchSecret],
@@ -69,7 +68,7 @@ namespace ChronoBot.Utilities.SocialMedias
             return await Task.FromResult($"Successfully added {displayName} \n{Hyperlink}{loginName}");
         }
 
-        public override async Task<string> GetSocialMediaUser(ulong guildId, ulong channelId, string username)
+        public override async Task<string> GetSocialMediaUser(ulong guildId, string username)
         {
             int i = FindIndexByName(guildId, username, SocialMediaEnum.Twitch);
             if (i <= -1)

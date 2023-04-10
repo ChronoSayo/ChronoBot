@@ -4,6 +4,7 @@ using ChronoBot.Utilities.Games;
 using ChronoBot.Utilities.SocialMedias;
 using ChronoBot.Utilities.Tools;
 using ChronoBot.Utilities.Tools.Deadlines;
+using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
 using Google.Apis.YouTube.v3;
@@ -26,9 +27,15 @@ namespace ChronoBot.Services
 
         private static IServiceCollection AddBaseServiceCollection(this IServiceCollection services)
         {
+            var config = new DiscordSocketConfig
+            {
+                GatewayIntents = GatewayIntents.All,
+                UseInteractionSnowflakeDate = false
+            };
+            var client = new DiscordSocketClient(config);
             return services
                 .AddSingleton(Statics.Config)
-                .AddSingleton<DiscordSocketClient>()
+                .AddSingleton(client)
                 .AddSingleton(x => new InteractionService(x.GetRequiredService<DiscordSocketClient>()))
                 .AddSingleton<CommandHandler>();
         }

@@ -16,37 +16,70 @@ namespace ChronoBot.Modules.SocialMedias
             SocialMediaType = SocialMediaEnum.Twitter;
         }
 
-        [SlashCommand("twitter-options", "Choose an option on how to handle Tweeter.", runMode: RunMode.Async)]
-        public override Task SetTwitterOption(Options option, 
-            [Summary("Tweeter", "Insert Twitter handle.")] string user,
-            [Summary("Where", "To which channel should this be posted. Default is this channel.")] 
-                [ChannelTypes(ChannelType.Text)] IChannel channel = null,
-            [Summary("Filter", "Choose which the bot should filter the Tweeter's posts by.")] [Choice("Posts", "p")]
-            [Choice("Retweets", "r")]
-            [Choice("Likes", "l")]
-            [Choice("QuoteTweets", "q")]
-            [Choice("AllMedia", "m")]
-            [Choice("Pictures", "mp")]
-            [Choice("GIF", "mg")]
-            [Choice("Video", "mv")]
-            [Choice("All", "")] string filter = "")
+        [SlashCommand(AddCommand, "Adds YouTuber to the list of updates.", runMode: RunMode.Async)]
+        public override async Task AddTwitterUser(
+            [Summary("Tweeter", "Insert Twitter handle.")]
+            string user,
+            [Summary("Filter1", "Filter tweets based option.")]
+            TwitterFiltersEnum.TwitterFilters filter1 = TwitterFiltersEnum.TwitterFilters.All,
+            [Summary("Filter2", "Filter tweets based option.")]
+            TwitterFiltersEnum.TwitterFilters filter2 = TwitterFiltersEnum.TwitterFilters.All,
+            [Summary("Filter3", "Filter tweets based option.")]
+            TwitterFiltersEnum.TwitterFilters filter3 = TwitterFiltersEnum.TwitterFilters.All,
+            [Summary("Filter4", "Filter tweets based option.")]
+            TwitterFiltersEnum.TwitterFilters filter4 = TwitterFiltersEnum.TwitterFilters.All,
+            [Summary("Filter5", "Filter tweets based option.")]
+            TwitterFiltersEnum.TwitterFilters filter5 = TwitterFiltersEnum.TwitterFilters.All,
+            [Summary("Filter6", "Filter tweets based option.")]
+            TwitterFiltersEnum.TwitterFilters filter6 = TwitterFiltersEnum.TwitterFilters.All,
+            [Summary("Where", "To which channel should this be posted. Default is this channel.")]
+            [ChannelTypes(ChannelType.Text)]
+            IChannel channel = null)
         {
-            return base.SetTwitterOption(option, user, channel, filter);
+            await base.AddTwitterUser(user, filter1, filter2, filter3, filter4, filter5, filter6, channel);
+        }
+
+        [SlashCommand(DeleteCommand, "Deletes Tweeter from the list of updates.", runMode: RunMode.Async)]
+        public override Task DeleteSocialMediaUser(
+            [Summary("Tweeter", "Insert Twitter handle.")]
+            string user)
+        {
+            return base.DeleteSocialMediaUser(user);
+        }
+
+        [SlashCommand(GetCommand, "Posts Tweeter's latest tweet.", runMode: RunMode.Async)]
+        public override Task GetSocialMediaUser(
+            [Summary("Tweeter", "Insert Twitter handle.")]
+            string user)
+        {
+            return base.GetSocialMediaUser(user);
+        }
+
+        [SlashCommand(ListCommand, "Gets a list of added Tweeters.", runMode: RunMode.Async)]
+        public override Task ListSocialMediaUser()
+        {
+            return base.ListSocialMediaUser();
+        }
+
+        [SlashCommand(UpdateCommand, "Updates all listed Tweeters in the server.", runMode: RunMode.Async)]
+        public override Task UpdateSocialMediaUser()
+        {
+            return base.UpdateSocialMediaUser();
         }
 
         [SlashCommand("show-twitter-video", "Use this if embedded video didn't work from the tweet.", runMode: RunMode.Async)]
         public async Task PostVideoAsync()
         {
             var message = await GetOriginalResponseAsync();
-            if(message == null)
+            if (message == null)
             {
                 await SendMessage(Client, "No Twitter video discovered.");
                 return;
             }
 
             string video =
-                await ((Twitter) SocialMedia).PostVideo(Context.Guild.Id, Context.Channel.Id, message.Source.ToString());
-            if(!string.IsNullOrEmpty(video))
+                await ((Twitter)SocialMedia).PostVideo(Context.Guild.Id, Context.Channel.Id, message.Source.ToString());
+            if (!string.IsNullOrEmpty(video))
                 await SendMessage(Client, video);
         }
     }
