@@ -174,7 +174,8 @@ namespace ChronoBot.Common.Systems
                     try
                     {
                         XElement found = xml.Descendants("Service").Descendants(ud.DeadlineType.ToString()).Descendants("User")
-                            .First(x => x.Attributes("UserID").First().Value == deadlineUserData.UserId.ToString());
+                            .First(x => x.Attributes("UserID").First().Value == deadlineUserData.UserId.ToString() &&
+                                        x.Attributes("ID").First().Value == deadlineUserData.Id);
                         found.Attributes("Name").First().Value = deadlineUserData.Name;
                         found.Attributes("ChannelID").First().Value = deadlineUserData.ChannelId.ToString();
                         found.Attributes("ID").First().Value = deadlineUserData.Id;
