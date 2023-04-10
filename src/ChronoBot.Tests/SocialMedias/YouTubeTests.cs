@@ -34,7 +34,7 @@ namespace ChronoBot.Tests.SocialMedias
             _config.SetupGet(x => x[It.Is<string>(y => y == "IDs:TextChannel")]).Returns("1");
             Statics.Config = _config.Object;
 
-            _fakeYouTube = new FakeYouTubeService();
+            _fakeYouTube = new FakeYouTubeService(null);
             _mockClient = new Mock<DiscordSocketClient>(MockBehavior.Loose);
         }
 
