@@ -229,7 +229,7 @@ namespace ChronoBot.Tests.SocialMedias
                     case 5:
                         Assert.Equal("Tweeter6", user.Name);
                         Assert.Equal("6", user.ChannelId.ToString());
-                        Assert.Equal("123", user.Id);
+                        Assert.Equal("789", user.Id);
                         Assert.Equal("l", user.Options);
                         break;
                     case 6:
