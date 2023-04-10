@@ -44,7 +44,9 @@ namespace ChronoBot.Tests.SocialMedias
             var youtube = LoadYouTubeService();
             var result = youtube.ListSavedSocialMediaUsers(123456789, SocialMediaEnum.YouTube).GetAwaiter().GetResult();
             
-            Assert.Equal("■ YouTuber1 \n■ YouTuber2 \n■ YouTuber3 \n", result);
+            Assert.Equal("■ YouTuber1 (https://www.youtube.com/@YouTuber1) \n" +
+                         "■ YouTuber2 (https://www.youtube.com/@YouTuber2) \n" +
+                         "■ YouTuber3 (https://www.youtube.com/@YouTuber3) \n", result);
         }
 
         [Fact]

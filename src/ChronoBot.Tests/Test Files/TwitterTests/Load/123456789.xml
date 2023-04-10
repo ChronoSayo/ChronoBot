@@ -7,9 +7,9 @@
     <User Name="Streamer" ChannelID="2" ID="spasm" />
   </Twitch>
   <Twitter>
-    <User Name="Tweeter1" ChannelID="1" ID="chirp" />
-    <User Name="Tweeter2" ChannelID="2" ID="chirps" />
-    <User Name="Tweeter3" ChannelID="3" ID="chirpf" />
+    <User Name="Tweeter1" ChannelID="1" ID="chirp" Options="p q l q m"/>
+    <User Name="Tweeter2" ChannelID="2" ID="chirps" Options="p q l q m"/>
+    <User Name="Tweeter3" ChannelID="3" ID="chirpf" Options="p q l q m"/>
 	<User Name="Tweeter4" ChannelID="4" ID="chirp" Options="p" />
     <User Name="Tweeter5" ChannelID="5" ID="chirp" Options="q r" />
     <User Name="Tweeter6" ChannelID="6" ID="789" Options="l"/>

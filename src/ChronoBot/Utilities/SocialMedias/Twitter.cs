@@ -452,12 +452,7 @@ namespace ChronoBot.Utilities.SocialMedias
 
         private bool MessageDisplayed(string id, ulong guildId)
         {
-            foreach (SocialMediaUserData ud in Users)
-            {
-                if (ud.Id == id && guildId == ud.GuildId)
-                    return true;
-            }
-            return false;
+            return Users.FindAll(x => x.SocialMedia == SocialMediaEnum.Twitter).Any(ud => ud.Id == id && guildId == ud.GuildId);
         }
 
         private async Task<Tuple<string, bool>> IsLegitTwitterHandle(string name)
