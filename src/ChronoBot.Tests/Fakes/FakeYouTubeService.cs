@@ -6,6 +6,8 @@ using Google.Apis.Util;
 using Google.Apis.YouTube.v3;
 using Google.Apis.YouTube.v3.Data;
 using Google.Apis.Requests;
+using System.Runtime.ExceptionServices;
+using System.Threading;
 
 namespace ChronoBot.Tests.Fakes
 {
@@ -21,35 +23,40 @@ namespace ChronoBot.Tests.Fakes
     public class FakeSearchResource : SearchResource
     {
         private readonly IClientService _service;
+
         public FakeSearchResource(IClientService service) : base(service)
         {
-            _service = service;
+            this._service = service;
         }
-        public override FakeListRequest List(Repeatable<string> part)
+        
+        public override SearchResource.ListRequest List(Repeatable<string> part)
         {
-            return new FakeListRequest(_service, part);
+            return new SearchResource.ListRequest(_service, part);
+        }
+
+        public class ListRequest : YouTubeBaseServiceRequest<SearchListResponse>
+        {
+            /// <summary>Constructs a new List request.</summary>
+            public ListRequest(IClientService service, Repeatable<string> part) : base(service)
+            {
+            }
+
+            public override string MethodName { get; }
+            public override string RestPath { get; }
+            public override string HttpMethod { get; }
+
+            public async void ExecuteAsync()
+            {
+            }
         }
     }
 
-    public class FakeListRequest : SearchResource.ListRequest
-    {
-        public FakeListRequest(IClientService service, Repeatable<string> part) : base(service, part)
-        {
-        }
-    }
 
-    public class FakeListRequest<FakeSearchListResponse> : SearchResource.ListRequest
+    public partial class FakeClientServiceRequest<TResponse> : ClientServiceRequest<TResponse>, IClientServiceRequest<TResponse>
     {
-        private readonly Func<FakeClientServiceRequest<FakeSearchListResponse>> _service;
-        public FakeListRequest(IClientService service, Repeatable<string> part, Func<FakeClientServiceRequest<FakeSearchListResponse>> service1) : base(service, part)
+        public TResponse Execute()
         {
-            _service = service1;
-        }
-        public override string Q { get; set; }
-        public override long? MaxResults { get; set; }
-        public async Task<FakeClientServiceRequest<FakeSearchListResponse>> ExecuteAsync()
-        {
-            return await new Task<FakeClientServiceRequest<FakeSearchListResponse>>(_service);
+            return default;
         }
     }
 
@@ -68,7 +75,7 @@ namespace ChronoBot.Tests.Fakes
         public override string ETag { get; set; }
     }
 
-    public class FakeClientServiceRequest<TResponse> : ClientServiceRequest<TResponse>
+    public partial class FakeClientServiceRequest<TResponse> : ClientServiceRequest<TResponse>
     {
         public FakeClientServiceRequest(IClientService service) : base(service)
         {
