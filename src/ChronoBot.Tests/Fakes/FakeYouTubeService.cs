@@ -1,10 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Net.Http;
 using System.Threading.Tasks;
-using System.Threading;
-using Google.Apis.Discovery;
 using Google.Apis.Services;
 using Google.Apis.Util;
 using Google.Apis.YouTube.v3;
@@ -15,12 +11,11 @@ namespace ChronoBot.Tests.Fakes
 {
     public class FakeYouTubeService : YouTubeService
     {
-        public FakeYouTubeService(FakeSearchResource search)
+        public FakeYouTubeService(Initializer initializer) : base(initializer)
         {
-            Search = search;
         }
 
-        public override FakeSearchResource Search { get; }
+        public override FakeSearchResource Search => new(this);
     }
 
     public class FakeSearchResource : SearchResource
