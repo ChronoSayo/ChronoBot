@@ -213,7 +213,7 @@ namespace ChronoBot.Utilities.SocialMedias
             if (Users.Count == 0)
                 return await Task.FromResult("No YouTuber registered.");
 
-            if (_quotaReached && _newDay <= DateTime.Now)
+            if (_quotaReached && _newDay >= DateTime.Now)
                 return string.Empty;
 
             if (_newDay <= DateTime.Now)
