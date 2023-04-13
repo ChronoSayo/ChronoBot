@@ -18,9 +18,11 @@ namespace ChronoBot.Utilities.SocialMedias
     {
         private readonly YouTubeService _service;
         private readonly string _channelLink;
+        private bool _quotaReached;
+        private DateTime _newDay;
 
         public YouTube(YouTubeService service, DiscordSocketClient client, IConfiguration config,
-        IEnumerable<SocialMediaUserData> users, SocialMediaFileSystem fileSystem, int seconds = 240) :
+        IEnumerable<SocialMediaUserData> users, SocialMediaFileSystem fileSystem, int seconds = 600) :
             base(client, config, users, fileSystem, seconds)
         {
             _service = service;
@@ -31,6 +33,8 @@ namespace ChronoBot.Utilities.SocialMedias
             Hyperlink = "https://www.youtube.com/watch?v=";
 
             _channelLink = "https://www.youtube.com/@";
+            _quotaReached = false;
+            _newDay = DateTime.MinValue;
 
             OnUpdateTimerAsync(seconds);
 
@@ -43,7 +47,6 @@ namespace ChronoBot.Utilities.SocialMedias
         {
             var searchListRequest = _service.Search.List("snippet");
             searchListRequest.Q = user;
-            searchListRequest.MaxResults = 5;
 
             var searchListResponse = await searchListRequest.ExecuteAsync();
             foreach (var searchResult in searchListResponse.Items)
@@ -105,6 +108,12 @@ namespace ChronoBot.Utilities.SocialMedias
             if (Duplicate(guildId, username, SocialMediaEnum.YouTube))
                 return await Task.FromResult($"Already added {username}");
 
+            if (_quotaReached && _newDay >= DateTime.Now)
+                return await Task.FromResult("Cannot use YouTube service. Try again tomorrow."); ;
+
+            if (_newDay <= DateTime.Now)
+                _quotaReached = false;
+
             string youtubeChannelId;
             string videoId;
             bool live;
@@ -117,8 +126,9 @@ namespace ChronoBot.Utilities.SocialMedias
             }
             catch (Exception ex)
             {
-                await Statics.SendMessageToLogChannel(Client, $"YOUTUBE:\n{ex.Message}");
-                return await Task.FromResult("YouTube service is down. Try again later.");
+                QuotaReach();
+                await Statics.SendMessageToLogChannel(Client, $"YOUTUBE\n" + ex.Message);
+                return await Task.FromResult("Cannot use YouTube service. Try again tomorrow.");
             }
             if (string.IsNullOrEmpty(youtubeChannelId))
                 return await Task.FromResult("Can't find " + username);
@@ -141,6 +151,12 @@ namespace ChronoBot.Utilities.SocialMedias
             if (i == -1)
                 return await Task.FromResult("Could not find YouTuber.");
 
+            if (_quotaReached && _newDay >= DateTime.Now)
+                return string.Empty;
+
+            if (_newDay <= DateTime.Now)
+                _quotaReached = false;
+
             string videoId;
             bool live;
             try
@@ -151,8 +167,9 @@ namespace ChronoBot.Utilities.SocialMedias
             }
             catch (Exception ex)
             {
-                await Statics.SendMessageToLogChannel(Client, $"YOUTUBE:\n{ex.Message}");
-                return await Task.FromResult("YouTube service is down. Try again later.");
+                QuotaReach();
+                await Statics.SendMessageToLogChannel(Client, $"YOUTUBE\n" + ex.Message);
+                return await Task.FromResult("Cannot use YouTube service. Try again tomorrow.");
             }
 
             if (string.IsNullOrEmpty(videoId)) 
@@ -196,6 +213,12 @@ namespace ChronoBot.Utilities.SocialMedias
             if (Users.Count == 0)
                 return await Task.FromResult("No YouTuber registered.");
 
+            if (_quotaReached && _newDay <= DateTime.Now)
+                return string.Empty;
+
+            if (_newDay <= DateTime.Now)
+                _quotaReached = false;
+
             List<SocialMediaUserData> newVideos = new List<SocialMediaUserData>();
             for (int i = 0; i < Users.Count; i++)
             {
@@ -213,8 +236,9 @@ namespace ChronoBot.Utilities.SocialMedias
                 }
                 catch (Exception ex)
                 {
-                    await Statics.SendMessageToLogChannel(Client, $"YOUTUBE:\n{ex.Message}");
-                    return await Task.FromResult("YouTube service is down. Try again later.");
+                    QuotaReach();
+                    await Statics.SendMessageToLogChannel(Client, $"YOUTUBE\n" + ex.Message);
+                    return await Task.FromResult(string.Empty);
                 }
 
                 if (string.IsNullOrEmpty(videoId))
@@ -233,6 +257,13 @@ namespace ChronoBot.Utilities.SocialMedias
                 return await UpdateSocialMedia(newVideos);
 
             return await Task.FromResult("No updates since last time.");
+        }
+
+
+        private void QuotaReach()
+        {
+            _quotaReached = true;
+            _newDay = DateTime.Now.AddDays(1);
         }
     }
 }
