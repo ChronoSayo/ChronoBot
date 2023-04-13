@@ -214,15 +214,16 @@ namespace ChronoBot.Common.Systems
 
             XDocument xml = XDocument.Load(guildPath);
             List<DeadlineUserData> users = new List<DeadlineUserData>();
-            users.AddRange(CollectUserData(new Dictionary<XDocument, ulong> { { xml, deadlineUserData.GuildId } }, deadlineUserData.DeadlineType));
+            users.AddRange(CollectUserData(new Dictionary<XDocument, ulong> {{xml, deadlineUserData.GuildId}},
+                deadlineUserData.DeadlineType));
             bool remove = false;
-            foreach (DeadlineUserData ud in users)
+            foreach (var ud in users.Where(ud => ud.Id == deadlineUserData.Id || ud.UserId == deadlineUserData.UserId))
             {
-                if (ud.Id != deadlineUserData.Id && ud.UserId != deadlineUserData.UserId)
-                    continue;
                 xml.Descendants("Service")
                     .Descendants(ud.DeadlineType.ToString())
-                    .Descendants("User").Where(x => x.Attribute("ID")?.Value == ud.Id && x.Attribute("UserID")?.Value == ud.UserId.ToString())
+                    .Descendants("User").Where(x =>
+                        x.Attribute("ID")?.Value == ud.Id && x.Attribute("UserID")?.Value == ud.UserId.ToString() &&
+                        x.Attribute("ChannelID")?.Value == ud.ChannelId.ToString())
                     .Remove();
                 remove = true;
                 break;
