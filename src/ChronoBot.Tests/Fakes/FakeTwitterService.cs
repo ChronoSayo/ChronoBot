@@ -18,7 +18,6 @@ namespace ChronoBot.Tests.Fakes
             if (options.Id == 2)
                 return await Task.FromResult(GetFailTweetAsync());
 
-
             var url1 = new Uri(
                 "https://video.twimg.com/ext_tw_video/1/pu/vid/180x20/swhi5fpAMRc-fzJp.mp4?tag=12");
             var url2 = new Uri(
@@ -28,15 +27,15 @@ namespace ChronoBot.Tests.Fakes
 
             var variants = new List<TwitterMediaVariant>
             {
-                new TwitterMediaVariant
+                new()
                 {
                     BitRate = 1, ContentType = "video/mp4", Url = url1
                 },
-                new TwitterMediaVariant
+                new()
                 {
                     BitRate = 3, ContentType = "video/mp4", Url = url2
                 },
-                new TwitterMediaVariant
+                new()
                 {
                     BitRate = 2, ContentType = "video/mp4", Url = url3
                 }
@@ -54,7 +53,7 @@ namespace ChronoBot.Tests.Fakes
             {
                 Media = new List<TwitterExtendedEntity>
                 {
-                    new TwitterExtendedEntity
+                    new()
                     {
                         ExtendedEntityType = options.Id == 4 ? TwitterMediaType.AnimatedGif : TwitterMediaType.Video,
                         VideoInfo = videoInfo
@@ -78,7 +77,7 @@ namespace ChronoBot.Tests.Fakes
 
             var variants = new List<TwitterMediaVariant>
             {
-                new TwitterMediaVariant
+                new()
                 {
                     ContentType = "video/mp4", Url = url1
                 }
@@ -96,7 +95,7 @@ namespace ChronoBot.Tests.Fakes
             {
                 Media = new List<TwitterExtendedEntity>
                 {
-                    new TwitterExtendedEntity
+                    new()
                     {
                         ExtendedEntityType = TwitterMediaType.Video,
                         VideoInfo = videoInfo
@@ -180,7 +179,7 @@ namespace ChronoBot.Tests.Fakes
             {
                 Media = new List<TwitterExtendedEntity>
                 {
-                    new TwitterExtendedEntity { ExtendedEntityType = TwitterMediaType.AnimatedGif }
+                    new() { ExtendedEntityType = TwitterMediaType.AnimatedGif }
                 }
             };
 

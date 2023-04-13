@@ -23,7 +23,7 @@ namespace ChronoBot.Utilities.Tools.Deadlines
             foreach (DeadlineUserData user in Users)
             {
                 if (user.DeadlineType != DeadlineEnum.Repeater || now.DayOfWeek != user.Deadline.DayOfWeek ||
-                    now.Day == user.Deadline.Day)
+                    now.DayOfYear == user.Deadline.DayOfYear)
                     continue;
 
                 try

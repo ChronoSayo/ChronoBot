@@ -18,8 +18,6 @@ namespace ChronoBot.Utilities.SocialMedias
     {
         private readonly YouTubeService _service;
         private readonly string _channelLink;
-        private bool _quotaReached;
-        private DateTime _newDay;
 
         public YouTube(YouTubeService service, DiscordSocketClient client, IConfiguration config,
         IEnumerable<SocialMediaUserData> users, SocialMediaFileSystem fileSystem, int seconds = 240) :
@@ -33,8 +31,6 @@ namespace ChronoBot.Utilities.SocialMedias
             Hyperlink = "https://www.youtube.com/watch?v=";
 
             _channelLink = "https://www.youtube.com/@";
-            _quotaReached = false;
-            _newDay = DateTime.MinValue;
 
             OnUpdateTimerAsync(seconds);
 
@@ -108,12 +104,6 @@ namespace ChronoBot.Utilities.SocialMedias
         {
             if (Duplicate(guildId, username, SocialMediaEnum.YouTube))
                 return await Task.FromResult($"Already added {username}");
-            
-            if (_quotaReached && _newDay == DateTime.Today)
-                return await Task.FromResult("Cannot use YouTube service. Try again tomorrow."); ;
-
-            if (_newDay != DateTime.Today)
-                _quotaReached = false;
 
             string youtubeChannelId;
             string videoId;
@@ -125,11 +115,9 @@ namespace ChronoBot.Utilities.SocialMedias
                 videoId = videoInfo.Item1;
                 live = videoInfo.Item2;
             }
-            catch
+            catch (Exception ex)
             {
-                _quotaReached = true;
-                _newDay = DateTime.Today;
-                await Statics.SendMessageToLogChannel(Client, "YouTube quota has been reached.");
+                await Statics.SendMessageToLogChannel(Client, $"YOUTUBE:\n{ex.Message}");
                 return await Task.FromResult("YouTube service is down. Try again later.");
             }
             if (string.IsNullOrEmpty(youtubeChannelId))
@@ -152,12 +140,6 @@ namespace ChronoBot.Utilities.SocialMedias
             int i = FindIndexByName(guildId, username, SocialMediaEnum.YouTube);
             if (i == -1)
                 return await Task.FromResult("Could not find YouTuber.");
-            
-            if (_quotaReached && _newDay == DateTime.Today)
-                return await Task.FromResult("YouTube service is down. Try again later.");
-
-            if (_newDay != DateTime.Today)
-                _quotaReached = false;
 
             string videoId;
             bool live;
@@ -167,11 +149,9 @@ namespace ChronoBot.Utilities.SocialMedias
                 videoId = videoInfo.Item1;
                 live = videoInfo.Item2;
             }
-            catch
+            catch (Exception ex)
             {
-                _quotaReached = true;
-                _newDay = DateTime.Today;
-                await Statics.SendMessageToLogChannel(Client, "YouTube quota has been reached.");
+                await Statics.SendMessageToLogChannel(Client, $"YOUTUBE:\n{ex.Message}");
                 return await Task.FromResult("YouTube service is down. Try again later.");
             }
 
@@ -216,12 +196,6 @@ namespace ChronoBot.Utilities.SocialMedias
             if (Users.Count == 0)
                 return await Task.FromResult("No YouTuber registered.");
 
-            if (_quotaReached && _newDay == DateTime.Today)
-                return string.Empty;
-
-            if (_newDay != DateTime.Today)
-                _quotaReached = false;
-
             List<SocialMediaUserData> newVideos = new List<SocialMediaUserData>();
             for (int i = 0; i < Users.Count; i++)
             {
@@ -237,15 +211,12 @@ namespace ChronoBot.Utilities.SocialMedias
                     videoId = videoInfo.Item1;
                     live = videoInfo.Item2;
                 }
-                catch
+                catch (Exception ex)
                 {
-                    _quotaReached = true;
-                    _newDay = DateTime.Today;
-                    await Statics.SendMessageToLogChannel(Client, "YouTube quota has been reached.");
-                    UpdateTimer.Interval++;
+                    await Statics.SendMessageToLogChannel(Client, $"YOUTUBE:\n{ex.Message}");
                     return await Task.FromResult("YouTube service is down. Try again later.");
                 }
-                
+
                 if (string.IsNullOrEmpty(videoId))
                     continue;
                 if (videoId == user.Options && live == user.Live)
