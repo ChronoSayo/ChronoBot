@@ -1,13 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using Google.Apis.Services;
 using Google.Apis.Util;
 using Google.Apis.YouTube.v3;
 using Google.Apis.YouTube.v3.Data;
 using Google.Apis.Requests;
-using System.Runtime.ExceptionServices;
 using System.Threading;
+using System.Threading.Tasks;
+using System.Runtime.ExceptionServices;
+using System;
+using System.Net;
+using Google;
+using System.Net.Http;
+using TwitchLib.PubSub.Models.Responses;
 
 namespace ChronoBot.Tests.Fakes
 {
@@ -26,37 +30,41 @@ namespace ChronoBot.Tests.Fakes
 
         public FakeSearchResource(IClientService service) : base(service)
         {
-            this._service = service;
+            _service = service;
         }
         
-        public override SearchResource.ListRequest List(Repeatable<string> part)
+        public override ListRequest List(Repeatable<string> part)
         {
-            return new SearchResource.ListRequest(_service, part);
+            return new FakeListRequest(_service, part);
         }
 
-        public class ListRequest : YouTubeBaseServiceRequest<SearchListResponse>
+        public class FakeListRequest : ListRequest, IClientServiceRequest<FakeSearchListResponse>
         {
+            private readonly IClientService _service;
             /// <summary>Constructs a new List request.</summary>
-            public ListRequest(IClientService service, Repeatable<string> part) : base(service)
+            public FakeListRequest(IClientService service, Repeatable<string> part) : base(service, part)
             {
+                _service = service;
+            }
+            
+            public override string MethodName => "list";
+            public override string HttpMethod => "GET";
+            public override string RestPath => "youtube/v3/search";
+            
+            public Task<FakeSearchListResponse> ExecuteAsync()
+            {
+                return Task.FromResult(_service.DeserializeResponse<FakeSearchListResponse>(new HttpResponseMessage(HttpStatusCode.OK)).ConfigureAwait(false).GetAwaiter().GetResult());
             }
 
-            public override string MethodName { get; }
-            public override string RestPath { get; }
-            public override string HttpMethod { get; }
-
-            public async void ExecuteAsync()
+            public Task<FakeSearchListResponse> ExecuteAsync(CancellationToken cancellationToken)
             {
+                throw new NotImplementedException();
             }
-        }
-    }
 
-
-    public partial class FakeClientServiceRequest<TResponse> : ClientServiceRequest<TResponse>, IClientServiceRequest<TResponse>
-    {
-        public TResponse Execute()
-        {
-            return default;
+            public FakeSearchListResponse Execute()
+            {
+                throw new NotImplementedException();
+            }
         }
     }
 

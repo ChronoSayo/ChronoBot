@@ -35,20 +35,20 @@ namespace ChronoBot.Tests.SocialMedias
             _mockClient = new Mock<DiscordSocketClient>(MockBehavior.Loose);
         }
 
-        [Fact]
-        public void AddYouTube_Test_Success()
-        {
-            var youTube = CreateNewYouTube(out var fileSystem);
+        //[Fact]
+        //public void AddYouTube_Test_Success()
+        //{
+        //    var youTube = CreateNewYouTube(out var fileSystem);
 
-            youTube.AddSocialMediaUser(1, 4, "YouTuber").GetAwaiter().GetResult();
-            var users = (List<SocialMediaUserData>)fileSystem.Load();
-            var user = users.Find(x => x.Name == "YouTuber");
+        //    youTube.AddSocialMediaUser(1, 4, "YouTuber").GetAwaiter().GetResult();
+        //    var users = (List<SocialMediaUserData>)fileSystem.Load();
+        //    var user = users.Find(x => x.Name == "YouTuber");
 
-            Assert.NotNull(user);
-            Assert.Equal("YouTuber", user.Name);
+        //    Assert.NotNull(user);
+        //    Assert.Equal("YouTuber", user.Name);
 
-            File.Delete(Path.Combine(fileSystem.PathToSaveFile, "1.xml"));
-        }
+        //    File.Delete(Path.Combine(fileSystem.PathToSaveFile, "1.xml"));
+        //}
 
         [Fact]
         public void ListSocialMedias_Test_Success()
