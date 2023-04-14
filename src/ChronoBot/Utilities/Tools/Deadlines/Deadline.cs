@@ -8,6 +8,8 @@ using System.Timers;
 using ChronoBot.Enums;
 using Discord;
 using ChronoBot.Common.UserDatas;
+using ChronoBot.Helpers;
+using ChronoBot.Modules.Tools.Deadlines;
 
 namespace ChronoBot.Utilities.Tools.Deadlines
 {
@@ -38,27 +40,43 @@ namespace ChronoBot.Utilities.Tools.Deadlines
             Users = FileSystem.Load().Cast<DeadlineUserData>().ToList();
         }
 
-        protected virtual async void DeadlineCheck(object sender, ElapsedEventArgs e)
+        protected virtual void DeadlineCheck(object sender, ElapsedEventArgs e)
         {
-            await Task.CompletedTask;
         }
 
         protected virtual int TotalDaysLeft(DateTime deadline)
         {
-            return Convert.ToInt32((deadline - DateTime.Now).TotalDays);
+            return Convert.ToInt32((deadline.Date - DateTime.Now.Date).TotalDays);
         }
 
         public virtual DeadlineUserData SetDeadline(string message, DateTime dateTime, ulong guildId, ulong channelId,
             string user, ulong userId, DeadlineEnum type)
         {
-            return CreateDeadlineUserData(message, dateTime, guildId, channelId, user, userId, type,
+            DateTime setDateTime;
+            switch (type)
+            {
+                case DeadlineEnum.Reminder:
+                    setDateTime = dateTime;
+                    break;
+                case DeadlineEnum.Countdown:
+                case DeadlineEnum.Repeater:
+                    setDateTime = dateTime.Date;
+                    break;
+                default:
+                    setDateTime = DateTime.Now;
+                    break;
+            }
+            return CreateDeadlineUserData(message, setDateTime, guildId, channelId, user, userId, type,
                 TotalDaysLeft(dateTime));
         }
 
         public virtual DeadlineUserData SetRepeater(string message, DayOfWeek day, ulong guildId, ulong channelId,
             string user, ulong userId, DeadlineEnum type)
         {
-            DateTime dateTime = DateTime.Now.AddDays(-(int) DateTime.Today.DayOfWeek + (int) day);
+            int daysLeft = -(int)DateTime.Today.DayOfWeek + (int)day;
+            DateTime dateTime = DateTime.Now.AddDays(daysLeft);
+            if (daysLeft < 0)
+                dateTime = dateTime.AddDays(7);
             return CreateDeadlineUserData(message, dateTime, guildId, channelId, user, userId, type,
                 TotalDaysLeft(dateTime));
         }
@@ -206,6 +224,28 @@ namespace ChronoBot.Utilities.Tools.Deadlines
                 Users.Remove(temp);
 
             return ok ? temp : null;
+        }
+
+        protected virtual async void SendMessage(DeadlineUserData user, string message = "")
+        {
+            try
+            {
+                var embed = DeadlineModule.DeadlineEmbed(user, message == string.Empty ? user.Id : message, Client);
+                if (Statics.Debug)
+                    await Statics.DebugSendMessageToChannelAsync(Client, embed);
+                else
+                    await Client.GetGuild(user.GuildId).GetTextChannel(user.ChannelId).SendMessageAsync(embed: embed);
+            }
+            catch
+            {
+                // Continue
+            }
+        }
+
+        protected virtual void RemoveUsers(List<DeadlineUserData> removeDatas)
+        {
+            foreach (var user in from user in removeDatas let ok = FileSystem.DeleteInFile(user) where ok select user)
+                Users.Remove(user);
         }
     }
 }

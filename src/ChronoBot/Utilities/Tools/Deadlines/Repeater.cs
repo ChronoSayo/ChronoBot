@@ -1,10 +1,7 @@
 ﻿using ChronoBot.Common.Systems;
 using ChronoBot.Common.UserDatas;
 using ChronoBot.Enums;
-using ChronoBot.Helpers;
-using ChronoBot.Modules.Tools.Deadlines;
 using Discord.WebSocket;
-using System;
 using System.Collections.Generic;
 using System.Timers;
 
@@ -12,38 +9,35 @@ namespace ChronoBot.Utilities.Tools.Deadlines
 {
     public class Repeater : Deadline
     {
+        private const int NextWeek = 7;
         public Repeater(DiscordSocketClient client, DeadlineFileSystem fileSystem, IEnumerable<DeadlineUserData> users, int seconds = 5) :
             base(client, fileSystem, users, seconds)
         {
         }
 
-        protected override async void DeadlineCheck(object sender, ElapsedEventArgs e)
+        protected override void DeadlineCheck(object sender, ElapsedEventArgs e)
         {
-            DateTime now = DateTime.Now;
             foreach (DeadlineUserData user in Users)
             {
-                if (user.DeadlineType != DeadlineEnum.Repeater || now.DayOfWeek != user.Deadline.DayOfWeek ||
-                    now.DayOfYear == user.Deadline.DayOfYear)
+                if (user.DeadlineType != DeadlineEnum.Repeater)
                     continue;
 
-                try
+                int daysLeft = TotalDaysLeft(user.Deadline);
+                if (user.DaysLeft == daysLeft)
+                    continue;
+
+                if (daysLeft > 0)
                 {
-                    var embed = DeadlineModule.DeadlineEmbed(user, user.Id, Client);
-                    if (Statics.Debug)
-                        await Statics.DebugSendMessageToChannelAsync(Client, embed);
-                    else
-                        await Client.GetGuild(user.GuildId).GetTextChannel(user.ChannelId)
-                            .SendMessageAsync(embed: embed);
-                }
-                catch
-                {
-                    // Continue
-                }
-                finally
-                {
-                    user.Deadline = now;
+                    user.DaysLeft = daysLeft;
                     FileSystem.UpdateFile(user);
+                    continue;
                 }
+                
+                SendMessage(user);
+                
+                user.Deadline = user.Deadline.AddDays(7);
+                user.DaysLeft = TotalDaysLeft(user.Deadline);
+                FileSystem.UpdateFile(user);
             }
         }
     }

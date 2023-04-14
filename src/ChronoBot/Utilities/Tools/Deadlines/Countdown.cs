@@ -3,6 +3,7 @@ using ChronoBot.Helpers;
 using Discord.WebSocket;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Timers;
 using ChronoBot.Modules.Tools.Deadlines;
 using ChronoBot.Enums;
@@ -17,7 +18,7 @@ namespace ChronoBot.Utilities.Tools.Deadlines
         {
         }
 
-        protected override async void DeadlineCheck(object sender, ElapsedEventArgs e)
+        protected override void DeadlineCheck(object sender, ElapsedEventArgs e)
         {
             List<DeadlineUserData> countedDownUsers = new List<DeadlineUserData>();
             foreach (DeadlineUserData user in Users)
@@ -36,30 +37,15 @@ namespace ChronoBot.Utilities.Tools.Deadlines
                         $"***{daysLeft} day" + (daysLeft > 1 ? "s" : string.Empty) + $"** left until:*\n{message}";
 
                     user.DaysLeft = daysLeft;
+                    FileSystem.UpdateFile(user);
                 }
                 else 
                     countedDownUsers.Add(user);
 
-                try
-                {
-                    var embed = DeadlineModule.DeadlineEmbed(user, message, Client);
-                    if (Statics.Debug)
-                        await Statics.DebugSendMessageToChannelAsync(Client, embed);
-                    else
-                        await Client.GetGuild(user.GuildId).GetTextChannel(user.ChannelId).SendMessageAsync(embed: embed);
-                }
-                catch
-                {
-                    // Continue
-                }
+                SendMessage(user, message);
             }
-
-            foreach (DeadlineUserData user in countedDownUsers)
-            {
-                bool ok = FileSystem.DeleteInFile(user);
-                if (ok)
-                    Users.Remove(user);
-            }
+            
+            RemoveUsers(countedDownUsers);
         }
     }
 }
