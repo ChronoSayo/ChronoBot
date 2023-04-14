@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Timers;
 using ChronoBot.Common.Systems;
 using ChronoBot.Common.UserDatas;
 using ChronoBot.Enums;
-using ChronoBot.Helpers;
-using ChronoBot.Modules.Tools.Deadlines;
 using Discord.WebSocket;
 
 namespace ChronoBot.Utilities.Tools.Deadlines
@@ -17,7 +16,7 @@ namespace ChronoBot.Utilities.Tools.Deadlines
         {
         }
 
-        protected override async void DeadlineCheck(object sender, ElapsedEventArgs e)
+        protected override void DeadlineCheck(object sender, ElapsedEventArgs e)
         {
             DateTime now = DateTime.Now;
             List<DeadlineUserData> remindedUsers = new List<DeadlineUserData>();
@@ -26,28 +25,13 @@ namespace ChronoBot.Utilities.Tools.Deadlines
                 if (user.DeadlineType != DeadlineEnum.Reminder || now < user.Deadline)
                     continue;
 
-                try
-                {
-                    var embed = DeadlineModule.DeadlineEmbed(user, user.Id, Client);
-                    if (Statics.Debug)
-                        await Statics.DebugSendMessageToChannelAsync(Client, embed);
-                    else
-                        await Client.GetGuild(user.GuildId).GetTextChannel(user.ChannelId).SendMessageAsync(embed: embed);
-                }
-                catch
-                {
-                    // Continue
-                }
+                SendMessage(user);
 
                 remindedUsers.Add(user);
             }
 
-            foreach (DeadlineUserData user in remindedUsers)
-            {
-                bool ok = FileSystem.DeleteInFile(user);
-                if (ok)
-                    Users.Remove(user);
-            }
+            foreach (var user in from user in remindedUsers let ok = FileSystem.DeleteInFile(user) where ok select user)
+                Users.Remove(user);
         }
     }
 }

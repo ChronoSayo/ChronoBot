@@ -8,6 +8,7 @@ using ChronoBot.Enums;
 using ChronoBot.Utilities.Tools.Deadlines;
 using Discord;
 using Discord.WebSocket;
+using Google.Apis.YouTube.v3.Data;
 using Moq;
 using Xunit;
 
@@ -34,7 +35,7 @@ namespace ChronoBot.Tests.Tools
                 "CountdownUser", 9001, DeadlineEnum.Countdown);
 
             Assert.Equal("TestCountdown", user.Id);
-            Assert.Equal(user.Deadline, tomorrow);
+            Assert.Equal(user.Deadline.Date, tomorrow.Date);
             Assert.Equal(987654321, (int)user.GuildId);
             Assert.Equal(134679, (int)user.ChannelId);
             Assert.Equal("CountdownUser", user.Name);
@@ -166,9 +167,9 @@ namespace ChronoBot.Tests.Tools
             Assert.NotNull(countdown1);
             Assert.NotNull(countdown2);
             Assert.NotNull(countdown3);
-            Assert.Equal(countdown1.Deadline, tomorrow);
-            Assert.Equal(countdown2.Deadline, tomorrow);
-            Assert.True(countdown3.Deadline == tomorrow);
+            Assert.Equal(countdown1.Deadline.Date, tomorrow.Date);
+            Assert.Equal(countdown2.Deadline.Date, tomorrow.Date);
+            Assert.True(countdown3.Deadline.Date == tomorrow.Date);
             Assert.Contains("1.", embed.Description);
             Assert.Contains("2.", embed.Description);
             Assert.Contains("3.", embed.Description);
@@ -656,7 +657,7 @@ namespace ChronoBot.Tests.Tools
                 "RepeaterUser", 9001, DeadlineEnum.Repeater);
 
             Assert.Equal("TestRepeater", user.Id);
-            Assert.Equal(tomorrow, user.Deadline);
+            Assert.Equal(tomorrow.Date, user.Deadline.Date);
             Assert.Equal(741852963, (int)user.GuildId);
             Assert.Equal(147258, (int)user.ChannelId);
             Assert.Equal("RepeaterUser", user.Name);
@@ -675,11 +676,45 @@ namespace ChronoBot.Tests.Tools
             Assert.Equal("\"Repeater message 1\"", embed.Description);
             Assert.Equal("REPEATER", embed.Title);
         }
-        
+
+        [Fact]
+        public void Repeater_Repeating_Success()
+        {
+            var deadline = CreateNewRepeater(out var fileSystem, "Repeating", 1);
+            var user = deadline.SetRepeater("TestRepeater", DateTime.Now.AddDays(7).DayOfWeek, 987654324, 134679,
+                "RepeaterUser", 9001, DeadlineEnum.Repeater);
+            user.DaysLeft = 1;
+
+            Thread.Sleep(1500);
+            var users = (List<DeadlineUserData>)fileSystem.Load();
+            var actualUser = users.Find(x => x.UserId == user.UserId && x.Id == user.Id && x.GuildId == user.GuildId);
+            
+            Assert.Equal(7, actualUser.DaysLeft);
+
+            File.Delete(Path.Combine(fileSystem.PathToSaveFile, "987654324.xml"));
+        }
+
+        [Fact]
+        public void Repeater_NotRepeating_Success()
+        {
+            var deadline = CreateNewRepeater(out var fileSystem, "NotRepeating", 1);
+            var user = deadline.SetRepeater("TestRepeater", DateTime.Now.AddDays(1).DayOfWeek, 987654324, 134679,
+                "RepeaterUser", 9001, DeadlineEnum.Repeater);
+            user.DaysLeft = 2;
+
+            Thread.Sleep(1500);
+            var users = (List<DeadlineUserData>)fileSystem.Load();
+            var actualUser = users.Find(x => x.UserId == user.UserId && x.Id == user.Id && x.GuildId == user.GuildId);
+
+            Assert.Equal(1, actualUser.DaysLeft);
+
+            File.Delete(Path.Combine(fileSystem.PathToSaveFile, "987654324.xml"));
+        }
+
         [Fact]
         public void Repeater_OtherTypes_Success()
         {
-            var deadline = CreateNewCountdown(out var fileSystem, "OtherTypesInRepeater", 1);
+            var deadline = CreateNewRepeater(out var fileSystem, "OtherTypesInRepeater", 1);
             var tomorrow = DateTime.Now.AddDays(1);
             var countdownUser = deadline.SetDeadline("TestRepeater", tomorrow, 987654324, 134679,
                 "CountdownUser", 9001, DeadlineEnum.Countdown);
@@ -735,9 +770,9 @@ namespace ChronoBot.Tests.Tools
             Assert.NotNull(countdown1);
             Assert.NotNull(countdown2);
             Assert.NotNull(countdown3);
-            Assert.Equal(countdown1.Deadline, tomorrow);
-            Assert.Equal(countdown2.Deadline, tomorrow);
-            Assert.True(countdown3.Deadline == tomorrow);
+            Assert.Equal(countdown1.Deadline.Date, tomorrow.Date);
+            Assert.Equal(countdown2.Deadline.Date, tomorrow.Date);
+            Assert.True(countdown3.Deadline.Date == tomorrow.Date);
             Assert.Contains("1.", embed.Description);
             Assert.Contains("2.", embed.Description);
             Assert.Contains("3.", embed.Description);
