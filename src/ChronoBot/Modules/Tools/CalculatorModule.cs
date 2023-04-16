@@ -1,38 +1,38 @@
 ﻿using System.Threading.Tasks;
 using ChronoBot.Common;
 using ChronoBot.Utilities.Tools;
-using Discord.Commands;
-using Microsoft.Extensions.Logging;
+using Discord.Interactions;
+using Discord.WebSocket;
 
 namespace ChronoBot.Modules.Tools
 {
-    public class CalculatorModule : ModuleBase<SocketCommandContext>
+    [Group("calculator", "Solves math problems.")]
+    public class CalculatorModule : ChronoInteractionModuleBase
     {
-        private readonly ILogger<CalculatorModule> _logger;
+        private readonly DiscordSocketClient _client;
         private readonly Calculator _calculator;
 
-        public CalculatorModule(ILogger<CalculatorModule> logger, Calculator calculator)
+        public CalculatorModule(DiscordSocketClient client, Calculator calculator)
         {
-            _logger = logger;
             _calculator = calculator;
+            _client = client;
         }
 
-        [Command("calculator")]
-        [Alias("calculate", "calc", "c", "calc", "math", "m")]
-        public async Task CalculatorAsync([Remainder] string calc)
+        [SlashCommand("calculator", "Calculates calculations.")]
+        public async Task CalculatorAsync([Summary("Calculation", "Insert what you want to be calculated.")] string calculation)
         {
+            await DeferAsync();
+
             bool ok;
-            string result = _calculator.Result(calc, out ok);
+            string result = _calculator.Result(calculation, out ok);
 
             if (ok)
             {
                 var embed = new ChronoBotEmbedBuilder(result).Build();
-                await ReplyAsync(embed: embed);
+                await SendMessage(_client, embed);
             }
             else
-                await ReplyAsync(result);
-
-            _logger.LogInformation($"{Context.User.Username} used {System.Reflection.MethodBase.GetCurrentMethod()?.Name} in {GetType().Name}.");
+                await SendMessage(_client, result);
         }
     }
 }

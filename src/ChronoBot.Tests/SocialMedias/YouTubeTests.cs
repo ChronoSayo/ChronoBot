@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using ChronoBot.Common.Systems;
 using ChronoBot.Common.UserDatas;
 using ChronoBot.Enums;
@@ -11,7 +7,7 @@ using ChronoBot.Helpers;
 using ChronoBot.Tests.Fakes;
 using ChronoBot.Utilities.SocialMedias;
 using Discord.WebSocket;
-using Google.Apis.YouTube.v3.Data;
+using Google.Apis.Services;
 using Microsoft.Extensions.Configuration;
 using Moq;
 using Xunit;
@@ -34,25 +30,43 @@ namespace ChronoBot.Tests.SocialMedias
             _config.SetupGet(x => x[It.Is<string>(y => y == "IDs:TextChannel")]).Returns("1");
             Statics.Config = _config.Object;
 
-            _fakeYouTube = new FakeYouTubeService();
+            _fakeYouTube = new FakeYouTubeService(new BaseClientService.Initializer
+                { ApiKey = _config.Object[Statics.YouTubeApiKey], ApplicationName = "UnitTest" });
             _mockClient = new Mock<DiscordSocketClient>(MockBehavior.Loose);
         }
+
+        //[Fact]
+        //public void AddYouTube_Test_Success()
+        //{
+        //    var youTube = CreateNewYouTube(out var fileSystem);
+
+        //    youTube.AddSocialMediaUser(1, 4, "YouTuber").GetAwaiter().GetResult();
+        //    var users = (List<SocialMediaUserData>)fileSystem.Load();
+        //    var user = users.Find(x => x.Name == "YouTuber");
+
+        //    Assert.NotNull(user);
+        //    Assert.Equal("YouTuber", user.Name);
+
+        //    File.Delete(Path.Combine(fileSystem.PathToSaveFile, "1.xml"));
+        //}
 
         [Fact]
         public void ListSocialMedias_Test_Success()
         {
-            var twitter = LoadYouTubeService();
-            var result = twitter.ListSavedSocialMediaUsers(123456789, SocialMediaEnum.YouTube).GetAwaiter().GetResult();
+            var youtube = LoadYouTubeService();
+            var result = youtube.ListSavedSocialMediaUsers(123456789, SocialMediaEnum.YouTube).GetAwaiter().GetResult();
             
-            Assert.Equal("■ YouTuber1 \n■ YouTuber2 \n■ YouTuber3 \n", result);
+            Assert.Equal("■ YouTuber1 (https://www.youtube.com/@YouTuber1) \n" +
+                         "■ YouTuber2 (https://www.youtube.com/@YouTuber2) \n" +
+                         "■ YouTuber3 (https://www.youtube.com/@YouTuber3) \n", result);
         }
 
         [Fact]
         public void DeleteYouTube_Test_Success()
         {
-            var twitter = LoadCopyYouTubeService(out var fileSystem);
+            var youtube = LoadCopyYouTubeService(out var fileSystem);
             
-            string result = twitter.DeleteSocialMediaUser(123456789, "YouTuber2", SocialMediaEnum.YouTube);
+            string result = youtube.DeleteSocialMediaUser(123456789, "YouTuber2", SocialMediaEnum.YouTube);
             var users = (List<SocialMediaUserData>)fileSystem.Load();
             users.RemoveAll(x => x.SocialMedia != SocialMediaEnum.YouTube);
 
@@ -67,9 +81,20 @@ namespace ChronoBot.Tests.SocialMedias
             var fileSystem = new SocialMediaFileSystem(Path.Combine(Directory.GetCurrentDirectory(), "Test Files", GetType().Name, "Load"));
 
             return new YouTube(_fakeYouTube, _mockClient.Object, _config.Object, new List<SocialMediaUserData>(),
-                new List<string>(), fileSystem);
+                fileSystem);
         }
-        
+
+        private YouTube CreateNewYouTube(out SocialMediaFileSystem fileSystem, string folderName = "New", int seconds = 60)
+        {
+            string path = Path.Combine(Directory.GetCurrentDirectory(), "Test Files", GetType().Name, folderName);
+            if (Directory.Exists(path))
+                Directory.Delete(path, true);
+            fileSystem = new SocialMediaFileSystem(path);
+
+            return new YouTube(_fakeYouTube, _mockClient.Object, _config.Object,
+                new List<SocialMediaUserData>(), fileSystem, seconds);
+        }
+
         private YouTube LoadCopyYouTubeService(out SocialMediaFileSystem fileSystem)
         {
             string path = Path.Combine(Directory.GetCurrentDirectory(), "Test Files", GetType().Name, "Update");
@@ -81,7 +106,7 @@ namespace ChronoBot.Tests.SocialMedias
             fileSystem = new SocialMediaFileSystem(path);
 
             return new YouTube(_fakeYouTube, _mockClient.Object, _config.Object, new List<SocialMediaUserData>(),
-                new List<string>(), fileSystem);
+                fileSystem);
         }
     }
 }

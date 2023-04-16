@@ -1,123 +1,157 @@
 ﻿using System;
-using System.Diagnostics.Eventing.Reader;
+using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
+using ChronoBot.Common;
 using ChronoBot.Enums;
 using ChronoBot.Helpers;
 using ChronoBot.Utilities.SocialMedias;
 using Discord;
-using Discord.Commands;
+using Discord.Interactions;
 using Discord.WebSocket;
-using Microsoft.Extensions.Logging;
 
 namespace ChronoBot.Modules.SocialMedias
 {
-    public class SocialMediaModule : ModuleBase<SocketCommandContext>
+    public class SocialMediaModule : ChronoInteractionModuleBase
     {
         protected readonly DiscordSocketClient Client;
-        private readonly ILogger<SocialMediaModule> _logger;
         protected SocialMedia SocialMedia;
         protected SocialMediaEnum SocialMediaType;
+        protected const string AddCommand = "add";
+        protected const string DeleteCommand = "delete";
+        protected const string GetCommand = "get";
+        protected const string ListCommand = "list";
+        protected const string UpdateCommand = "update";
 
-        public SocialMediaModule(DiscordSocketClient client, ILogger<SocialMediaModule> logger, SocialMedia socialMedia)
+        public enum Options
+        {
+            [ChoiceDisplay("Add")] Add, Delete, Get, List, Update
+        }
+
+        public SocialMediaModule(DiscordSocketClient client, SocialMedia socialMedia)
         {
             Client = client;
-            _logger = logger;
             SocialMedia = socialMedia;
         }
 
-        public virtual async Task AddAsync(string user, [Remainder] string option = "")
+        public virtual async Task AddSocialMediaUser(
+            string user,
+            [ChannelTypes(ChannelType.Text)]
+            IChannel channel = null)
         {
-            ulong guildId = Context.Guild.Id;
-            ulong channelId = Context.Channel.Id;
-            ulong sendToChannel = Context.Message.MentionedChannels.Count > 0 ? Context.Message.MentionedChannels.FirstOrDefault()!.Id : 0;
-            string result = await SocialMedia.AddSocialMediaUser(guildId, channelId, user, sendToChannel, option);
-            await SendMessage(result, sendToChannel);
+            await HandleOption(Options.Add, user, channel);
         }
 
-        public virtual async Task DeleteAsync(string user)
+        public virtual async Task AddTwitterUser(
+            string user,
+            TwitterFiltersEnum.TwitterFilters filter1 = TwitterFiltersEnum.TwitterFilters.All,
+            TwitterFiltersEnum.TwitterFilters filter2 = TwitterFiltersEnum.TwitterFilters.All,
+            TwitterFiltersEnum.TwitterFilters filter3 = TwitterFiltersEnum.TwitterFilters.All,
+            TwitterFiltersEnum.TwitterFilters filter4 = TwitterFiltersEnum.TwitterFilters.All,
+            TwitterFiltersEnum.TwitterFilters filter5 = TwitterFiltersEnum.TwitterFilters.All,
+            TwitterFiltersEnum.TwitterFilters filter6 = TwitterFiltersEnum.TwitterFilters.All,
+            [ChannelTypes(ChannelType.Text)] IChannel channel = null)
         {
-            ulong guildId = Context.Guild.Id;
-            string result = SocialMedia.DeleteSocialMediaUser(guildId, user, SocialMediaType);
-            await SendMessage(result);
-        }
-
-        public virtual async Task GetAsync(string user)
-        {
-            string result = await SocialMedia.GetSocialMediaUser(Context.Guild.Id, Context.Channel.Id, user);
-            await SendMessage(result);
-        }
-
-        public virtual async Task ListAsync()
-        {
-            string result = await SocialMedia.ListSavedSocialMediaUsers(Context.Guild.Id, SocialMediaType, Context.Message.MentionedChannels.ElementAt(0).ToString());
-            var embed = new EmbedBuilder()
-                .WithDescription(result)
-                .Build();
-            await SendMessage(embed);
-        }
-
-        public virtual async Task UpdateAsync()
-        {
-            string result = await SocialMedia.GetUpdatedSocialMediaUsers(Context.Guild.Id);
-            await SendMessage(result);
-        }
-
-        public virtual async Task HowToUseAsync()
-        {
-            await Task.CompletedTask;
-        }
-
-        protected virtual Embed HowToText(string socialMedia)
-        {
-            string urlIcon = "";
-            switch (socialMedia)
+            List<string> filters = new List<string>
             {
-                case "twitter":
-                    urlIcon =
-                        "https://cdn.discordapp.com/attachments/891627208089698384/891627590023000074/Twitter_social_icons_-_circle_-_blue.png";
-                    break;
-                case "youtube":
-                    urlIcon =
-                        "https://cdn.discordapp.com/attachments/891627208089698384/905575565636010074/youtube-logo-transparent-png-pictures-transparent-background-youtube-logo-11562856729oa42buzkng.png";
-                    break;
-            }
-            return new EmbedBuilder()
-                .WithTitle($"How to use {socialMedia.ToUpper()}")
-                .WithThumbnailUrl(urlIcon)
-                .AddField("Add ", $"{Statics.Prefix}{socialMedia.ToLowerInvariant()}add <name> [channel]", true)
-                .AddField("Delete", $"{Statics.Prefix}{socialMedia.ToLowerInvariant()}delete <name>", true)
-                .AddField("Get", $"{Statics.Prefix}{socialMedia.ToLowerInvariant()}get <name>", true)
-                .AddField("List", $"{Statics.Prefix}{socialMedia.ToLowerInvariant()}list", true)
-                .Build();
+                TwitterFiltersEnum.ConvertEnumToFilter(filter1),
+                TwitterFiltersEnum.ConvertEnumToFilter(filter2),
+                TwitterFiltersEnum.ConvertEnumToFilter(filter3),
+                TwitterFiltersEnum.ConvertEnumToFilter(filter4),
+                TwitterFiltersEnum.ConvertEnumToFilter(filter5),
+                TwitterFiltersEnum.ConvertEnumToFilter(filter6)
+            };
+            await HandleOption(Options.Add, user, channel, string.Join(" ", filters).TrimEnd());
         }
 
-        protected virtual async Task SendMessage(string result, ulong sendToChannel = 0)
+        public virtual async Task DeleteSocialMediaUser(string user)
         {
-            if (Statics.Debug)
-                await Statics.DebugSendMessageToChannelAsync(Client, result);
-            else if (sendToChannel != 0)
-                await Client.GetGuild(Context.Guild.Id).GetTextChannel(sendToChannel).SendMessageAsync(result);
-            else
-                await ReplyAsync(result);
+            await HandleOption(Options.Delete, user);
         }
-        protected virtual async Task SendMessage(Embed result, ulong sendToChannel = 0)
+
+        public virtual async Task GetSocialMediaUser(string user)
         {
-            if (Statics.Debug)
-                await Statics.DebugSendMessageToChannelAsync(Client, result);
-            else if (sendToChannel != 0)
-                await Client.GetGuild(Context.Guild.Id).GetTextChannel(sendToChannel).SendMessageAsync(embed: result);
-            else
-                await ReplyAsync(embed: result);
+            await HandleOption(Options.Get, user);
         }
-        protected virtual async Task SendFile(Embed result, string socialMedia)
+
+        public virtual async Task ListSocialMediaUser()
+        {
+            await HandleOption(Options.List, null);
+        }
+
+        public virtual async Task UpdateSocialMediaUser()
+        {
+            await HandleOption(Options.Update, null);
+        }
+
+        protected virtual async Task SendFileWithLogo(Embed result, string socialMedia)
         {
             string thumbnail = Path.Combine(Environment.CurrentDirectory, $@"Resources\Images\SocialMedia\{socialMedia}.png");
             if (Statics.Debug)
                 await Statics.DebugSendFileToChannelAsync(Client, result, thumbnail);
             else
-                await Context.Channel.SendFileAsync(thumbnail, embed: result);
+                await FollowupWithFileAsync(thumbnail, embed: result);
+        }
+
+        private async Task HandleOption(Options option, string user = "", [ChannelTypes(ChannelType.Text)] IChannel channel = null, string options = "")
+        {
+            await DeferAsync();
+
+            ulong guildId = Context.Guild.Id;
+            ulong channelId = Context.Channel.Id;
+            ulong sendToChannel = channel?.Id ?? channelId;
+            string result;
+            switch (option)
+            {
+                case Options.Add:
+                    try
+                    {
+                        result = await SocialMedia.AddSocialMediaUser(guildId, channelId, user, sendToChannel, options);
+                        await SendMessage(Client, result, sendToChannel);
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e);
+                        throw;
+                    }
+                    break;
+                case Options.Delete:
+                    result = SocialMedia.DeleteSocialMediaUser(guildId, user, SocialMediaType);
+                    await SendMessage(Client, result);
+                    break;
+                case Options.Get:
+                    result = await SocialMedia.GetSocialMediaUser(guildId, user);
+                    await SendMessage(Client, result);
+                    break;
+                case Options.List:
+                    result = await SocialMedia.ListSavedSocialMediaUsers(guildId, SocialMediaType,
+                        Client.GetGuild(guildId).GetTextChannel(sendToChannel).Mention);
+                    var embed = new EmbedBuilder()
+                        .WithDescription(result)
+                        .WithColor(GetSocialMediaColor(SocialMediaType))
+                        .Build();
+                    await SendMessage(Client, embed);
+                    break;
+                case Options.Update:
+                    result = await SocialMedia.GetUpdatedSocialMediaUsers(guildId);
+                    await SendMessage(Client, result);
+                    break;
+            }
+        }
+
+        private Color GetSocialMediaColor(SocialMediaEnum type)
+        {
+            switch (type)
+            {
+                case SocialMediaEnum.Twitter:
+                    return new Color(29, 161, 242);
+                case SocialMediaEnum.Twitch:
+                    return new Color(100, 65, 165);
+                case SocialMediaEnum.YouTube:
+                    return new Color(255, 0, 0);
+                default:
+                    return Color.Green;
+            }
         }
     }
 }

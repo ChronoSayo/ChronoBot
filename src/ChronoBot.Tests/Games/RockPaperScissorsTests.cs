@@ -288,7 +288,7 @@ namespace ChronoBot.Tests.Games
         [Fact]
         public void Options_Test_ResetAndTotalPlays()
         {
-            RpsPlayData player = CreatePlayer("p");
+            RpsPlayData player = CreatePlayer("p", guildId:1);
             int totalPlays = 3;
 
             for (int i = 0; i < totalPlays; i++)
@@ -417,12 +417,12 @@ namespace ChronoBot.Tests.Games
             Assert.Equal(coins, ud.Coins);
         }
 
-        private RpsPlayData CreatePlayer(string input, string username = "Tester", string mention = "Test123", ulong userId = 345678912)
+        private RpsPlayData CreatePlayer(string input, string username = "Tester", string mention = "Test123", ulong userId = 345678912, ulong guildId = 234567891)
         {
             return new RpsPlayData
             {
                 ChannelId = 123456789,
-                GuildId = 234567891,
+                GuildId = guildId,
                 UserId = userId,
                 Input = input,
                 Mention = mention,

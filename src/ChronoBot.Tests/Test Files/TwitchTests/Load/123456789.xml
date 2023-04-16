@@ -4,9 +4,9 @@
     <User Name="YouTuber" ChannelID="1" ID="wecylinder" />>
   </YouTube>
   <Twitch>
-    <User Name="streamer1" ChannelID="1" ID="online" />
+    <User Name="streamer1" ChannelID="1" ID="Streamer1 is playing A Game" />
     <User Name="streamer2" ChannelID="2" ID="offline" />
-    <User Name="streamer3" ChannelID="3" ID="online" />
+    <User Name="streamer3" ChannelID="3" ID="Streamer3 is playing The Game" />
   </Twitch>
   <Twitter>
     <User Name="Tweeter" ChannelID="3" ID="chirp" />

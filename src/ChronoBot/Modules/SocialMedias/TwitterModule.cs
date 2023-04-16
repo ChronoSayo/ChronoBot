@@ -1,59 +1,86 @@
 ﻿using System.Threading.Tasks;
 using ChronoBot.Enums;
 using ChronoBot.Utilities.SocialMedias;
-using Discord.Commands;
+using Discord;
+using Discord.Interactions;
 using Discord.WebSocket;
-using Microsoft.Extensions.Logging;
 
 namespace ChronoBot.Modules.SocialMedias
 {
+    [Group("twitter", "Notifies when a Tweeter has tweeted.")]
     public class TwitterModule : SocialMediaModule
     {
-        private readonly ILogger<SocialMediaModule> _logger;
-        private const string SocialMediaCommand = "twitter";
-
-        public TwitterModule(DiscordSocketClient client, ILogger<SocialMediaModule> logger, Twitter socialMedia) : base(client, logger, socialMedia)
+        public TwitterModule(DiscordSocketClient client, Twitter socialMedia) : base(client, socialMedia)
         {
-            _logger = logger;
             SocialMedia = socialMedia;
             SocialMediaType = SocialMediaEnum.Twitter;
         }
 
-        [Command(SocialMediaCommand + "add", RunMode = RunMode.Async)]
-        public override async Task AddAsync(string user, [Remainder] string option = "")
+        [SlashCommand(AddCommand, "Adds YouTuber to the list of updates.", runMode: RunMode.Async)]
+        public override async Task AddTwitterUser(
+            [Summary("Tweeter", "Insert Twitter handle.")]
+            string user,
+            [Summary("Filter1", "Filter tweets based option.")]
+            TwitterFiltersEnum.TwitterFilters filter1 = TwitterFiltersEnum.TwitterFilters.All,
+            [Summary("Filter2", "Filter tweets based option.")]
+            TwitterFiltersEnum.TwitterFilters filter2 = TwitterFiltersEnum.TwitterFilters.All,
+            [Summary("Filter3", "Filter tweets based option.")]
+            TwitterFiltersEnum.TwitterFilters filter3 = TwitterFiltersEnum.TwitterFilters.All,
+            [Summary("Filter4", "Filter tweets based option.")]
+            TwitterFiltersEnum.TwitterFilters filter4 = TwitterFiltersEnum.TwitterFilters.All,
+            [Summary("Filter5", "Filter tweets based option.")]
+            TwitterFiltersEnum.TwitterFilters filter5 = TwitterFiltersEnum.TwitterFilters.All,
+            [Summary("Filter6", "Filter tweets based option.")]
+            TwitterFiltersEnum.TwitterFilters filter6 = TwitterFiltersEnum.TwitterFilters.All,
+            [Summary("Where", "To which channel should this be posted. Default is this channel.")]
+            [ChannelTypes(ChannelType.Text)]
+            IChannel channel = null)
         {
-            await base.AddAsync(user, option);
+            await base.AddTwitterUser(user, filter1, filter2, filter3, filter4, filter5, filter6, channel);
         }
 
-        [Command(SocialMediaCommand + "delete", RunMode = RunMode.Async), Alias(SocialMediaCommand + "del", SocialMediaCommand + "remove")]
-        public override async Task DeleteAsync(string user)
+        [SlashCommand(DeleteCommand, "Deletes Tweeter from the list of updates.", runMode: RunMode.Async)]
+        public override Task DeleteSocialMediaUser(
+            [Summary("Tweeter", "Insert Twitter handle.")]
+            string user)
         {
-            await base.DeleteAsync(user);
+            return base.DeleteSocialMediaUser(user);
         }
 
-        [Command(SocialMediaCommand + "get", RunMode = RunMode.Async), Alias(SocialMediaCommand)]
-        public override async Task GetAsync(string user)
+        [SlashCommand(GetCommand, "Posts Tweeter's latest tweet.", runMode: RunMode.Async)]
+        public override Task GetSocialMediaUser(
+            [Summary("Tweeter", "Insert Twitter handle.")]
+            string user)
         {
-            await base.GetAsync(user);
+            return base.GetSocialMediaUser(user);
         }
 
-        [Command(SocialMediaCommand + "list", RunMode = RunMode.Async), Alias(SocialMediaCommand + "all")]
-        public override async Task ListAsync()
+        [SlashCommand(ListCommand, "Gets a list of added Tweeters.", runMode: RunMode.Async)]
+        public override Task ListSocialMediaUser()
         {
-            await base.ListAsync();
+            return base.ListSocialMediaUser();
         }
 
-        [Command(SocialMediaCommand + "update", RunMode = RunMode.Async), Alias(SocialMediaCommand + "latest")]
-        public override async Task UpdateAsync()
+        [SlashCommand(UpdateCommand, "Updates all listed Tweeters in the server.", runMode: RunMode.Async)]
+        public override Task UpdateSocialMediaUser()
         {
-            await base.UpdateAsync();
+            return base.UpdateSocialMediaUser();
         }
 
-        [Command(SocialMediaCommand + "?", RunMode = RunMode.Async), Alias(SocialMediaCommand + "howto", SocialMediaCommand)]
-        public override async Task HowToUseAsync()
+        [SlashCommand("show-twitter-video", "Use this if embedded video didn't work from the tweet.", runMode: RunMode.Async)]
+        public async Task PostVideoAsync()
         {
-            var embed = HowToText(SocialMediaCommand);
-            await SendMessage(embed);
+            var message = await GetOriginalResponseAsync();
+            if (message == null)
+            {
+                await SendMessage(Client, "No Twitter video discovered.");
+                return;
+            }
+
+            string video =
+                await ((Twitter)SocialMedia).PostVideo(Context.Guild.Id, Context.Channel.Id, message.Source.ToString());
+            if (!string.IsNullOrEmpty(video))
+                await SendMessage(Client, video);
         }
     }
 }

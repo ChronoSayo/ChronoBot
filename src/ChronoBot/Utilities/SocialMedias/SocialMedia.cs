@@ -7,6 +7,7 @@ using ChronoBot.Common.Systems;
 using ChronoBot.Common.UserDatas;
 using ChronoBot.Enums;
 using ChronoBot.Helpers;
+using Discord;
 using Discord.WebSocket;
 using Microsoft.Extensions.Configuration;
 
@@ -21,15 +22,13 @@ namespace ChronoBot.Utilities.SocialMedias
         protected string Hyperlink;
         protected string TypeOfSocialMedia;
         protected List<SocialMediaUserData> Users;
-        protected List<string> AvailableOptions;
 
-        public SocialMedia(DiscordSocketClient client, IConfiguration config, IEnumerable<SocialMediaUserData> users, 
-            IEnumerable<string> availableOptions, SocialMediaFileSystem fileSystem, int seconds = 60)
+        public SocialMedia(DiscordSocketClient client, IConfiguration config, IEnumerable<SocialMediaUserData> users,
+            SocialMediaFileSystem fileSystem, int seconds = 60)
         {
             Client = client;
             Config = config;
             Users = users.ToList();
-            AvailableOptions = availableOptions.ToList();
             FileSystem = fileSystem;
         }
 
@@ -39,7 +38,7 @@ namespace ChronoBot.Utilities.SocialMedias
         }
 
         protected virtual bool CreateSocialMediaUser(string name, ulong guildId, ulong channelId, string id,
-            SocialMediaEnum socialMedia, string options = "")
+            SocialMediaEnum socialMedia, string options = "", bool live = false)
         {
             SocialMediaUserData temp = new SocialMediaUserData
             {
@@ -48,7 +47,8 @@ namespace ChronoBot.Utilities.SocialMedias
                 ChannelId = channelId,
                 Id = id,
                 SocialMedia = socialMedia,
-                Options = options
+                Options = options,
+                Live = live
             };
             Users.Add(temp);
 
@@ -80,7 +80,14 @@ namespace ChronoBot.Utilities.SocialMedias
 
         private async void OnUpdateTimerOnElapsed(object s, ElapsedEventArgs e)
         {
-            await UpdateTimerElapsed();
+            try
+            {
+                await UpdateTimerElapsed();
+            }
+            catch (Exception exception)
+            {
+                await Statics.SendEmbedMessageToLogChannel(Client, exception.Message, Color.Red);
+            }
         }
 
         protected virtual async Task UpdateTimerElapsed()
@@ -90,15 +97,9 @@ namespace ChronoBot.Utilities.SocialMedias
 
         protected virtual async Task AutoUpdate()
         {
-            ulong current = 0;
-            for (int i = 0; i < Users.Count; i++)
-            {
-                if (Users[i].GuildId == current)
-                    continue;
-
-                current = Users[i].GuildId;
-                await GetUpdatedSocialMediaUsers(current);
-            }
+            var groupedUsers = Users.GroupBy(x => x.GuildId).ToList();
+            foreach (var user in groupedUsers)
+                await GetUpdatedSocialMediaUsers(user.Key);
         }
 
         public virtual async Task<string> AddSocialMediaUser(ulong guildId, ulong channelId, string username,
@@ -120,10 +121,6 @@ namespace ChronoBot.Utilities.SocialMedias
             return $"Failed to delete {user}";
         }
 
-        public virtual async Task<string> GetSocialMediaUser(ulong guildId, ulong channelId, string username)
-        {
-            return await Task.FromResult(string.Empty);
-        }
         public virtual async Task<string> GetSocialMediaUser(ulong guildId, string username)
         {
             return await Task.FromResult(string.Empty);
@@ -147,7 +144,7 @@ namespace ChronoBot.Utilities.SocialMedias
                     continue;
 
                 string name = user.Name;
-                line += $"■ {name} {(channelMention ?? "***Missing channel info.***")}\n";
+                line += $"■ {name} {channelMention ?? "***Missing channel info.***"}\n";
             }
 
             return await Task.FromResult(line);
@@ -158,7 +155,7 @@ namespace ChronoBot.Utilities.SocialMedias
             return await Task.FromResult(string.Empty);
         }
         
-        protected virtual async Task<string> UpdateSocialMedia(IEnumerable<SocialMediaUserData> socialMediaUsers, Tuple<string, string> streamerInfo = null)
+        protected virtual async Task<string> UpdateSocialMedia(IEnumerable<SocialMediaUserData> socialMediaUsers)
         {
             //Save guild ID's and channel ID's to avoid repetition
             List<ulong> usedGuildIDs = new List<ulong>();
@@ -189,7 +186,7 @@ namespace ChronoBot.Utilities.SocialMedias
                         switch(TypeOfSocialMedia)
                         {
                             case "twitch":
-                                message += GetStreamerUrlAndGame(users[j], streamerInfo);
+                                message += GetStreamerUrlAndGame(users[j]);
                                 break;
                             case "twitter":
                                 message += GetTwitterUrl(users[j]);
@@ -241,11 +238,10 @@ namespace ChronoBot.Utilities.SocialMedias
         }
 
         //Display text for Twitch.
-        protected virtual string GetStreamerUrlAndGame(SocialMediaUserData ud, Tuple<string, string> streamerInfo)
+        protected virtual string GetStreamerUrlAndGame(SocialMediaUserData ud)
         {
-            if (streamerInfo?.Item1 == null || streamerInfo.Item2 == null)
-                return $"{Hyperlink}{ud.Name}\n\n";
-            return $"{streamerInfo.Item1} is playing {streamerInfo.Item2}\n{Hyperlink}{ud.Name}\n\n";
+            string result = $"{ud.Id}\n{Hyperlink}{ud.Name}\n\n";
+            return result;
         }
 
         //Display text for Twitter.
@@ -259,7 +255,7 @@ namespace ChronoBot.Utilities.SocialMedias
         //Display text for YouTube.
         protected virtual string GetYouTuber(SocialMediaUserData ud)
         {
-            string message = Hyperlink + ud.Id;
+            string message = (ud.Live ? "LIVE:\n" : string.Empty) + Hyperlink + ud.Options;
             return message + "\n\n";
         }
 
@@ -273,7 +269,8 @@ namespace ChronoBot.Utilities.SocialMedias
                     continue;
 
                 if (ud.GuildId != guildId ||
-                    !string.Equals(ud.Name, name, StringComparison.CurrentCultureIgnoreCase)) 
+                    !string.Equals(ud.Name, name, StringComparison.CurrentCultureIgnoreCase) ||
+                    ud.SocialMedia != socialMedia) 
                     continue;
 
                 duplicate = true;
@@ -286,7 +283,7 @@ namespace ChronoBot.Utilities.SocialMedias
         protected virtual int FindIndexByName(ulong guildId, string name, SocialMediaEnum socialMedia)
         {
             return Users.FindIndex(x =>
-                x.GuildId == guildId && string.Equals(x.Name, name, StringComparison.InvariantCultureIgnoreCase) &&
+                x.GuildId == guildId && string.Equals(x.Name, name, StringComparison.CurrentCultureIgnoreCase) &&
                 x.SocialMedia == socialMedia);
         }
     }

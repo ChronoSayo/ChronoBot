@@ -1,68 +1,55 @@
-﻿using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using ChronoBot.Enums;
 using ChronoBot.Utilities.SocialMedias;
 using Discord;
-using Discord.Commands;
+using Discord.Interactions;
 using Discord.WebSocket;
-using Microsoft.Extensions.Logging;
 
 namespace ChronoBot.Modules.SocialMedias
 {
+    [Group("youtube", "Notifies when a YouTuber has uploaded a video.")]
     public class YouTubeModule : SocialMediaModule
     {
-        private readonly ILogger<SocialMediaModule> _logger;
-        private const string SocialMediaCommand = "youtube";
-        private const string AltSocialMediaCommand = "yt";
-
-        public YouTubeModule(DiscordSocketClient client, ILogger<SocialMediaModule> logger, YouTube socialMedia) : base(client, logger, socialMedia)
+        public YouTubeModule(DiscordSocketClient client, YouTube socialMedia) : base(client, socialMedia)
         {
-            _logger = logger;
             SocialMedia = socialMedia;
             SocialMediaType = SocialMediaEnum.YouTube;
         }
 
-        [Command(SocialMediaCommand + "add", RunMode = RunMode.Async), Alias(AltSocialMediaCommand + "add")]
-        public override async Task AddAsync(string user, [Remainder] string option = "")
+        [SlashCommand(AddCommand, "Adds YouTuber to the list of updates.", runMode: RunMode.Async)]
+        public override Task AddSocialMediaUser(
+            [Summary("Youtuber", "Insert YouTuber's name.")] string user,
+            [Summary("Where", "To which channel should this be updated to. Default is this channel.")]
+                [ChannelTypes(ChannelType.Text)] IChannel channel = null)
         {
-            await base.AddAsync(user, option);
+            return base.AddSocialMediaUser(user, channel);
         }
 
-        [Command(SocialMediaCommand + "delete", RunMode = RunMode.Async),
-         Alias(SocialMediaCommand + "del", SocialMediaCommand + "remove", AltSocialMediaCommand + "delete",
-             AltSocialMediaCommand + "del", AltSocialMediaCommand + "remove")]
-        public override async Task DeleteAsync(string user)
+        [SlashCommand(DeleteCommand, "Deletes YouTuber from the list of updates.", runMode: RunMode.Async)]
+        public override Task DeleteSocialMediaUser(
+            [Summary("Youtuber", "Insert YouTuber's name.")] string user)
         {
-            await base.DeleteAsync(user);
+            return base.DeleteSocialMediaUser(user);
         }
 
-        [Command(SocialMediaCommand + "get", RunMode = RunMode.Async), 
-         Alias(SocialMediaCommand, AltSocialMediaCommand, AltSocialMediaCommand + "get")]
-        public override async Task GetAsync(string user)
+        [SlashCommand(GetCommand, "Posts YouTuber's latest video.", runMode: RunMode.Async)]
+        public override Task GetSocialMediaUser(
+            [Summary("Youtuber", "Insert YouTuber's name.")]
+            string user)
         {
-            await base.GetAsync(user);
+            return base.GetSocialMediaUser(user);
         }
 
-        [Command(SocialMediaCommand + "list", RunMode = RunMode.Async), 
-         Alias(SocialMediaCommand + "all", AltSocialMediaCommand + "list", AltSocialMediaCommand + "all")]
-        public override async Task ListAsync()
+        [SlashCommand(ListCommand, "Gets a list of added YouTubers.", runMode: RunMode.Async)]
+        public override Task ListSocialMediaUser()
         {
-            await base.ListAsync();
+            return base.ListSocialMediaUser();
         }
 
-
-        [Command(SocialMediaCommand + "update", RunMode = RunMode.Async), 
-         Alias(SocialMediaCommand + "latest", AltSocialMediaCommand + "update", AltSocialMediaCommand + "latest")]
-        public override async Task UpdateAsync()
+        [SlashCommand(UpdateCommand, "Updates all listed YouTubers in the server.", runMode: RunMode.Async)]
+        public override Task UpdateSocialMediaUser()
         {
-            await base.UpdateAsync();
-        }
-
-        [Command(SocialMediaCommand + "?", RunMode = RunMode.Async), Alias(SocialMediaCommand + "howto", SocialMediaCommand, AltSocialMediaCommand)]
-        public override async Task HowToUseAsync()
-        {
-            var embed = HowToText(SocialMediaCommand);
-            await SendMessage(embed);
+            return base.UpdateSocialMediaUser();
         }
     }
 }

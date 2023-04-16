@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using ChronoBot.Common.Systems;
 using ChronoBot.Common.UserDatas;
@@ -7,6 +6,7 @@ using ChronoBot.Enums;
 using ChronoBot.Helpers;
 using Discord.WebSocket;
 using Microsoft.Extensions.Configuration;
+using TwitchLib.Api.Core.Exceptions;
 
 namespace ChronoBot.Utilities.SocialMedias
 {
@@ -15,13 +15,13 @@ namespace ChronoBot.Utilities.SocialMedias
         private readonly ChronoTwitch.ChronoTwitch _api;
 
         public Twitch(ChronoTwitch.ChronoTwitch api, DiscordSocketClient client, IConfiguration config,
-            IEnumerable<SocialMediaUserData> users, IEnumerable<string> availableOptions,
+            IEnumerable<SocialMediaUserData> users,
             SocialMediaFileSystem fileSystem, int seconds = 120) :
-            base(client, config, users, availableOptions, fileSystem)
+            base(client, config, users, fileSystem)
         {
             _api = api;
             _api.Authenticate(Config[Statics.TwitchClientId], Config[Statics.TwitchSecret],
-                Config[Statics.TwitchAccessToken]);
+                Config[Statics.TwitchAccessToken], Config[Statics.TwitchRefreshToken]);
 
             Hyperlink = "https://www.twitch.com/";
 
@@ -38,7 +38,15 @@ namespace ChronoBot.Utilities.SocialMedias
             if (Duplicate(guildId, username, SocialMediaEnum.Twitch))
                 return await Task.FromResult($"Already added {username}");
 
-            string loginName = await _api.LoginName(username);
+            string loginName = string.Empty;
+            try
+            {
+                loginName = await _api.LoginName(username);
+            }
+            catch (BadScopeException ex)
+            {
+                await Statics.SendMessageToLogChannel(Client, ex.Message);
+            }
             if (string.IsNullOrEmpty(loginName))
                 return await Task.FromResult("Can't find " + username);
 
@@ -48,22 +56,39 @@ namespace ChronoBot.Utilities.SocialMedias
             if (!CreateSocialMediaUser(loginName, guildId, sendToChannelId, "offline", SocialMediaEnum.Twitch))
                 return await Task.FromResult($"Failed to add {loginName}.");
 
-            var displayName = await _api.DisplayName(username);
+            var displayName = string.Empty;
+            try
+            {
+                displayName = await _api.DisplayName(username);
+            }
+            catch (BadScopeException ex)
+            {
+                await Statics.SendMessageToLogChannel(Client, ex.Message);
+            }
             return await Task.FromResult($"Successfully added {displayName} \n{Hyperlink}{loginName}");
         }
 
-        public override async Task<string> GetSocialMediaUser(ulong guildId, ulong channelId, string username)
+        public override async Task<string> GetSocialMediaUser(ulong guildId, string username)
         {
             int i = FindIndexByName(guildId, username, SocialMediaEnum.Twitch);
             if (i <= -1)
                 return await Task.FromResult("Can't find streamer.");
 
             SocialMediaUserData ud = Users[i];
-            bool isLive = await _api.IsLive(ud.Name);
+            bool isLive = false;
+            try
+            {
+                isLive = await _api.IsLive(ud.Name);
+                ud.Live = isLive;
+            }
+            catch(BadScopeException ex)
+            {
+                await Statics.SendMessageToLogChannel(Client, ex.Message);
+            }
             string message;
             if (isLive)
             {
-                message = await UpdateSocialMedia(new List<SocialMediaUserData> { ud }, await GetStreamInfo(ud.Name));
+                message = await UpdateSocialMedia(new List<SocialMediaUserData> { ud });
             }
             else
                 message = Hyperlink + ud.Name;
@@ -86,42 +111,48 @@ namespace ChronoBot.Utilities.SocialMedias
                 return await Task.FromResult("No streamers registered.");
 
             List<SocialMediaUserData> live = new List<SocialMediaUserData>();
-            Tuple<string, string> streamerInfo = null;
             for (int i = 0; i < Users.Count; i++)
             {
                 SocialMediaUserData user = Users[i];
                 if (user.SocialMedia != SocialMediaEnum.Twitch || user.GuildId != guildId)
                     continue;
 
-                bool isLive = await _api.IsLive(user.Name);
-                string oldId = user.Id;
+                bool isLive = false;
+                string streamInfo = string.Empty;
+                try
+                {
+                    isLive = await _api.IsLive(user.Name);
+                    streamInfo = await GetStreamInfo(user.Name);
+                    if (user.Live == isLive && user.Id == streamInfo)
+                        continue;
+                    user.Live = isLive;
+                }
+                catch (BadScopeException ex)
+                {
+                    await Statics.SendMessageToLogChannel(Client, ex.Message);
+                }
+
                 if (isLive)
                 {
-                    user.Id = "online";
-                    streamerInfo = await GetStreamInfo(user.Name);
+                    user.Id = streamInfo;
+                    Users[i] = user;
+                    live.Add(Users[i]);
                 }
-                else
-                    user.Id = "offline";
 
-                if (user.Id == oldId)
-                    continue;
-
-                Users[i] = user;
-                live.Add(Users[i]);
                 FileSystem.UpdateFile(user);
             }
 
             if (live.Count > 0)
-                return await UpdateSocialMedia(live, streamerInfo);
+                return await UpdateSocialMedia(live);
 
             return await Task.FromResult("No streamers are broadcasting.");
         }
 
-        private async Task<Tuple<string, string>> GetStreamInfo(string name)
+        private async Task<string> GetStreamInfo(string name)
         {
             string displayName = await _api.DisplayName(name);
             string gameName = await _api.GameName(name);
-            return new Tuple<string, string>(displayName, gameName);
+            return $"{displayName} is playing {gameName}";
         }
     }
 }

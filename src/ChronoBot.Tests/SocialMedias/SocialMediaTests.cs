@@ -20,7 +20,7 @@ namespace ChronoBot.Tests.SocialMedias
             var mockClient = new Mock<DiscordSocketClient>(MockBehavior.Loose);
             var config = new Mock<IConfiguration>();
             _socialMedia = new SocialMedia(mockClient.Object, config.Object,
-                new List<SocialMediaUserData>(), new List<string>(), new SocialMediaFileSystem());
+                new List<SocialMediaUserData>(), new SocialMediaFileSystem());
         }
 
         [Fact]
@@ -33,7 +33,7 @@ namespace ChronoBot.Tests.SocialMedias
         [Fact]
         public void GetSocialMediaUsers_Test_General_Success()
         {
-            var result = _socialMedia.GetSocialMediaUser(123456789, 1, "Test").GetAwaiter().GetResult();
+            var result = _socialMedia.GetSocialMediaUser(123456789, "Test").GetAwaiter().GetResult();
             Assert.Equal(string.Empty, result);
         }
 
@@ -59,19 +59,19 @@ namespace ChronoBot.Tests.SocialMedias
                 Directory.Delete(path, true);
             var users = new List<SocialMediaUserData>()
             {
-                new SocialMediaUserData
+                new()
                 {
                     ChannelId = 987654321, GuildId = 123456789, Id = "1", Name = "Test1",
                     SocialMedia = SocialMediaEnum.Twitter
                 },
-                new SocialMediaUserData
+                new()
                 {
                     ChannelId = 123456789, GuildId = 987654321, Id = "2", Name = "Test2",
                     SocialMedia = SocialMediaEnum.Twitch
                 }
             };
             var socialMedia = new SocialMedia(new Mock<DiscordSocketClient>().Object, new Mock<IConfiguration>().Object,
-                users, new List<string>(), new SocialMediaFileSystem(path));
+                users, new SocialMediaFileSystem(path));
 
             string result = socialMedia.DeleteSocialMediaUser(987654321, "Test2", SocialMediaEnum.Twitch);
 

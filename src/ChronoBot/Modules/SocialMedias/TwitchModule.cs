@@ -1,59 +1,55 @@
 ﻿using System.Threading.Tasks;
 using ChronoBot.Enums;
 using ChronoBot.Utilities.SocialMedias;
-using Discord.Commands;
+using Discord;
+using Discord.Interactions;
 using Discord.WebSocket;
-using Microsoft.Extensions.Logging;
 
 namespace ChronoBot.Modules.SocialMedias
 {
+    [Group("twitch", "Notifies when a Twitch streamer is broadcasting.")]
     public class TwitchModule : SocialMediaModule
     {
-        private readonly ILogger<SocialMediaModule> _logger;
-        private const string SocialMediaCommand = "twitch";
-
-        public TwitchModule(DiscordSocketClient client, ILogger<SocialMediaModule> logger, Twitch socialMedia) : base(client, logger, socialMedia)
+        public TwitchModule(DiscordSocketClient client, Twitch socialMedia) : base(client, socialMedia)
         {
-            _logger = logger;
             SocialMedia = socialMedia;
             SocialMediaType = SocialMediaEnum.Twitch;
         }
 
-        [Command(SocialMediaCommand + "add", RunMode = RunMode.Async)]
-        public override async Task AddAsync(string user, [Remainder] string option = "")
+        [SlashCommand(AddCommand, "Adds streamer to the list of updates.", runMode: RunMode.Async)]
+        public override Task AddSocialMediaUser(
+            [Summary("Streamer", "Insert streamer's name.")] string user,
+            [Summary("Where", "To which channel should this be updated to. Default is this channel.")]
+            [ChannelTypes(ChannelType.Text)] IChannel channel = null)
         {
-            await base.AddAsync(user, option);
+            return base.AddSocialMediaUser(user, channel);
         }
 
-        [Command(SocialMediaCommand + "delete", RunMode = RunMode.Async), Alias(SocialMediaCommand + "del", SocialMediaCommand + "remove")]
-        public override async Task DeleteAsync(string user)
+        [SlashCommand(DeleteCommand, "Deletes streamer from the list of updates.", runMode: RunMode.Async)]
+        public override Task DeleteSocialMediaUser(
+            [Summary("Streamer", "Insert streamer's name.")] string user)
         {
-            await base.DeleteAsync(user);
+            return base.DeleteSocialMediaUser(user);
         }
 
-        [Command(SocialMediaCommand + "get", RunMode = RunMode.Async), Alias(SocialMediaCommand)]
-        public override async Task GetAsync(string user)
+        [SlashCommand(GetCommand, "Posts streamer's latest video.", runMode: RunMode.Async)]
+        public override Task GetSocialMediaUser(
+            [Summary("Streamer" , "Insert streamer's name.")]
+            string user)
         {
-            await base.GetAsync(user);
+            return base.GetSocialMediaUser(user);
         }
 
-        [Command(SocialMediaCommand + "list", RunMode = RunMode.Async), Alias(SocialMediaCommand + "all")]
-        public override async Task ListAsync()
+        [SlashCommand(ListCommand, "Gets a list of added streamers.", runMode: RunMode.Async)]
+        public override Task ListSocialMediaUser()
         {
-            await base.ListAsync();
+            return base.ListSocialMediaUser();
         }
 
-        [Command(SocialMediaCommand + "update", RunMode = RunMode.Async), Alias(SocialMediaCommand + "latest")]
-        public override async Task UpdateAsync()
+        [SlashCommand(UpdateCommand, "Updates all listed streamers in the server.", runMode: RunMode.Async)]
+        public override Task UpdateSocialMediaUser()
         {
-            await base.UpdateAsync();
-        }
-
-        [Command(SocialMediaCommand + "?", RunMode = RunMode.Async), Alias(SocialMediaCommand + "howto", SocialMediaCommand)]
-        public override async Task HowToUseAsync()
-        {
-            var embed = HowToText(SocialMediaCommand);
-            await SendMessage(embed);
+            return base.UpdateSocialMediaUser();
         }
     }
 }
