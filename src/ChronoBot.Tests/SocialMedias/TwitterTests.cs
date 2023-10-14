@@ -269,8 +269,8 @@ namespace ChronoBot.Tests.SocialMedias
         {
             var twitter = CreateNewTwitter(out var fileSystem, "AddLike", 1);
 
-            twitter.AddSocialMediaUser(123456789, 5, "AddLike", options: "l").GetAwaiter().GetResult();
-            var result = twitter.GetSocialMediaUser(123456789, "AddLike").GetAwaiter().GetResult();
+            twitter.AddSocialMediaUser(111111111, 5, "AddLike", options: "l").GetAwaiter().GetResult();
+            var result = twitter.GetSocialMediaUser(111111111, "AddLike").GetAwaiter().GetResult();
 
             Assert.Equal("https://twitter.com/AddLike/status/123\n\n", result);
 
@@ -281,7 +281,7 @@ namespace ChronoBot.Tests.SocialMedias
             Assert.NotNull(user);
             Assert.Equal("987", user.Id);
 
-            File.Delete(Path.Combine(fileSystem.PathToSaveFile, "123456789.xml"));
+            File.Delete(Path.Combine(fileSystem.PathToSaveFile, "111111111.xml"));
         }
 
         [Fact]

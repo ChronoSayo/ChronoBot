@@ -13,14 +13,14 @@ namespace ChronoBot.Common
             if (Statics.Debug)
                 await Statics.DebugSendMessageToChannelAsync(client, result);
             else
-                await FollowupAsync(result);
+                await ReplyAsync(result);
         }
         protected virtual async Task SendMessage(DiscordSocketClient client, Embed result)
         {
             if (Statics.Debug)
                 await Statics.DebugSendMessageToChannelAsync(client, result);
             else
-                await FollowupAsync(embed: result);
+                await ReplyAsync(embed: result);
         }
         protected virtual async Task SendMessage(DiscordSocketClient client, string result, ulong sendToChannel = 0)
         {
@@ -29,7 +29,7 @@ namespace ChronoBot.Common
             else if (sendToChannel != 0)
                 await client.GetGuild(Context.Guild.Id).GetTextChannel(sendToChannel).SendMessageAsync(result);
             else
-                await FollowupAsync(result);
+                await ReplyAsync(result);
         }
         protected virtual async Task SendMessage(DiscordSocketClient client, Embed result, ulong sendToChannel = 0)
         {
@@ -38,7 +38,7 @@ namespace ChronoBot.Common
             else if (sendToChannel != 0)
                 await client.GetGuild(Context.Guild.Id).GetTextChannel(sendToChannel).SendMessageAsync(embed: result);
             else
-                await FollowupAsync("", embed: result);
+                await ReplyAsync("", embed: result);
         }
         protected virtual async Task SendMessage(DiscordSocketClient client, string result, Embed resultEmbed, ulong sendToChannel = 0)
         {
@@ -47,7 +47,7 @@ namespace ChronoBot.Common
             else if (sendToChannel != 0)
                 await client.GetGuild(Context.Guild.Id).GetTextChannel(sendToChannel).SendMessageAsync(embed: resultEmbed);
             else
-                await FollowupAsync(result, embed: resultEmbed);
+                await ReplyAsync(result, embed: resultEmbed);
         }
         protected virtual async Task SendFile(DiscordSocketClient client, Embed result, string file)
         {
