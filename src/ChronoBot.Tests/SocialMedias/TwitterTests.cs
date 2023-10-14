@@ -390,7 +390,7 @@ namespace ChronoBot.Tests.SocialMedias
         {
             var twitter = LoadTwitter(out _);
 
-            var result = twitter.PostVideo(1, 1, "https://twitter.com/Video/status/1").Result;
+            var result = twitter.PostVideo("https://twitter.com/Video/status/1").Result;
 
             Assert.Equal("https://video.twimg.com/ext_tw_video/2/pu/vid/1280x720/swhi5fpAMRc-fzJp.mp4?tag=12", result);
         }
@@ -400,7 +400,7 @@ namespace ChronoBot.Tests.SocialMedias
         {
             var twitter = LoadTwitter(out _);
 
-            var result = twitter.PostVideo(1, 1, "https://twitter.com/Video/status/2").Result;
+            var result = twitter.PostVideo("https://twitter.com/Video/status/2").Result;
 
             Assert.Equal("", result);
         }
@@ -410,7 +410,7 @@ namespace ChronoBot.Tests.SocialMedias
         {
             var twitter = LoadTwitter(out _);
 
-            var result = twitter.PostVideo(1, 1, "https://twitter.com/Video/status/3").Result;
+            var result = twitter.PostVideo("https://twitter.com/Video/status/3").Result;
 
             Assert.Equal("", result);
         }
@@ -420,7 +420,7 @@ namespace ChronoBot.Tests.SocialMedias
         {
             var twitter = LoadTwitter(out _);
 
-            var result = twitter.PostVideo(1, 1, "https://twitter.com/Video/status/4").Result;
+            var result = twitter.PostVideo("https://twitter.com/Video/status/4").Result;
 
             Assert.Equal("", result);
         }
@@ -430,7 +430,7 @@ namespace ChronoBot.Tests.SocialMedias
         {
             var twitter = LoadTwitter(out _);
 
-            var result = twitter.PostVideo(1, 1, "https://twitter.com/Video/status/5").Result;
+            var result = twitter.PostVideo("https://twitter.com/Video/status/5").Result;
 
             Assert.Equal("", result);
         }
