@@ -13,6 +13,7 @@ using TweetSharp;
 using System.Globalization;
 using Color = Discord.Color;
 using ChronoBot.Common.UserDatas;
+using System.Runtime.CompilerServices;
 
 namespace ChronoBot.Utilities.SocialMedias
 {
@@ -221,7 +222,7 @@ namespace ChronoBot.Utilities.SocialMedias
                 await UpdateSocialMedia(newTweets);
                 foreach (SocialMediaUserData ud in newTweets)
                 {
-                    string video = await PostVideo(ud.GuildId, ud.ChannelId, GetTwitterUrl(ud));
+                    string video = await PostVideo(GetTwitterUrl(ud));
                     if (!string.IsNullOrEmpty(video))
                         await Client.GetGuild(ud.GuildId).GetTextChannel(ud.ChannelId).SendMessageAsync(video);
                 }
@@ -340,7 +341,7 @@ namespace ChronoBot.Utilities.SocialMedias
             if (ContainsTweetLink(message))
                 return await ConvertToEmbed(message.Split(' ')[^1]);
 
-            message = await GetMessageFromChannelHistory(guildId, channelId, message);
+            message = await GetMessageFromChannelHistory(guildId, channelId);
 
             if (string.IsNullOrEmpty(message))
                 return new EmbedBuilder
@@ -349,31 +350,37 @@ namespace ChronoBot.Utilities.SocialMedias
             return await ConvertToEmbed(message);
         }
 
-        public async Task<string> PostVideo(ulong guildId, ulong channelId, string message)
+        public async Task<string> PostVideo(string message)
         {
-            if (ContainsTweetLink(message)) 
-                return await ConvertToVideo(message.Split(' ')[^1]);
-
-            message = await GetMessageFromChannelHistory(guildId, channelId, message);
-
             if (string.IsNullOrEmpty(message))
                 return "Too many messages away from a Tweet with video.";
 
             return await ConvertToVideo(message);
         }
 
-        private async Task<string> GetMessageFromChannelHistory(ulong guildId, ulong channelId, string message)
+        public string AddFx(string message)
+        {
+            if (string.IsNullOrEmpty(message))
+                return "Too many messages away from a Tweet .";
+
+            return message.Replace("twitter", "fxtwitter");
+        }
+
+        public async Task<string> GetMessageFromChannelHistory(ulong guildId, ulong channelId, string skip = "")
         {
             var messages = await Client.GetGuild(guildId).GetTextChannel(channelId).GetMessagesAsync(10)
                 .FlattenAsync();
             foreach (var m in messages)
             {
-                if (!ContainsTweetLink(m.Content))
-                    continue;
-                message = m.Content;
-                break;
+                if (ContainsTweetLink(m.Content))
+                {
+                    if (!string.IsNullOrEmpty(skip) && m.Content.Contains(skip))
+                        continue;
+
+                    return m.Content;
+                }
             }
-            return !ContainsTweetLink(message) ? string.Empty : message;
+            return string.Empty;
         }
 
         private async Task<string> ConvertToVideo(string message)
@@ -444,7 +451,7 @@ namespace ChronoBot.Utilities.SocialMedias
             return tweet;
         }
 
-        private bool ContainsTweetLink(string message)
+        public static bool ContainsTweetLink(string message)
         {
             return message.Contains("https://twitter.com/") &&
                    message.Contains("status", StringComparison.InvariantCultureIgnoreCase);

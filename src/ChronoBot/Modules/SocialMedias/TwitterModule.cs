@@ -1,4 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Linq;
+using System.Threading.Tasks;
 using ChronoBot.Enums;
 using ChronoBot.Utilities.SocialMedias;
 using Discord;
@@ -70,17 +72,25 @@ namespace ChronoBot.Modules.SocialMedias
         [SlashCommand("show-twitter-video", "Use this if embedded video didn't work from the tweet.", runMode: RunMode.Async)]
         public async Task PostVideoAsync()
         {
-            var message = await GetOriginalResponseAsync();
-            if (message == null)
-            {
-                await SendMessage(Client, "No Twitter video discovered.");
-                return;
-            }
+            string findVideo = await ((Twitter)SocialMedia).GetMessageFromChannelHistory(Context.Guild.Id, Context.Channel.Id);
+            string video = await ((Twitter)SocialMedia).PostVideo(findVideo);
 
-            string video =
-                await ((Twitter)SocialMedia).PostVideo(Context.Guild.Id, Context.Channel.Id, message.Source.ToString());
             if (!string.IsNullOrEmpty(video))
                 await SendMessage(Client, video);
+            else
+                await SendMessage(Client, "No Twitter video was discovered.");
+        }
+
+        [SlashCommand("fx", "Use this if embedded didn't work from the tweet.", runMode: RunMode.Async)]
+        public async Task AddFxAsync()
+        {
+            string findFx = await ((Twitter)SocialMedia).GetMessageFromChannelHistory(Context.Guild.Id, Context.Channel.Id, "https://fx");
+            string fx = ((Twitter)SocialMedia).AddFx(findFx);
+
+            if (!string.IsNullOrEmpty(fx))
+                await SendMessage(Client, fx);
+            else
+                await SendMessage(Client, "No Twitter link was discovered.");
         }
     }
 }
