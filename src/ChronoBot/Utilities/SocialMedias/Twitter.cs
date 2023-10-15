@@ -363,7 +363,7 @@ namespace ChronoBot.Utilities.SocialMedias
             if (string.IsNullOrEmpty(message))
                 return "Too many messages away from a Tweet .";
 
-            return message.Replace("twitter", "fxtwitter");
+            return message.Replace(message.Contains("twitter") ? "twitter.com" : "x.com", "fxtwitter.com");
         }
 
         public async Task<string> GetMessageFromChannelHistory(ulong guildId, ulong channelId, string skip = "")
@@ -453,7 +453,7 @@ namespace ChronoBot.Utilities.SocialMedias
 
         public static bool ContainsTweetLink(string message)
         {
-            return message.Contains("https://twitter.com/") &&
+            return (message.Contains("https://twitter.com/") || message.Contains("https://x.com/")) &&
                    message.Contains("status", StringComparison.InvariantCultureIgnoreCase);
         }
 
