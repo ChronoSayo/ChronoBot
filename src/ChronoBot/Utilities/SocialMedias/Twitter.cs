@@ -352,33 +352,31 @@ namespace ChronoBot.Utilities.SocialMedias
 
         public async Task<string> PostVideo(string message)
         {
-            if (string.IsNullOrEmpty(message))
-                return "Too many messages away from a Tweet with video.";
-
-            return await ConvertToVideo(message);
+            return !ContainsTweetLink(message) ? "No X URL found." : await ConvertToVideo(message); ;
         }
 
         public string AddFx(string message)
         {
-            if (string.IsNullOrEmpty(message))
-                return "Too many messages away from a Tweet .";
+            return !ContainsTweetLink(message) ? "No X URL found." : message.Replace(message.Contains("twitter") ? "twitter.com" : "x.com", "fxtwitter.com");
+        }
 
-            return message.Replace(message.Contains("twitter") ? "twitter.com" : "x.com", "fxtwitter.com");
+        public static string GlobalAddFx(string message)
+        {
+            return !ContainsTweetLink(message) ? "No X URL found." : message.Replace(message.Contains("twitter") ? "twitter.com" : "x.com", "fxtwitter.com");
         }
 
         public async Task<string> GetMessageFromChannelHistory(ulong guildId, ulong channelId, string skip = "")
         {
-            var messages = await Client.GetGuild(guildId).GetTextChannel(channelId).GetMessagesAsync(10)
+            var messages = await Client.GetGuild(guildId).GetTextChannel(channelId).GetMessagesAsync(50)
                 .FlattenAsync();
+
             foreach (var m in messages)
             {
-                if (ContainsTweetLink(m.Content))
-                {
-                    if (!string.IsNullOrEmpty(skip) && m.Content.Contains(skip))
-                        continue;
+                if (!ContainsTweetLink(m.Content)) continue;
+                if (!string.IsNullOrEmpty(skip) && m.Content.Contains(skip))
+                    continue;
 
-                    return m.Content;
-                }
+                return m.Content;
             }
             return string.Empty;
         }

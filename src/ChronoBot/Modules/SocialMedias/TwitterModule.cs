@@ -1,11 +1,15 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Timers;
+using System.Threading;
 using System.Threading.Tasks;
 using ChronoBot.Enums;
 using ChronoBot.Utilities.SocialMedias;
 using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
+using Timer = System.Timers;
 
 namespace ChronoBot.Modules.SocialMedias
 {
@@ -16,6 +20,11 @@ namespace ChronoBot.Modules.SocialMedias
         {
             SocialMedia = socialMedia;
             SocialMediaType = SocialMediaEnum.Twitter;
+        }
+
+        private void SpamTimerOnElapsed(object sender, ElapsedEventArgs e)
+        {
+            throw new NotImplementedException();
         }
 
         [SlashCommand(AddCommand, "Adds YouTuber to the list of updates.", runMode: RunMode.Async)]
@@ -70,27 +79,30 @@ namespace ChronoBot.Modules.SocialMedias
         }
 
         [SlashCommand("show-twitter-video", "Use this if embedded video didn't work from the tweet.", runMode: RunMode.Async)]
-        public async Task PostVideoAsync()
+        public async Task PostVideoAsync(
+            [Summary("URL", "Insert X video URL.")]
+            string url)
         {
-            string findVideo = await ((Twitter)SocialMedia).GetMessageFromChannelHistory(Context.Guild.Id, Context.Channel.Id);
-            string video = await ((Twitter)SocialMedia).PostVideo(findVideo);
-
-            if (!string.IsNullOrEmpty(video))
-                await SendMessage(Client, video);
-            else
-                await SendMessage(Client, "No Twitter video was discovered.");
+            string video = await ((Twitter)SocialMedia).PostVideo(url);
+            await SendMessage(Client, video);
         }
 
-        [SlashCommand("fx", "Use this if embedded didn't work from the tweet.", runMode: RunMode.Async)]
+        [SlashCommand("convert-latest-fx", "Use this if embedded didn't work from the tweet.", runMode: RunMode.Async)]
         public async Task AddFxAsync()
         {
             string findFx = await ((Twitter)SocialMedia).GetMessageFromChannelHistory(Context.Guild.Id, Context.Channel.Id, "https://fx");
             string fx = ((Twitter)SocialMedia).AddFx(findFx);
 
-            if (!string.IsNullOrEmpty(fx))
-                await SendMessage(Client, fx);
-            else
-                await SendMessage(Client, "No Twitter link was discovered.");
+            await SendMessage(Client, fx);
+        }
+
+        [SlashCommand("fx", "Use this if embedded didn't work from the tweet.", runMode: RunMode.Async)]
+        public async Task AddFxAsync(
+            [Summary("URL", "Insert X URL.")]
+            string url)
+        {
+            string fx = ((Twitter)SocialMedia).AddFx(url);
+            await SendMessage(Client, fx);
         }
     }
 }
