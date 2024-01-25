@@ -34,9 +34,12 @@ namespace ChronoBot.Services
 
         private async Task ClientOnMessageReceived(SocketMessage arg)
         {
-            string fx = Twitter.GlobalAddFx(arg.Content);
-            if(fx.Contains("https://fx"))
-                await arg.Channel.SendMessageAsync(fx);
+            if (Statics.FetchX)
+            {
+                string fx = Twitter.GlobalAddFx(arg.Content);
+                if (fx.Contains("https://fx"))
+                    await arg.Channel.SendMessageAsync(fx);
+            }
         }
 
         private async Task HandleInteraction(SocketInteraction socketInteraction)
