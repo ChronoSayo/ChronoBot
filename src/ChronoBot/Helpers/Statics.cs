@@ -24,6 +24,7 @@ namespace ChronoBot.Helpers
         public static string TwitterConsumerSecret => "Tokens:Twitter:ConsumerSecret";
         public static string TwitterToken => "Tokens:Twitter:Token";
         public static string TwitterSecret => "Tokens:Twitter:Secret";
+        public static bool FetchX => bool.TryParse(Config["FetchX"], out bool fetchX) && fetchX;
 
         public static string YouTubeApiKey => "Tokens:YouTube";
 
